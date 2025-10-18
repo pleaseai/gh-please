@@ -206,9 +206,12 @@ ${mockRules.map((rule, index) => {
   const exitCode = rule.response.exitCode ?? 0
   const delay = rule.response.delay ?? 0
 
-  return `
-# Rule ${index + 1}
-if [[ "$ARGS" ${isRegex ? '=~' : '=='} ${isRegex ? `'${pattern}'` : `"${pattern}"`} ]]; then
+  // For regex patterns, store in variable to avoid bash parsing issues
+  const patternSetup = isRegex ? `PATTERN_${index}='${pattern}'\n` : ''
+  const patternRef = isRegex ? `$PATTERN_${index}` : `"${pattern}"`
+
+  return `${patternSetup}# Rule ${index + 1}
+if [[ "$ARGS" ${isRegex ? '=~' : '=='} ${patternRef} ]]; then
   ${delay > 0 ? `sleep ${delay / 1000}` : ''}
   echo "${stdout}"
   >&2 echo "${stderr}"
