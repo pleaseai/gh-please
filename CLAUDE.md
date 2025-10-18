@@ -159,6 +159,103 @@ Tests follow the **Arrange-Act-Assert** pattern and use Bun's built-in test runn
 6. Install locally: `gh extension install .`
 7. Test as extension: `gh please <command> [options]`
 
+## Issue Workflow
+
+Follow this standardized workflow for all feature development and bug fixes:
+
+### 1. Create Issue Branch
+
+Create a new branch linked to a GitHub issue using the gh CLI:
+
+```bash
+gh issue develop <issue-number>
+```
+
+This command:
+- Creates a branch automatically named after the issue (e.g., `issue-<number>`)
+- Links the branch to the issue in GitHub
+- Helps track work in progress
+
+### 2. Checkout Branch
+
+Switch to the newly created branch:
+
+```bash
+git checkout <branch-name>
+# or if using gh workflow:
+gh issue develop <issue-number>  # automatically checks out
+```
+
+### 3. Follow TDD Cycle
+
+Implement changes following Test-Driven Development (see `docs/TDD.md`):
+
+1. **Red**: Write a failing test that defines the desired behavior
+2. **Green**: Implement the minimum code needed to make the test pass
+3. **Refactor**: Improve code structure while keeping tests passing
+4. **Commit**: Use small, focused commits following conventional commits (see `docs/commit-convention.md`)
+
+Key commands:
+
+```bash
+# Run tests continuously
+bun test --watch
+
+# Run all tests before committing
+bun test
+
+# Type check before committing
+bun run type-check
+```
+
+### 4. Commit, Push, and Create PR
+
+Once your implementation is complete and all tests pass:
+
+```bash
+# Stage your changes
+git add .
+
+# Create a commit following conventional commit format
+git commit -m "feat: brief description of the feature"
+
+# Push to remote
+git push -u origin <branch-name>
+
+# Create a pull request
+gh pr create --title "Title" --body "Description"
+```
+
+Or use the convenient shorthand:
+
+```bash
+/commit-commands:commit-push-pr
+```
+
+### Workflow Summary
+
+```
+┌─────────────────────────────────────┐
+│ 1. Create issue branch              │
+│    gh issue develop <issue-number>  │
+└──────────────┬──────────────────────┘
+               ↓
+┌─────────────────────────────────────┐
+│ 2. Checkout branch                  │
+│    git checkout <branch-name>       │
+└──────────────┬──────────────────────┘
+               ↓
+┌─────────────────────────────────────┐
+│ 3. Follow TDD cycle                 │
+│    Red → Green → Refactor → Commit  │
+└──────────────┬──────────────────────┘
+               ↓
+┌─────────────────────────────────────┐
+│ 4. Commit, Push, and Create PR      │
+│    git commit → git push → gh pr    │
+└─────────────────────────────────────┘
+```
+
 ## Launcher Script
 
 `gh-extension-please` is a bash script that:
