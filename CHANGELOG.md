@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.3.0](https://github.com/pleaseai/gh-please/compare/github-v0.2.0...github-v0.3.0) (2025-10-18)
+
+
+### Features
+
+* add --repo option to all commands for cross-repository operations ([37a1d35](https://github.com/pleaseai/gh-please/commit/37a1d35a84b12d57121a6088b6684085fe156d44))
+* add system language-based i18n support for all commands ([d68847c](https://github.com/pleaseai/gh-please/commit/d68847c9d99c4a6a14b503ef76ef4e6c9409e4e3))
+
+
+### Documentation
+
+* add --repo option documentation to README files ([795581c](https://github.com/pleaseai/gh-please/commit/795581c03881da17d7b94b5cf8657401458e1002))
+* add bilingual documentation (Korean/English) ([22c0edd](https://github.com/pleaseai/gh-please/commit/22c0edd293b0fb86198cbb6448f91a79e677aa93))
+* change default README to Korean ([dd6a7e1](https://github.com/pleaseai/gh-please/commit/dd6a7e13f42ccd2e0ba8c606c1144b1ba736e330))
+
 ## [0.2.0](https://github.com/pleaseai/github/compare/github-v0.1.0...github-v0.2.0) (2025-10-18)
 
 
