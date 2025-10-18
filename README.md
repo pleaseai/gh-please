@@ -6,6 +6,8 @@
 
 GitHub CLI extension for **PleaseAI** - AI-powered code review and issue management automation.
 
+English | [한국어](./README.ko.md)
+
 ## Overview
 
 `@pleaseai/github` is the command-line interface for PleaseAI, providing intelligent automation for:
