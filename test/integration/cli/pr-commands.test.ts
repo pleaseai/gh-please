@@ -3,6 +3,8 @@
  * Tests review-reply and resolve commands through CLI
  */
 
+/* eslint-disable regexp/prefer-d, regexp/no-super-linear-backtracking */
+
 import type { GhMockRule } from '../../helpers/cli-runner'
 import { afterEach, beforeEach, describe, test } from 'bun:test'
 import {

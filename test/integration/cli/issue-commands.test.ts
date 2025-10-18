@@ -3,6 +3,8 @@
  * Tests sub-issue and dependency management through CLI
  */
 
+/* eslint-disable regexp/prefer-d, regexp/no-super-linear-backtracking, unused-imports/no-unused-imports */
+
 import type { GhMockRule } from '../../helpers/cli-runner'
 import { afterEach, beforeEach, describe, test } from 'bun:test'
 import {
