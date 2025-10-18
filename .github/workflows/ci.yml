@@ -92,18 +92,19 @@ jobs:
           )
 
       - name: Run E2E tests
-        if: secrets.GITHUB_TEST_TOKEN != ''
         env:
           GITHUB_TEST_TOKEN: ${{ secrets.GITHUB_TEST_TOKEN }}
           GITHUB_TEST_OWNER: ${{ vars.GITHUB_TEST_OWNER || 'gh-please-e2e' }}
           GITHUB_TEST_REPO: ${{ vars.GITHUB_TEST_REPO || 'test-repo' }}
-        run: bun run test:e2e
-
-      - name: Skip E2E tests
-        if: secrets.GITHUB_TEST_TOKEN == ''
         run: |
-          echo "⊘ Skipping E2E tests (GITHUB_TEST_TOKEN not configured)"
-          echo "To enable E2E tests, add GITHUB_TEST_TOKEN to repository secrets"
+          if [ -z "$GITHUB_TEST_TOKEN" ]; then
+            echo "⊘ Skipping E2E tests (GITHUB_TEST_TOKEN not configured)"
+            echo "To enable E2E tests, add GITHUB_TEST_TOKEN to repository secrets"
+            exit 0
+          fi
+
+          echo "🚀 Running E2E tests..."
+          bun run test:e2e
 
       - name: Upload E2E test results
         if: always()
