@@ -146,12 +146,23 @@ gh api rate_limit
 ```
 gh-extension-please/
 ├── src/
-│   ├── index.ts          # CLI entry point
-│   ├── github-api.ts     # GitHub API wrapper
-│   └── types.ts          # TypeScript type definitions
+│   ├── commands/         # Command implementations
+│   │   └── review-reply.ts
+│   ├── lib/             # Reusable utilities
+│   │   ├── github-api.ts
+│   │   └── validation.ts
+│   ├── index.ts         # CLI entry point
+│   └── types.ts         # TypeScript type definitions
+├── test/
+│   ├── commands/        # Command tests
+│   ├── lib/             # Library tests
+│   │   ├── github-api.test.ts
+│   │   └── validation.test.ts
+│   └── fixtures/        # Test data
+│       └── mock-data.ts
 ├── script/
-│   └── build.sh          # Build script for releases
-├── gh-extension-please   # Launcher script
+│   └── build.sh         # Build script for releases
+├── gh-extension-please  # Launcher script
 ├── package.json
 ├── tsconfig.json
 └── README.md
@@ -182,6 +193,27 @@ bun run src/index.ts review-reply --help
 ```bash
 bun run type-check
 ```
+
+### Testing
+
+The project includes comprehensive unit tests:
+
+```bash
+# Run all tests
+bun test
+
+# Run tests in watch mode
+bun test --watch
+
+# Run tests with coverage
+bun test --coverage
+```
+
+**Test Coverage:**
+- Input validation (comment IDs, reply bodies)
+- GitHub API helpers (endpoint building, PR info parsing)
+- Comment type detection (top-level vs replies)
+- 16 test cases with 29 assertions
 
 ## Contributing
 
