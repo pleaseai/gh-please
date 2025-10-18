@@ -2,7 +2,7 @@
   "packages": {
     ".": {
       "release-type": "node",
-      "package-name": "gh-extension-please",
+      "package-name": "@please/github",
       "changelog-sections": [
         {
           "type": "feat",
