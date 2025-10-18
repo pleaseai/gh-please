@@ -1,7 +1,7 @@
 {
   "name": "@pleaseai/github",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "GitHub CLI extension for PleaseAI - AI-powered code review and issue management automation",
   "author": "PleaseAI",
   "license": "MIT",
