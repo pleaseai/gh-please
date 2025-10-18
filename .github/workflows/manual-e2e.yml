@@ -4,15 +4,15 @@ on:
   workflow_dispatch:
     inputs:
       test_owner:
-        description: 'GitHub test repository owner'
+        description: GitHub test repository owner
         required: false
-        default: 'gh-please-e2e'
+        default: gh-please-e2e
       test_repo:
-        description: 'GitHub test repository name'
+        description: GitHub test repository name
         required: false
-        default: 'test-repo'
+        default: test-repo
       skip_cleanup:
-        description: 'Skip cleanup after tests (for debugging)'
+        description: Skip cleanup after tests (for debugging)
         required: false
         type: boolean
         default: false

@@ -23,7 +23,7 @@ Runs on every push to `main` and on all pull requests.
 **Runs on**: Every push and PR
 **Duration**: ~30-60 seconds
 
-```yaml
+```
 Steps:
 1. Checkout code
 2. Setup Bun
@@ -45,7 +45,7 @@ Steps:
 **Runs on**: After unit tests pass
 **Duration**: ~1-2 minutes
 
-```yaml
+```
 Steps:
 1. Checkout code
 2. Setup Bun
@@ -65,7 +65,7 @@ Steps:
 **Runs on**: Only on `main` branch or manual trigger
 **Duration**: ~2-5 minutes
 
-```yaml
+```
 Conditions:
 - Only runs on main branch push
 - Or when manually triggered via workflow_dispatch
@@ -90,7 +90,7 @@ Steps:
 **Runs on**: Every push and PR
 **Duration**: ~30 seconds
 
-```yaml
+```
 Steps:
 1. Checkout code
 2. Setup Bun
@@ -104,7 +104,7 @@ Steps:
 **Runs on**: Every push and PR
 **Duration**: ~30 seconds
 
-```yaml
+```
 Steps:
 1. Checkout code
 2. Setup Bun

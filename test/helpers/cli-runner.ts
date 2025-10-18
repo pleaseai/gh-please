@@ -3,8 +3,7 @@
  * Provides utilities for spawning and testing the gh-please CLI
  */
 
-import type { Subprocess } from 'bun'
-import { describe, expect } from 'bun:test'
+import { expect } from 'bun:test'
 
 export interface CliResult {
   exitCode: number | null
@@ -93,9 +92,9 @@ export async function runCliExpectSuccess(
 
   if (!result.success) {
     throw new Error(
-      `Expected CLI to succeed but got exit code ${result.exitCode}\n` +
-      `stdout: ${result.stdout}\n` +
-      `stderr: ${result.stderr}`,
+      `Expected CLI to succeed but got exit code ${result.exitCode}\n`
+      + `stdout: ${result.stdout}\n`
+      + `stderr: ${result.stderr}`,
     )
   }
 
@@ -113,9 +112,9 @@ export async function runCliExpectFailure(
 
   if (result.success) {
     throw new Error(
-      `Expected CLI to fail but it succeeded\n` +
-      `stdout: ${result.stdout}\n` +
-      `stderr: ${result.stderr}`,
+      `Expected CLI to fail but it succeeded\n`
+      + `stdout: ${result.stdout}\n`
+      + `stderr: ${result.stderr}`,
     )
   }
 
@@ -195,16 +194,16 @@ export async function createGhMock(
 ARGS="$@"
 
 ${mockRules.map((rule, index) => {
-    const pattern = rule.args instanceof RegExp
-      ? rule.args.source
-      : rule.args.join(' ')
+  const pattern = rule.args instanceof RegExp
+    ? rule.args.source
+    : rule.args.join(' ')
 
-    const stdout = rule.response.stdout ?? ''
-    const stderr = rule.response.stderr ?? ''
-    const exitCode = rule.response.exitCode ?? 0
-    const delay = rule.response.delay ?? 0
+  const stdout = rule.response.stdout ?? ''
+  const stderr = rule.response.stderr ?? ''
+  const exitCode = rule.response.exitCode ?? 0
+  const delay = rule.response.delay ?? 0
 
-    return `
+  return `
 # Rule ${index + 1}
 if [[ "$ARGS" == ${pattern instanceof RegExp ? `*${pattern}*` : `"${pattern}"`} ]]; then
   ${delay > 0 ? `sleep ${delay / 1000}` : ''}
@@ -213,7 +212,7 @@ if [[ "$ARGS" == ${pattern instanceof RegExp ? `*${pattern}*` : `"${pattern}"`} 
   exit ${exitCode}
 fi
 `
-  }).join('\n')}
+}).join('\n')}
 
 # No rule matched
 >&2 echo "gh-mock: No rule matched for args: $ARGS"
@@ -254,7 +253,7 @@ export function extractIssueNumber(output: string): number | null {
  * Helper to extract URLs from CLI output
  */
 export function extractUrl(output: string): string | null {
-  const match = output.match(/https:\/\/github\.com\/[^\s]+/)
+  const match = output.match(/https:\/\/github\.com\/\S+/)
   return match ? match[0] : null
 }
 

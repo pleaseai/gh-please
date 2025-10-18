@@ -139,7 +139,7 @@ E2E_SKIP_CLEANUP=true bun run test:e2e
 Utilities for spawning and testing CLI commands:
 
 ```typescript
-import { runCli, runCliExpectSuccess, assertOutputContains } from '../helpers/cli-runner'
+import { assertOutputContains, runCli, runCliExpectSuccess } from '../helpers/cli-runner'
 
 // Run command and get result
 const result = await runCli(['ai', 'triage', '123'])
@@ -165,14 +165,14 @@ Mock GitHub API responses:
 
 ```typescript
 import {
-  mockIssue,
-  mockPr,
   createIssueCommentResponse,
   ghCliResponses,
+  mockIssue,
+  mockPr,
 } from '../fixtures/github-responses'
 
 // Use pre-defined mocks
-const issue = mockIssue  // { number: 123, title: "Test Issue", ... }
+const issue = mockIssue // { number: 123, title: "Test Issue", ... }
 
 // Create custom response
 const response = createIssueCommentResponse(123, 'comment text', 456)
@@ -183,7 +183,7 @@ const response = createIssueCommentResponse(123, 'comment text', 456)
 E2E test infrastructure:
 
 ```typescript
-import { setupE2ESuite, E2ETestHelper } from './setup'
+import { E2ETestHelper, setupE2ESuite } from './setup'
 
 let helper: E2ETestHelper | null = null
 
@@ -202,7 +202,8 @@ beforeAll(async () => {
 })
 
 test('should work', async () => {
-  if (!helper) return  // Skip if no E2E
+  if (!helper)
+    return // Skip if no E2E
 
   const result = await runE2ECommand(['ai', 'triage', '123'], helper.getConfig())
   expect(result.exitCode).toBe(0)
@@ -239,8 +240,8 @@ describe('Feature Name', () => {
 ### Integration Test Template
 
 ```typescript
-import { describe, test, beforeEach, afterEach } from 'bun:test'
-import { runCliExpectSuccess, createGhMock } from '../../helpers/cli-runner'
+import { afterEach, beforeEach, describe, test } from 'bun:test'
+import { createGhMock, runCliExpectSuccess } from '../../helpers/cli-runner'
 
 describe('Command - CLI Integration', () => {
   let cleanupMock: (() => void) | null = null
@@ -268,7 +269,7 @@ describe('Command - CLI Integration', () => {
 
 ```typescript
 import { beforeAll, describe, test } from 'bun:test'
-import { setupE2ESuite, runE2ECommand } from './setup'
+import { runE2ECommand, setupE2ESuite } from './setup'
 
 describe('Feature - E2E', () => {
   let helper: E2ETestHelper | null = null
@@ -276,7 +277,8 @@ describe('Feature - E2E', () => {
 
   beforeAll(async () => {
     helper = setupE2ESuite()
-    if (!helper) return
+    if (!helper)
+      return
 
     testIssueNumber = await helper.createTestIssue('Test Issue')
   })
@@ -402,7 +404,7 @@ Increase timeout in test file:
 ```typescript
 test('slow test', async () => {
   // ...
-}, { timeout: 30000 })  // 30 seconds
+}, { timeout: 30000 }) // 30 seconds
 ```
 
 ## Contributing

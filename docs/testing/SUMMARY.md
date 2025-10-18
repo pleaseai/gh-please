@@ -76,7 +76,6 @@ A comprehensive **3-level testing strategy** with automated CI/CD integration:
 // E2E tests only run when GITHUB_TEST_TOKEN is set
 if (!shouldRunE2ETests()) {
   console.log('⊘ Skipping E2E tests (GITHUB_TEST_TOKEN not set)')
-  return
 }
 ```
 
@@ -120,10 +119,10 @@ const cleanup = await createGhMock([
 
 ```typescript
 import {
-  mockIssue,
-  mockPr,
+  createGetIssueNodeIdResponse,
   createIssueCommentResponse,
-  createGetIssueNodeIdResponse
+  mockIssue,
+  mockPr
 } from '../fixtures/github-responses'
 ```
 
@@ -331,10 +330,14 @@ test('should do something', () => {
 ### 3. Clear Test Names
 ```typescript
 // ✅ Good
-test('should create sub-issue with title and body', ...)
+test('should create sub-issue with title and body', async () => {
+  // test implementation
+})
 
 // ❌ Avoid
-test('test create', ...)
+test('test create', async () => {
+  // test implementation
+})
 ```
 
 ### 4. Fast Unit Tests

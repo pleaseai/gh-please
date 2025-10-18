@@ -3,16 +3,8 @@
  * Tests review-reply and resolve commands through CLI
  */
 
-import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
-import {
-  assertExitCode,
-  assertOutputContains,
-  createGhMock,
-  runCli,
-  runCliExpectFailure,
-  runCliExpectSuccess,
-  type GhMockRule,
-} from '../../helpers/cli-runner'
+import type { GhMockRule } from '../../helpers/cli-runner'
+import { afterEach, beforeEach, describe, test } from 'bun:test'
 import {
   createGetPrNodeIdResponse,
   createGetReviewCommentResponse,
@@ -21,10 +13,18 @@ import {
   createReviewReplyResponse,
   ghCliResponses,
   mockPr,
-  mockRepoInfo,
   mockReviewComment,
   mockReviewThread,
 } from '../../fixtures/github-responses'
+import {
+  assertExitCode,
+  assertOutputContains,
+  createGhMock,
+
+  runCli,
+  runCliExpectFailure,
+  runCliExpectSuccess,
+} from '../../helpers/cli-runner'
 
 describe('PR Commands - CLI Integration', () => {
   let cleanupMock: (() => void) | null = null

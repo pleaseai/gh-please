@@ -10,8 +10,9 @@
  * - E2E_SKIP_CLEANUP: Set to 'true' to skip cleanup (useful for debugging)
  */
 
+import type { E2ETestHelper } from './setup'
 import { beforeAll, describe, expect, test } from 'bun:test'
-import { runE2ECommand, setupE2ESuite, type E2ETestHelper } from './setup'
+import { runE2ECommand, setupE2ESuite } from './setup'
 
 describe('Sub-issue Management - E2E', () => {
   let helper: E2ETestHelper | null = null

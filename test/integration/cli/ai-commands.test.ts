@@ -3,25 +3,24 @@
  * Tests actual CLI execution with mocked GitHub API responses
  */
 
-import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
+import type { GhMockRule } from '../../helpers/cli-runner'
+import { afterEach, beforeEach, describe, test } from 'bun:test'
+import {
+  createIssueCommentResponse,
+  createPrCommentResponse,
+  ghCliResponses,
+  mockIssue,
+  mockPr,
+} from '../../fixtures/github-responses'
 import {
   assertExitCode,
   assertOutputContains,
   createGhMock,
+
   runCli,
   runCliExpectFailure,
   runCliExpectSuccess,
-  type GhMockRule,
 } from '../../helpers/cli-runner'
-import {
-  createIssueCommentResponse,
-  createPrCommentResponse,
-  createRepoViewResponse,
-  ghCliResponses,
-  mockIssue,
-  mockPr,
-  mockRepoInfo,
-} from '../../fixtures/github-responses'
 
 describe('AI Commands - CLI Integration', () => {
   let cleanupMock: (() => void) | null = null

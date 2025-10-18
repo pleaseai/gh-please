@@ -3,16 +3,8 @@
  * Tests sub-issue and dependency management through CLI
  */
 
-import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
-import {
-  assertExitCode,
-  assertOutputContains,
-  createGhMock,
-  runCli,
-  runCliExpectFailure,
-  runCliExpectSuccess,
-  type GhMockRule,
-} from '../../helpers/cli-runner'
+import type { GhMockRule } from '../../helpers/cli-runner'
+import { afterEach, beforeEach, describe, test } from 'bun:test'
 import {
   createAddBlockedByResponse,
   createAddSubIssueResponse,
@@ -21,15 +13,22 @@ import {
   createListSubIssuesResponse,
   createRemoveBlockedByResponse,
   createRemoveSubIssueResponse,
-  createRepoViewResponse,
   createSubIssueResponse,
   ghCliResponses,
   mockBlockedIssue,
   mockBlockingIssue,
   mockChildIssue,
   mockParentIssue,
-  mockRepoInfo,
 } from '../../fixtures/github-responses'
+import {
+  assertExitCode,
+  assertOutputContains,
+  createGhMock,
+
+  runCli,
+  runCliExpectFailure,
+  runCliExpectSuccess,
+} from '../../helpers/cli-runner'
 
 describe('Issue Commands - CLI Integration', () => {
   let cleanupMock: (() => void) | null = null

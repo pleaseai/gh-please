@@ -32,7 +32,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "bun test",
-    "test:unit": "bun test test/lib test/commands --exclude test/integration test/e2e",
+    "test:unit": "bun test test/lib test/commands",
     "test:integration": "bun test test/integration",
     "test:e2e": "bun test test/e2e",
     "test:watch": "bun test --watch",

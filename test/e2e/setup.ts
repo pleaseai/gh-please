@@ -3,7 +3,7 @@
  * Provides infrastructure for end-to-end testing with real GitHub API
  */
 
-import { beforeAll, afterAll } from 'bun:test'
+import { afterAll } from 'bun:test'
 
 /**
  * Environment configuration for E2E tests
@@ -48,9 +48,11 @@ export function getE2EConfig(): E2EConfig {
  * Skip test if E2E tests are not enabled
  */
 export function skipIfNoE2E(testFn: () => void | Promise<void>): () => void | Promise<void> {
-  return shouldRunE2ETests() ? testFn : () => {
-    console.log('⊘ Skipping E2E test (GITHUB_TEST_TOKEN not set)')
-  }
+  return shouldRunE2ETests()
+    ? testFn
+    : () => {
+        console.log('⊘ Skipping E2E test (GITHUB_TEST_TOKEN not set)')
+      }
 }
 
 /**
@@ -119,8 +121,10 @@ export class E2ETestHelper {
     const args = [
       'api',
       `/repos/${this.config.testOwner}/${this.config.testRepo}/issues`,
-      '-X', 'POST',
-      '-f', `title=${title}`,
+      '-X',
+      'POST',
+      '-f',
+      `title=${title}`,
     ]
 
     if (body) {
@@ -160,8 +164,10 @@ export class E2ETestHelper {
         'gh',
         'api',
         `/repos/${this.config.testOwner}/${this.config.testRepo}/issues/${issueNumber}`,
-        '-X', 'PATCH',
-        '-f', 'state=closed',
+        '-X',
+        'PATCH',
+        '-f',
+        'state=closed',
       ], {
         env: {
           ...process.env,
