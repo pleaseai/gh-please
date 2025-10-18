@@ -10,8 +10,12 @@ describe('init command', () => {
 
   let consoleLogSpy: ReturnType<typeof spyOn>
   let consoleErrorSpy: ReturnType<typeof spyOn>
+  let originalCwd: string
 
   beforeEach(() => {
+    // Save original working directory
+    originalCwd = process.cwd()
+
     // Suppress console output during tests
     consoleLogSpy = spyOn(console, 'log').mockImplementation(() => {})
     consoleErrorSpy = spyOn(console, 'error').mockImplementation(() => {})
@@ -27,6 +31,9 @@ describe('init command', () => {
   })
 
   afterEach(() => {
+    // Restore original working directory
+    process.chdir(originalCwd)
+
     // Restore console
     consoleLogSpy.mockRestore()
     consoleErrorSpy.mockRestore()

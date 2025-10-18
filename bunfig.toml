@@ -10,5 +10,5 @@ coverageReporter = [
   "lcov"
 ]
 
-# Use absolute path to avoid issues with process.chdir in tests
-coverageDir = "/home/coder/IdeaProjects/gh-extension-please/coverage"
+# Relative path works now that init.test.ts properly restores working directory
+coverageDir = "./coverage"
