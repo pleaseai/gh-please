@@ -44,6 +44,25 @@ GitHub CLI extension for **PleaseAI** - AI-powered code review and issue managem
    - AI-powered issue triage and investigation
    - Reply to review comments: `gh please review-reply <comment-id> -b "your reply"`
 
+## Common Options
+
+All commands support the `--repo` option to operate on repositories other than the current directory:
+
+```bash
+# Use current directory's repository (default)
+gh please ai triage 123
+
+# Specify a different repository
+gh please ai triage 123 --repo owner/repo
+gh please ai triage 123 -R owner/repo  # Short form
+
+# Available on all commands
+gh please issue sub-issue list 100 --repo pleaseai/another-repo
+gh please pr resolve 456 --all -R owner/repo
+```
+
+**Note**: Without the `--repo` option, the command uses the repository in the current directory.
+
 ## Features
 
 ### `gh please init` - Initialize PleaseAI Configuration

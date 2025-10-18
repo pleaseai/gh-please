@@ -44,6 +44,25 @@
    - AI 기반 이슈 분류 및 조사
    - 리뷰 코멘트에 답변: `gh please review-reply <comment-id> -b "답변 내용"`
 
+## 공통 옵션
+
+모든 명령어는 다른 저장소에서 실행할 수 있도록 `--repo` 옵션을 지원합니다:
+
+```bash
+# 현재 디렉토리의 저장소 사용 (기본)
+gh please ai triage 123
+
+# 다른 저장소 지정
+gh please ai triage 123 --repo owner/repo
+gh please ai triage 123 -R owner/repo  # 짧은 형식
+
+# 모든 명령어에서 사용 가능
+gh please issue sub-issue list 100 --repo pleaseai/another-repo
+gh please pr resolve 456 --all -R owner/repo
+```
+
+**참고**: `--repo` 옵션이 없으면 현재 디렉토리의 저장소가 사용됩니다.
+
 ## 주요 기능
 
 ### `gh please init` - PleaseAI 설정 초기화
