@@ -239,6 +239,165 @@ EOF
 )"
 ```
 
+### AI Commands
+
+Trigger PleaseAI automation workflows for code review and issue management.
+
+#### `gh please ai triage <issue-number>`
+
+Trigger PleaseAI to automatically triage an issue (categorize, add labels, etc.).
+
+```bash
+gh please ai triage 123
+```
+
+#### `gh please ai investigate <issue-number>`
+
+Trigger PleaseAI to investigate a bug or issue in detail.
+
+```bash
+gh please ai investigate 123
+```
+
+#### `gh please ai fix <issue-number>`
+
+Trigger PleaseAI to attempt an automated fix for an issue.
+
+```bash
+gh please ai fix 123
+```
+
+#### `gh please ai review <pr-number>`
+
+Trigger PleaseAI to perform code review on a pull request.
+
+```bash
+gh please ai review 456
+```
+
+#### `gh please ai apply <pr-number>`
+
+Trigger PleaseAI to apply its suggestions to a pull request.
+
+```bash
+gh please ai apply 456
+```
+
+### Issue Management Commands
+
+Manage GitHub issues with sub-issues and dependencies.
+
+#### `gh please issue sub-issue <subcommand> [options]`
+
+Manage issue sub-issues (hierarchical issue relationships).
+
+**Subcommands:**
+
+- `create <parent-issue> --title "..."` - Create a new sub-issue linked to parent
+- `add <parent-issue> <child-issue>` - Link existing issue as sub-issue
+- `remove <parent-issue> <child-issue>` - Unlink sub-issue from parent
+- `list <parent-issue>` - List all sub-issues of a parent issue
+
+**Examples:**
+
+```bash
+# Create a new sub-issue
+gh please issue sub-issue create 100 --title "Fix validation logic" --body "Add validation for user input"
+
+# Link existing issues
+gh please issue sub-issue add 100 101
+gh please issue sub-issue add 100 102
+
+# List all sub-issues
+gh please issue sub-issue list 100
+
+# Remove a sub-issue link
+gh please issue sub-issue remove 100 101
+```
+
+#### `gh please issue dependency <subcommand> [options]`
+
+Manage issue dependencies using "blocked by" relationships.
+
+**Subcommands:**
+
+- `add <issue> --blocked-by <blocker>` - Mark an issue as blocked by another
+- `remove <issue> <blocker>` - Remove a blocking dependency
+- `list <issue>` - List all issues blocking a given issue
+
+**Examples:**
+
+```bash
+# Mark issue as blocked
+gh please issue dependency add 200 --blocked-by 199
+
+# View blocking issues
+gh please issue dependency list 200
+
+# Remove blocking relationship
+gh please issue dependency remove 200 199
+```
+
+### PR Management Commands
+
+Manage pull request reviews and threads.
+
+#### `gh please pr review-reply <comment-id> --body "..."`
+
+Create a reply to a PR review comment. Replaces deprecated `gh please review-reply`.
+
+**Arguments:**
+- `<comment-id>` - ID of the review comment (found in comment URL)
+
+**Options:**
+- `-b, --body <text>` - Reply text (required if not piping)
+
+**Examples:**
+
+```bash
+# Direct reply
+gh please pr review-reply 1234567890 --body "Fixed in latest commit!"
+
+# Pipe from file
+cat reply.txt | gh please pr review-reply 1234567890
+
+# Multiline reply
+gh please pr review-reply 1234567890 --body "$(cat <<'EOF'
+Looks good, but:
+
+1. Please add error handling
+2. Add unit tests for edge cases
+
+Thanks for the fix!
+EOF
+)"
+```
+
+#### `gh please pr resolve <pr-number> [--thread <id> | --all]`
+
+Resolve review threads on a pull request.
+
+**Arguments:**
+- `<pr-number>` - Pull request number
+
+**Options:**
+- `--thread <id>` - Resolve specific thread
+- `--all` - Resolve all unresolved threads
+
+**Examples:**
+
+```bash
+# Resolve all threads
+gh please pr resolve 456 --all
+
+# Resolve specific thread
+gh please pr resolve 456 --thread MDEyOlB1bGxSZXF1ZXN0UmV2aWV3VGhyZWFk...
+```
+
+### Backward Compatibility
+
+The old `gh please review-reply` command still works but shows a deprecation warning. Please migrate to `gh please pr review-reply`.
+
 ## API Limitations
 
 ### Top-level Comments Only

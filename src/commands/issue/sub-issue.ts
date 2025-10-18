@@ -7,6 +7,10 @@ import {
   listSubIssues,
 } from "../../lib/github-graphql";
 
+/**
+ * Creates a command to manage issue sub-issue relationships
+ * @returns Command object with sub-commands (create, add, remove, list)
+ */
 export function createSubIssueCommand(): Command {
   const command = new Command("sub-issue");
 

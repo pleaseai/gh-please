@@ -2,6 +2,10 @@ import { Command } from "commander";
 import { getRepoInfo } from "../../lib/github-api";
 import { triggerPleaseAIPr } from "../../lib/please-trigger";
 
+/**
+ * Creates a command to trigger PleaseAI to apply suggestions on a pull request
+ * @returns Command object configured for applying suggestions
+ */
 export function createApplyCommand(): Command {
   const command = new Command("apply");
 

@@ -2,6 +2,10 @@ import { Command } from "commander";
 import { getRepoInfo } from "../../lib/github-api";
 import { getPrNodeId, listReviewThreads, resolveReviewThread } from "../../lib/github-graphql";
 
+/**
+ * Creates a command to resolve review threads on pull requests
+ * @returns Command object configured for resolving threads
+ */
 export function createResolveCommand(): Command {
   const command = new Command("resolve");
 

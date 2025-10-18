@@ -7,6 +7,10 @@ import {
   listBlockedBy,
 } from "../../lib/github-graphql";
 
+/**
+ * Creates a command to manage issue dependencies (blocked_by relationships)
+ * @returns Command object with sub-commands (add, remove, list)
+ */
 export function createDependencyCommand(): Command {
   const command = new Command("dependency");
 

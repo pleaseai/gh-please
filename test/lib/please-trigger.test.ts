@@ -37,11 +37,27 @@ describe("please-trigger", () => {
     test("should export function with correct signature", () => {
       expect(typeof triggerPleaseAIIssue).toBe("function");
     });
+
+    test("should accept type, owner, repo, and issueNumber parameters", () => {
+      const func = triggerPleaseAIIssue.toString();
+      expect(func).toContain("owner");
+      expect(func).toContain("repo");
+      expect(func).toContain("issueNumber");
+      expect(func).toContain("type");
+    });
   });
 
   describe("triggerPleaseAIPr", () => {
     test("should export function with correct signature", () => {
       expect(typeof triggerPleaseAIPr).toBe("function");
+    });
+
+    test("should accept type, owner, repo, and prNumber parameters", () => {
+      const func = triggerPleaseAIPr.toString();
+      expect(func).toContain("owner");
+      expect(func).toContain("repo");
+      expect(func).toContain("prNumber");
+      expect(func).toContain("type");
     });
   });
 });

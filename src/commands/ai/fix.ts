@@ -2,6 +2,10 @@ import { Command } from "commander";
 import { getRepoInfo } from "../../lib/github-api";
 import { triggerPleaseAIIssue } from "../../lib/please-trigger";
 
+/**
+ * Creates a command to trigger PleaseAI fix workflow for an issue
+ * @returns Command object configured for fix operations
+ */
 export function createFixCommand(): Command {
   const command = new Command("fix");
 

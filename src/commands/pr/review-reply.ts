@@ -2,6 +2,10 @@ import { Command } from "commander";
 import { getCurrentPrInfo, createReviewReply } from "../../lib/github-api";
 import { validateCommentId, validateReplyBody } from "../../lib/validation";
 
+/**
+ * Creates a command to reply to PR review comments
+ * @returns Command object configured for creating review replies
+ */
 export function createReviewReplyCommand(): Command {
   const command = new Command("review-reply");
 

@@ -2,6 +2,10 @@ import { Command } from "commander";
 import { getRepoInfo } from "../../lib/github-api";
 import { triggerPleaseAIIssue } from "../../lib/please-trigger";
 
+/**
+ * Creates a command to trigger PleaseAI triage for an issue
+ * @returns Command object configured for triage operations
+ */
 export function createTriageCommand(): Command {
   const command = new Command("triage");
 
