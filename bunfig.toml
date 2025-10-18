@@ -1,0 +1,12 @@
+telemetry = false
+
+[test]
+root = "./test"
+
+# Coverage configuration
+coverageSkipTestFiles = true
+coverageReporter = ["text", "lcov"]
+
+# Use absolute path to avoid issues with process.chdir in tests
+coverageDir = "/home/coder/IdeaProjects/gh-extension-please/coverage"
+

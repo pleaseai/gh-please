@@ -31,14 +31,14 @@ jobs:
         run: bun run test:unit
 
       - name: Generate coverage report
-        run: bun test test/lib test/commands --coverage
-        continue-on-error: true
+        run: bun run test:coverage
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: unit-tests
+          files: ./coverage/lcov.info
         continue-on-error: true
 
   integration-tests:
