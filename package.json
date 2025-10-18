@@ -36,7 +36,7 @@
     "test:integration": "bun test test/integration",
     "test:e2e": "bun test test/e2e",
     "test:watch": "bun test --watch",
-    "test:coverage": "node scripts/generate-coverage.mjs",
+    "test:coverage": "bun test test/lib test/commands --coverage",
     "test:coverage:text": "bun test --coverage",
     "test:all": "bun run test:unit && bun run test:integration",
     "test:manual": "./scripts/manual-test.sh"
