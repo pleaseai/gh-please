@@ -68,7 +68,7 @@ export function createSubIssueCommand(): Command {
 
         // Parse the issue number from the output URL
         const urlMatch = output.match(/\/issues\/(\d+)/)
-        if (!urlMatch) {
+        if (!urlMatch || !urlMatch[1]) {
           throw new Error('Failed to parse created issue number')
         }
         const childNumber = Number.parseInt(urlMatch[1], 10)
