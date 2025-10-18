@@ -1,7 +1,7 @@
 # @pleaseai/github
 
 [![CI](https://github.com/pleaseai/github/actions/workflows/ci.yml/badge.svg)](https://github.com/pleaseai/github/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/pleaseai/github/branch/main/graph/badge.svg)](https://codecov.io/gh/pleaseai/github)
+[![codecov](https://codecov.io/github/pleaseai/github/graph/badge.svg?token=BQKO959X1M)](https://codecov.io/github/pleaseai/github)
 [![code style](https://antfu.me/badge-code-style.svg)](https://github.com/antfu/eslint-config)
 
 GitHub CLI extension for **PleaseAI** - AI-powered code review and issue management automation.
