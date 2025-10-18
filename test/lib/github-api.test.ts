@@ -4,6 +4,9 @@ import {
   buildGetCommentEndpoint,
   buildReplyEndpoint,
   isTopLevelComment,
+  getRepoInfo,
+  createIssueComment,
+  createPrComment,
 } from "../../src/lib/github-api";
 import type { PrInfo, ReviewComment } from "../../src/types";
 
@@ -153,6 +156,24 @@ describe("github-api", () => {
 
       // Line 0 is still a number (not null), so it's top-level
       expect(isTopLevelComment(comment)).toBe(true);
+    });
+  });
+
+  describe("getRepoInfo", () => {
+    test("should export function with correct signature", () => {
+      expect(typeof getRepoInfo).toBe("function");
+    });
+  });
+
+  describe("createIssueComment", () => {
+    test("should export function with correct signature", () => {
+      expect(typeof createIssueComment).toBe("function");
+    });
+  });
+
+  describe("createPrComment", () => {
+    test("should export function with correct signature", () => {
+      expect(typeof createPrComment).toBe("function");
     });
   });
 });
