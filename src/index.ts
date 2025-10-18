@@ -2,6 +2,7 @@
 
 import { Command } from "commander";
 import { createReviewReplyCommand } from "./commands/review-reply";
+import { createInitCommand } from "./commands/init";
 
 const program = new Command();
 
@@ -12,6 +13,7 @@ program
 
 // Add commands
 program.addCommand(createReviewReplyCommand());
+program.addCommand(createInitCommand());
 
 // If no command provided, show help
 if (process.argv.length <= 2) {

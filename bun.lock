@@ -4,6 +4,7 @@
     "": {
       "name": "gh-extension-please",
       "dependencies": {
+        "@clack/prompts": "^0.11.0",
         "commander": "^12.1.0",
         "zod": "^4.1.12",
       },
