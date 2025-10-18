@@ -56,9 +56,11 @@ export function createReviewReplyCommand(): Command {
             throw new TypeError(msg.prNumberInvalid)
           }
           prInfo = { owner, repo, number: prNumber }
-        } else if (options.repo || options.pr) {
+        }
+        else if (options.repo || options.pr) {
           throw new Error(msg.bothRepoAndPr)
-        } else {
+        }
+        else {
           // Get from current PR context
           prInfo = await getCurrentPrInfo()
         }
