@@ -60,19 +60,65 @@ bun test --coverage
 gh extension install .
 
 # Use the extension
-gh please review-reply <comment-id> -b "reply text"
+# AI commands
+gh please ai triage 123
+gh please ai review 456
+
+# Issue commands
+gh please issue sub-issue list 123
+gh please issue dependency add 123 --blocked-by 124
+
+# PR commands
+gh please pr review-reply 987654 -b "Great work!"
+gh please pr resolve 456 --all
+
+# Configuration
 gh please init
+
+# Backward compatibility
+gh please review-reply 987654 -b "text"  # Works but shows deprecation warning
 ```
 
 ## Architecture
 
-### Command Structure
+### Command Structure (v0.2.0)
 
-The CLI uses **commander.js** for command parsing with a modular command pattern:
+The CLI uses **commander.js** for command parsing with a modular, grouped command structure:
 
-- **Entry point**: `src/index.ts` - Registers commands and handles CLI lifecycle
-- **Commands**: `src/commands/` - Each command is a separate module that exports a Commander Command instance
-  - `review-reply.ts` - Reply to PR review comments
+```bash
+# AI Group (PleaseAI triggers)
+gh please ai triage <issue-number>         # Trigger triage bot
+gh please ai investigate <issue-number>    # Trigger investigation
+gh please ai fix <issue-number>            # Trigger fix workflow
+gh please ai review <pr-number>            # Trigger PR review
+gh please ai apply <pr-number>             # Apply bot suggestions
+
+# Issue Group (Direct API calls)
+gh please issue sub-issue create <parent> --title "..."   # Create linked sub-issue
+gh please issue sub-issue add <parent> <child>            # Link existing issue
+gh please issue sub-issue remove <parent> <child>         # Unlink sub-issue
+gh please issue sub-issue list <parent>                   # List all sub-issues
+gh please issue dependency add <issue> --blocked-by <blocker>     # Add blocker
+gh please issue dependency remove <issue> <blocker>               # Remove blocker
+gh please issue dependency list <issue>                           # List blockers
+
+# PR Group (Direct API calls)
+gh please pr review-reply <comment-id> -b "text"  # Reply to review comment
+gh please pr resolve <pr-number> [--thread <id> | --all]   # Resolve threads
+
+# Configuration
+gh please init                               # Initialize .please/config.yml
+
+# Deprecated (still works with warning)
+gh please review-reply <comment-id> -b "text"   # → Use 'gh please pr review-reply'
+```
+
+**Directory structure:**
+- **Entry point**: `src/index.ts` - Registers all command groups and deprecation handler
+- **Commands**: `src/commands/` - Organized by group:
+  - `ai/` - PleaseAI trigger commands (triage, investigate, fix, review, apply)
+  - `issue/` - Issue management (sub-issue, dependency)
+  - `pr/` - Pull request management (review-reply, resolve)
   - `init.ts` - Initialize `.please/config.yml` configuration file
 
 ### Core Libraries
@@ -165,21 +211,34 @@ const proc = Bun.spawn(["gh", "api", "graphql", "-f", "query=...", "-F", "var=..
 
 Tests follow the **Arrange-Act-Assert** pattern and use Bun's built-in test runner:
 
-- **`test/lib/github-graphql.test.ts`**: Tests for GraphQL API functions (11 functions tested)
+### Library Tests (test/lib/)
+- **`github-graphql.test.ts`**: GraphQL API functions (11 functions tested)
   - `executeGraphQL()`, `getIssueNodeId()`, `getPrNodeId()`
   - Sub-issue operations: add, remove, list
   - Dependency management: add, remove, list
   - Review thread operations: resolve, list
-- **`test/lib/github-api.test.ts`**: Tests for REST API helper functions
+- **`github-api.test.ts`**: REST API helper functions
   - Endpoint building, PR info parsing, comment type detection
   - Comment creation: issue and PR comments
   - Repository information retrieval
-- **`test/lib/please-trigger.test.ts`**: Tests for PleaseAI automation triggers
+- **`please-trigger.test.ts`**: PleaseAI automation triggers
   - Trigger comment building for all automation types
-- **`test/lib/validation.test.ts`**: Tests for input validation logic
-- **`test/fixtures/`**: Mock data and test helpers
+- **`validation.test.ts`**: Input validation logic
 
-**Coverage**: 49 total test cases with 96 assertions across 5 test files (100% pass rate)
+### Command Tests (test/commands/)
+- **`ai/`**: AI trigger commands (5 commands)
+  - triage.test.ts, investigate.test.ts, fix.test.ts, review.test.ts, apply.test.ts
+- **`issue/`**: Issue management commands
+  - sub-issue.test.ts: sub-issue create, add, remove, list operations
+  - dependency.test.ts: dependency add, remove, list operations
+- **`pr/`**: PR management commands
+  - resolve.test.ts: resolve threads with --thread and --all options
+- **`init.test.ts`**: Configuration initialization
+
+### Test Fixtures
+- **`test/fixtures/mock-data.ts`**: Mock data for PR, comments, and test helpers
+
+**Coverage**: 87 total test cases with 135 assertions across 13 test files (100% pass rate)
 
 ## Code Style
 
