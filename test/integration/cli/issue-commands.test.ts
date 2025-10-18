@@ -45,9 +45,9 @@ describe('Issue Commands - CLI Integration', () => {
           exitCode: 0,
         },
       },
-      // Mock GraphQL queries - Get Issue Node ID
+      // Mock GraphQL queries - Get Issue Node ID (matches any issue number)
       {
-        args: /getIssueNodeId.*"number":100/,
+        args: /api graphql -f query=.*repository.*issue.*-F owner=.*-F repo=.*-F number=\d+/,
         response: {
           stdout: JSON.stringify(
             createGetIssueNodeIdResponse(mockParentIssue.number, mockParentIssue.nodeId),
@@ -55,36 +55,9 @@ describe('Issue Commands - CLI Integration', () => {
           exitCode: 0,
         },
       },
+      // Mock GraphQL mutations - Create Sub-issue
       {
-        args: /getIssueNodeId.*"number":101/,
-        response: {
-          stdout: JSON.stringify(
-            createGetIssueNodeIdResponse(mockChildIssue.number, mockChildIssue.nodeId),
-          ),
-          exitCode: 0,
-        },
-      },
-      {
-        args: /getIssueNodeId.*"number":200/,
-        response: {
-          stdout: JSON.stringify(
-            createGetIssueNodeIdResponse(mockBlockingIssue.number, mockBlockingIssue.nodeId),
-          ),
-          exitCode: 0,
-        },
-      },
-      {
-        args: /getIssueNodeId.*"number":201/,
-        response: {
-          stdout: JSON.stringify(
-            createGetIssueNodeIdResponse(mockBlockedIssue.number, mockBlockedIssue.nodeId),
-          ),
-          exitCode: 0,
-        },
-      },
-      // Mock GraphQL mutations - Sub-issues
-      {
-        args: /createSubIssue/,
+        args: /api graphql -H GraphQL-Features: sub_issues -f query=.*createSubIssue/,
         response: {
           stdout: JSON.stringify(
             createSubIssueResponse(mockParentIssue.nodeId, 'New Sub-issue', 102, 'I_kwDOABCDEF102000'),
@@ -92,8 +65,9 @@ describe('Issue Commands - CLI Integration', () => {
           exitCode: 0,
         },
       },
+      // Mock GraphQL mutations - Add Sub-issue
       {
-        args: /addSubIssue/,
+        args: /api graphql -H GraphQL-Features: sub_issues -f query=.*addSubIssue.*-F parentId=.*-F childId=/,
         response: {
           stdout: JSON.stringify(
             createAddSubIssueResponse(mockParentIssue.nodeId, mockChildIssue.nodeId),
@@ -101,8 +75,9 @@ describe('Issue Commands - CLI Integration', () => {
           exitCode: 0,
         },
       },
+      // Mock GraphQL mutations - Remove Sub-issue
       {
-        args: /removeSubIssue/,
+        args: /api graphql -H GraphQL-Features: sub_issues -f query=.*removeSubIssue.*-F parentId=.*-F childId=/,
         response: {
           stdout: JSON.stringify(
             createRemoveSubIssueResponse(mockParentIssue.nodeId, mockChildIssue.nodeId),
@@ -112,7 +87,7 @@ describe('Issue Commands - CLI Integration', () => {
       },
       // Mock GraphQL queries - List Sub-issues
       {
-        args: /subIssues.*first/,
+        args: /api graphql -H GraphQL-Features: sub_issues -f query=.*subIssues.*first.*-F issueId=/,
         response: {
           stdout: JSON.stringify(
             createListSubIssuesResponse([
@@ -123,9 +98,9 @@ describe('Issue Commands - CLI Integration', () => {
           exitCode: 0,
         },
       },
-      // Mock GraphQL mutations - Dependencies
+      // Mock GraphQL mutations - Add Blocked By
       {
-        args: /addBlockedBy/,
+        args: /api graphql -f query=.*addBlockedBy.*-F issueId=.*-F blockingIssueId=/,
         response: {
           stdout: JSON.stringify(
             createAddBlockedByResponse(
@@ -138,8 +113,9 @@ describe('Issue Commands - CLI Integration', () => {
           exitCode: 0,
         },
       },
+      // Mock GraphQL mutations - Remove Blocked By
       {
-        args: /removeBlockedBy/,
+        args: /api graphql -f query=.*removeBlockedBy.*-F issueId=.*-F blockingIssueId=/,
         response: {
           stdout: JSON.stringify(
             createRemoveBlockedByResponse(mockBlockedIssue.nodeId, mockBlockingIssue.nodeId),
@@ -147,9 +123,9 @@ describe('Issue Commands - CLI Integration', () => {
           exitCode: 0,
         },
       },
-      // Mock GraphQL queries - List Dependencies
+      // Mock GraphQL queries - List Blocked By
       {
-        args: /blockedBy.*first/,
+        args: /api graphql -f query=.*blockedBy.*first.*-F issueId=/,
         response: {
           stdout: JSON.stringify(
             createListBlockedByResponse([
@@ -246,7 +222,7 @@ describe('Issue Commands - CLI Integration', () => {
         env: { GH_PATH: mockGhPath! },
       })
 
-      assertOutputContains(result, 'error', 'any')
+      assertOutputContains(result, 'Error', 'any')
     })
   })
 
@@ -310,7 +286,7 @@ describe('Issue Commands - CLI Integration', () => {
       })
 
       assertOutputContains(result, 'Usage:')
-      assertOutputContains(result, 'Unlink sub-issue')
+      assertOutputContains(result, 'Remove sub-issue from parent')
     })
   })
 
@@ -369,7 +345,7 @@ describe('Issue Commands - CLI Integration', () => {
       })
 
       assertOutputContains(result, 'Usage:')
-      assertOutputContains(result, 'Add issue dependency')
+      assertOutputContains(result, 'Add a blocking dependency to an issue')
       assertOutputContains(result, '--blocked-by')
     })
 
@@ -411,7 +387,7 @@ describe('Issue Commands - CLI Integration', () => {
       })
 
       assertOutputContains(result, 'Usage:')
-      assertOutputContains(result, 'Remove issue dependency')
+      assertOutputContains(result, 'Remove a blocking dependency')
     })
   })
 
@@ -438,7 +414,7 @@ describe('Issue Commands - CLI Integration', () => {
       })
 
       assertOutputContains(result, 'Usage:')
-      assertOutputContains(result, 'List issue dependencies')
+      assertOutputContains(result, 'List all issues blocking')
     })
   })
 

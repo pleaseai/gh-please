@@ -208,7 +208,7 @@ ${mockRules.map((rule, index) => {
 
   return `
 # Rule ${index + 1}
-if [[ "$ARGS" ${isRegex ? '=~' : '=='} ${isRegex ? pattern : `"${pattern}"`} ]]; then
+if [[ "$ARGS" ${isRegex ? '=~' : '=='} ${isRegex ? `'${pattern}'` : `"${pattern}"`} ]]; then
   ${delay > 0 ? `sleep ${delay / 1000}` : ''}
   echo "${stdout}"
   >&2 echo "${stderr}"

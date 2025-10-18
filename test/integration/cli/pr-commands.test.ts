@@ -40,9 +40,17 @@ describe('PR Commands - CLI Integration', () => {
           exitCode: 0,
         },
       },
-      // Mock get review comment
+      // Mock pr view (for deprecated review-reply command)
       {
-        args: /\/pulls\/comments\/\d+$/,
+        args: /pr view --json number,owner,repository/,
+        response: {
+          stdout: ghCliResponses.currentPr,
+          exitCode: 0,
+        },
+      },
+      // Mock get review comment (REST API)
+      {
+        args: /api .*\/repos\/.*\/.*\/pulls\/comments\/\d+/,
         response: {
           stdout: JSON.stringify(
             createGetReviewCommentResponse(
@@ -56,9 +64,9 @@ describe('PR Commands - CLI Integration', () => {
           exitCode: 0,
         },
       },
-      // Mock create review reply
+      // Mock create review reply (REST API)
       {
-        args: /\/pulls\/\d+\/comments\/\d+\/replies/,
+        args: /api --method POST .*\/repos\/.*\/.*\/pulls\/\d+\/comments\/\d+\/replies -f body=/,
         response: {
           stdout: JSON.stringify(
             createReviewReplyResponse(
@@ -70,9 +78,9 @@ describe('PR Commands - CLI Integration', () => {
           exitCode: 0,
         },
       },
-      // Mock get PR node ID
+      // Mock get PR node ID (GraphQL)
       {
-        args: /getPrNodeId/,
+        args: /api graphql -f query=.*pullRequest.*-F owner=.*-F repo=.*-F number=\d+/,
         response: {
           stdout: JSON.stringify(
             createGetPrNodeIdResponse(mockPr.number, mockPr.nodeId),
@@ -80,9 +88,9 @@ describe('PR Commands - CLI Integration', () => {
           exitCode: 0,
         },
       },
-      // Mock list review threads
+      // Mock list review threads (GraphQL)
       {
-        args: /reviewThreads.*first/,
+        args: /api graphql -f query=.*reviewThreads.*first.*-F prId=/,
         response: {
           stdout: JSON.stringify(
             createListReviewThreadsResponse([
@@ -103,9 +111,9 @@ describe('PR Commands - CLI Integration', () => {
           exitCode: 0,
         },
       },
-      // Mock resolve review thread
+      // Mock resolve review thread (GraphQL)
       {
-        args: /resolveReviewThread/,
+        args: /api graphql -f query=.*resolveReviewThread.*-F threadId=/,
         response: {
           stdout: JSON.stringify(
             createResolveThreadResponse(mockReviewThread.id),
@@ -151,7 +159,7 @@ describe('PR Commands - CLI Integration', () => {
       })
 
       assertOutputContains(result, 'Usage:')
-      assertOutputContains(result, 'Reply to PR review comment')
+      assertOutputContains(result, 'Create a reply to a PR review comment')
       assertOutputContains(result, '--body')
     })
 
@@ -164,7 +172,7 @@ describe('PR Commands - CLI Integration', () => {
         env: { GH_PATH: mockGhPath! },
       })
 
-      assertOutputContains(result, 'error', 'any')
+      assertOutputContains(result, 'Error', 'any')
       assertOutputContains(result, 'body', 'any')
     })
 
@@ -179,7 +187,7 @@ describe('PR Commands - CLI Integration', () => {
         env: { GH_PATH: mockGhPath! },
       })
 
-      assertOutputContains(result, 'error', 'any')
+      assertOutputContains(result, 'Error', 'any')
     })
 
     test('should fail with empty body', async () => {
@@ -193,7 +201,7 @@ describe('PR Commands - CLI Integration', () => {
         env: { GH_PATH: mockGhPath! },
       })
 
-      assertOutputContains(result, 'error', 'any')
+      assertOutputContains(result, 'Error', 'any')
     })
   })
 
@@ -236,7 +244,7 @@ describe('PR Commands - CLI Integration', () => {
       })
 
       assertOutputContains(result, 'Usage:')
-      assertOutputContains(result, 'Resolve PR review threads')
+      assertOutputContains(result, 'Resolve review threads on a pull request')
       assertOutputContains(result, '--thread')
       assertOutputContains(result, '--all')
     })
@@ -250,7 +258,7 @@ describe('PR Commands - CLI Integration', () => {
         env: { GH_PATH: mockGhPath! },
       })
 
-      assertOutputContains(result, 'error', 'any')
+      assertOutputContains(result, 'Error', 'any')
       assertOutputContains(result, 'thread', 'any')
     })
 
@@ -264,7 +272,7 @@ describe('PR Commands - CLI Integration', () => {
         env: { GH_PATH: mockGhPath! },
       })
 
-      assertOutputContains(result, 'error', 'any')
+      assertOutputContains(result, 'Error', 'any')
     })
 
     test('should handle no unresolved threads gracefully', async () => {
@@ -282,7 +290,7 @@ describe('PR Commands - CLI Integration', () => {
           },
         },
         {
-          args: /getPrNodeId/,
+          args: /api graphql -f query=.*pullRequest.*-F owner=.*-F repo=.*-F number=\d+/,
           response: {
             stdout: JSON.stringify(
               createGetPrNodeIdResponse(mockPr.number, mockPr.nodeId),
@@ -291,7 +299,7 @@ describe('PR Commands - CLI Integration', () => {
           },
         },
         {
-          args: /reviewThreads.*first/,
+          args: /api graphql -f query=.*reviewThreads.*first.*-F prId=/,
           response: {
             stdout: JSON.stringify(
               createListReviewThreadsResponse([]),
@@ -385,7 +393,7 @@ describe('PR Commands - CLI Integration', () => {
           },
         },
         {
-          args: /\/pulls\/comments\/\d+$/,
+          args: /api .*\/repos\/.*\/.*\/pulls\/comments\/\d+/,
           response: {
             stderr: 'HTTP 404: Not Found',
             exitCode: 1,
@@ -407,7 +415,7 @@ describe('PR Commands - CLI Integration', () => {
         env: { GH_PATH: mockGhPath },
       })
 
-      assertOutputContains(result, 'error', 'any')
+      assertOutputContains(result, 'Error', 'any')
     })
 
     test('should handle PR not found error', async () => {
@@ -424,7 +432,7 @@ describe('PR Commands - CLI Integration', () => {
           },
         },
         {
-          args: /getPrNodeId/,
+          args: /api graphql -f query=.*pullRequest.*-F owner=.*-F repo=.*-F number=\d+/,
           response: {
             stderr: 'Could not resolve to a PullRequest',
             exitCode: 1,
@@ -445,7 +453,7 @@ describe('PR Commands - CLI Integration', () => {
         env: { GH_PATH: mockGhPath },
       })
 
-      assertOutputContains(result, 'error', 'any')
+      assertOutputContains(result, 'Error', 'any')
     })
   })
 })

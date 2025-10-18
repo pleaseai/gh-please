@@ -39,7 +39,7 @@ describe('AI Commands - CLI Integration', () => {
       },
       // Mock issue comment creation (for triage, investigate, fix)
       {
-        args: /api.*\/repos\/.*\/issues\/\d+\/comments/,
+        args: /api --method POST .* \/repos\/.*\/.*\/issues\/\d+\/comments -f body=/,
         response: {
           stdout: JSON.stringify(
             createIssueCommentResponse(123456, '/please [command]', mockIssue.number),
@@ -47,9 +47,9 @@ describe('AI Commands - CLI Integration', () => {
           exitCode: 0,
         },
       },
-      // Mock PR comment creation (for review, apply)
+      // Mock PR comment creation (for review, apply) - same pattern but defined separately
       {
-        args: /api.*\/repos\/.*\/issues\/\d+\/comments/,
+        args: /api --method POST .* \/repos\/.*\/.*\/issues\/\d+\/comments -f body=/,
         response: {
           stdout: JSON.stringify(
             createPrCommentResponse(234567, '/please [command]', mockPr.number),
@@ -90,7 +90,7 @@ describe('AI Commands - CLI Integration', () => {
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'triage')
-      assertOutputContains(result, 'Trigger PleaseAI triage')
+      assertOutputContains(result, 'Trigger PleaseAI to triage')
     })
 
     test('should fail with missing issue number', async () => {
@@ -107,7 +107,7 @@ describe('AI Commands - CLI Integration', () => {
         env: { GH_PATH: mockGhPath! },
       })
 
-      assertOutputContains(result, 'error', 'any')
+      assertOutputContains(result, 'Error', 'any')
     })
   })
 
@@ -130,7 +130,7 @@ describe('AI Commands - CLI Integration', () => {
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'investigate')
-      assertOutputContains(result, 'Trigger PleaseAI investigation')
+      assertOutputContains(result, 'Trigger PleaseAI to investigate')
     })
 
     test('should fail with missing issue number', async () => {
@@ -162,7 +162,7 @@ describe('AI Commands - CLI Integration', () => {
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'fix')
-      assertOutputContains(result, 'Trigger PleaseAI fix')
+      assertOutputContains(result, 'Trigger PleaseAI to fix')
     })
 
     test('should fail with missing issue number', async () => {
@@ -194,7 +194,7 @@ describe('AI Commands - CLI Integration', () => {
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'review')
-      assertOutputContains(result, 'Trigger PleaseAI code review')
+      assertOutputContains(result, 'Trigger PleaseAI to review')
     })
 
     test('should fail with missing PR number', async () => {
@@ -297,7 +297,7 @@ describe('AI Commands - CLI Integration', () => {
         env: { GH_PATH: mockGhPath },
       })
 
-      assertOutputContains(result, 'error', 'any')
+      assertOutputContains(result, 'Error', 'any')
     })
 
     test('should handle authentication errors', async () => {
@@ -323,7 +323,7 @@ describe('AI Commands - CLI Integration', () => {
         env: { GH_PATH: mockGhPath },
       })
 
-      assertOutputContains(result, 'error', 'any')
+      assertOutputContains(result, 'Error', 'any')
     })
   })
 })
