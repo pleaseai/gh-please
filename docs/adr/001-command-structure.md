@@ -13,6 +13,7 @@ The gh-please extension currently has only two commands (`init` and `review-repl
 3. **PR management**: review thread resolution, review comment replies
 
 The challenge is to design a command structure that is:
+
 - **Intuitive**: Easy to discover and remember
 - **Scalable**: Can accommodate future features
 - **Consistent**: Follows a clear pattern
@@ -57,12 +58,14 @@ gh please <group> <action> <target> [options]
 **Decision**: All commands require explicit issue/PR numbers as arguments.
 
 **Rationale**:
+
 - Prevents accidental modifications to wrong issues/PRs
 - Makes command behavior predictable and testable
 - Allows operating on any issue/PR, not just current context
 - Simpler implementation with clearer error messages
 
 **Alternative Considered**: Auto-detect from current branch
+
 - **Rejected**: Too implicit, error-prone, limits flexibility
 
 #### 2. Group by Function (`ai` vs `issue`/`pr`)
@@ -70,6 +73,7 @@ gh please <group> <action> <target> [options]
 **Decision**: Separate PleaseAI triggers (`ai`) from direct API manipulation (`issue`/`pr`).
 
 **Rationale**:
+
 - **Clarity of intent**: `ai` commands delegate to bot, others execute immediately
 - **Different execution models**:
   - `ai` commands create comments and are asynchronous
@@ -78,6 +82,7 @@ gh please <group> <action> <target> [options]
 - **Future-proof**: Easy to add new AI capabilities or direct API operations
 
 **Alternative Considered**: Group by resource type only (`issue`/`pr`)
+
 - **Rejected**: Mixes asynchronous bot triggers with synchronous API calls, unclear semantics
 
 #### 3. PleaseAI Integration via Comment Triggers
@@ -85,21 +90,25 @@ gh please <group> <action> <target> [options]
 **Decision**: PleaseAI commands create GitHub comments in the format `/please <action>`.
 
 **Rationale**:
+
 - **Simplicity**: No need for direct PleaseAI API integration
 - **Transparency**: Users can see the trigger comment in GitHub UI
 - **Flexibility**: PleaseAI bot configuration is independent of extension
 - **Existing pattern**: Aligns with how other GitHub bots work (e.g., slash commands)
 
 **Alternative Considered**: Direct PleaseAI API calls
+
 - **Rejected**: Requires authentication management, API endpoint configuration, tighter coupling
 
 #### 4. GraphQL for Sub-issues and Thread Resolution
 
 **Decision**: Use GitHub GraphQL API for:
+
 - Sub-issue creation and management
 - Review thread resolution
 
 **Rationale**:
+
 - **Required**: Sub-issue relationships are only exposed via GraphQL
 - **Efficiency**: GraphQL allows fetching nested data in single request
 - **Modern**: GraphQL is GitHub's recommended API for new features
@@ -111,6 +120,7 @@ gh please <group> <action> <target> [options]
 **Decision**: Keep `gh please review-reply` as a deprecated alias that redirects to `gh please pr review-reply` with a warning.
 
 **Rationale**:
+
 - **User experience**: Existing users won't have commands break
 - **Migration path**: Warning educates users about new structure
 - **Low cost**: Minimal code to maintain alias
@@ -128,16 +138,16 @@ gh please <group> <action> <target> [options]
 ### Negative
 
 - **More typing**: `gh please pr review-reply` is longer than `gh please review-reply`
-  - *Mitigation*: Most users will use shell aliases for frequent commands
+  - _Mitigation_: Most users will use shell aliases for frequent commands
 - **Learning curve**: Users must understand distinction between `ai` and `issue`/`pr` groups
-  - *Mitigation*: Clear documentation and help text
+  - _Mitigation_: Clear documentation and help text
 - **Breaking change**: Existing `review-reply` users see deprecation warning
-  - *Mitigation*: Command still works, just shows warning
+  - _Mitigation_: Command still works, just shows warning
 
 ### Neutral
 
 - **Explicit numbers**: Some users may prefer auto-detection for convenience
-  - *Trade-off*: We prioritize safety and predictability over convenience
+  - _Trade-off_: We prioritize safety and predictability over convenience
 
 ## Implementation Notes
 

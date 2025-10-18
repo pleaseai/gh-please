@@ -121,7 +121,7 @@ export async function createSubIssue(
   parentNodeId: string,
   title: string,
   body?: string
-): Promise<{ nodeId: string; number: number }>
+): Promise<{ nodeId: string, number: number }>
 
 /**
  * Add existing issue as sub-issue to parent
@@ -221,7 +221,7 @@ Add these functions:
 /**
  * Get current repository info (owner, repo)
  */
-export async function getRepoInfo(): Promise<{ owner: string; repo: string }>
+export async function getRepoInfo(): Promise<{ owner: string, repo: string }>
 
 /**
  * Create a comment on an issue
@@ -291,21 +291,21 @@ export type PleaseTriggerType = 'triage' | 'investigate' | 'fix' | 'review' | 'a
 **`src/commands/ai/triage.ts`**
 
 ```typescript
-import { Command } from "commander"
-import { getRepoInfo } from "../../lib/github-api"
-import { triggerPleaseAI } from "../../lib/please-trigger"
+import { Command } from 'commander'
+import { getRepoInfo } from '../../lib/github-api'
+import { triggerPleaseAI } from '../../lib/please-trigger'
 
 export function createTriageCommand(): Command {
-  const command = new Command("triage")
+  const command = new Command('triage')
 
   command
-    .description("Trigger PleaseAI to triage an issue")
-    .argument("<issue-number>", "Issue number to triage")
+    .description('Trigger PleaseAI to triage an issue')
+    .argument('<issue-number>', 'Issue number to triage')
     .action(async (issueNumberStr: string) => {
       try {
-        const issueNumber = parseInt(issueNumberStr, 10)
+        const issueNumber = Number.parseInt(issueNumberStr, 10)
         if (isNaN(issueNumber)) {
-          throw new Error("Issue number must be a valid number")
+          throw new TypeError('Issue number must be a valid number')
         }
 
         const { owner, repo } = await getRepoInfo()
@@ -314,7 +314,8 @@ export function createTriageCommand(): Command {
         await triggerPleaseAI('triage', owner, repo, issueNumber)
         console.log(`✅ Triage request posted to issue #${issueNumber}`)
         console.log(`   View: https://github.com/${owner}/${repo}/issues/${issueNumber}`)
-      } catch (error) {
+      }
+      catch (error) {
         console.error(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
         process.exit(1)
       }
@@ -325,6 +326,7 @@ export function createTriageCommand(): Command {
 ```
 
 **Similar files**:
+
 - `src/commands/ai/investigate.ts`
 - `src/commands/ai/fix.ts`
 - `src/commands/ai/review.ts` (uses prNumber instead)
@@ -333,17 +335,17 @@ export function createTriageCommand(): Command {
 **`src/commands/ai/index.ts`**
 
 ```typescript
-import { Command } from "commander"
-import { createTriageCommand } from "./triage"
-import { createInvestigateCommand } from "./investigate"
-import { createFixCommand } from "./fix"
-import { createReviewCommand } from "./review"
-import { createApplyCommand } from "./apply"
+import { Command } from 'commander'
+import { createApplyCommand } from './apply'
+import { createFixCommand } from './fix'
+import { createInvestigateCommand } from './investigate'
+import { createReviewCommand } from './review'
+import { createTriageCommand } from './triage'
 
 export function createAiCommand(): Command {
-  const command = new Command("ai")
+  const command = new Command('ai')
 
-  command.description("Trigger PleaseAI workflows")
+  command.description('Trigger PleaseAI workflows')
 
   command.addCommand(createTriageCommand())
   command.addCommand(createInvestigateCommand())
@@ -368,26 +370,26 @@ export function createAiCommand(): Command {
 **`src/commands/issue/sub-issue.ts`**
 
 ```typescript
-import { Command } from "commander"
-import { getRepoInfo } from "../../lib/github-api"
-import { getIssueNodeId, createSubIssue, addSubIssue, listSubIssues } from "../../lib/github-graphql"
+import { Command } from 'commander'
+import { getRepoInfo } from '../../lib/github-api'
+import { addSubIssue, createSubIssue, getIssueNodeId, listSubIssues } from '../../lib/github-graphql'
 
 export function createSubIssueCommand(): Command {
-  const command = new Command("sub-issue")
+  const command = new Command('sub-issue')
 
-  command.description("Manage sub-issues")
+  command.description('Manage sub-issues')
 
   // Create subcommand
-  const createCmd = new Command("create")
-    .description("Create a new sub-issue")
-    .argument("<parent-issue>", "Parent issue number")
-    .requiredOption("--title <text>", "Sub-issue title")
-    .option("--body <text>", "Sub-issue body")
-    .action(async (parentStr: string, options: { title: string; body?: string }) => {
+  const createCmd = new Command('create')
+    .description('Create a new sub-issue')
+    .argument('<parent-issue>', 'Parent issue number')
+    .requiredOption('--title <text>', 'Sub-issue title')
+    .option('--body <text>', 'Sub-issue body')
+    .action(async (parentStr: string, options: { title: string, body?: string }) => {
       try {
-        const parentNumber = parseInt(parentStr, 10)
+        const parentNumber = Number.parseInt(parentStr, 10)
         if (isNaN(parentNumber)) {
-          throw new Error("Parent issue number must be valid")
+          throw new TypeError('Parent issue number must be valid')
         }
 
         const { owner, repo } = await getRepoInfo()
@@ -400,25 +402,26 @@ export function createSubIssueCommand(): Command {
 
         console.log(`✅ Sub-issue #${number} created!`)
         console.log(`   View: https://github.com/${owner}/${repo}/issues/${number}`)
-      } catch (error) {
+      }
+      catch (error) {
         console.error(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
         process.exit(1)
       }
     })
 
   // Add subcommand
-  const addCmd = new Command("add")
-    .description("Add existing issue as sub-issue")
-    .argument("<parent-issue>", "Parent issue number")
-    .argument("<child-issue>", "Child issue number to add")
+  const addCmd = new Command('add')
+    .description('Add existing issue as sub-issue')
+    .argument('<parent-issue>', 'Parent issue number')
+    .argument('<child-issue>', 'Child issue number to add')
     .action(async (parentStr: string, childStr: string) => {
       // Implementation similar to create
     })
 
   // List subcommand
-  const listCmd = new Command("list")
-    .description("List all sub-issues")
-    .argument("<parent-issue>", "Parent issue number")
+  const listCmd = new Command('list')
+    .description('List all sub-issues')
+    .argument('<parent-issue>', 'Parent issue number')
     .action(async (parentStr: string) => {
       // Fetch and display sub-issues
     })
@@ -434,14 +437,14 @@ export function createSubIssueCommand(): Command {
 **`src/commands/issue/index.ts`**
 
 ```typescript
-import { Command } from "commander"
-import { createSubIssueCommand } from "./sub-issue"
-import { createDependencyCommand } from "./dependency"
+import { Command } from 'commander'
+import { createDependencyCommand } from './dependency'
+import { createSubIssueCommand } from './sub-issue'
 
 export function createIssueCommand(): Command {
-  const command = new Command("issue")
+  const command = new Command('issue')
 
-  command.description("Manage GitHub issues")
+  command.description('Manage GitHub issues')
 
   command.addCommand(createSubIssueCommand())
   command.addCommand(createDependencyCommand())
@@ -463,6 +466,7 @@ export function createIssueCommand(): Command {
 **`src/commands/issue/dependency.ts`**
 
 Similar structure to sub-issue.ts but using REST API functions:
+
 - `add` subcommand: calls `addIssueDependency()`
 - `remove` subcommand: calls `removeIssueDependency()`
 - `list` subcommand: calls `listIssueDependencies()`
@@ -482,14 +486,14 @@ Similar structure to sub-issue.ts but using REST API functions:
 **`src/commands/pr/index.ts`** (NEW)
 
 ```typescript
-import { Command } from "commander"
-import { createReviewReplyCommand } from "./review-reply"
-import { createResolveCommand } from "./resolve"
+import { Command } from 'commander'
+import { createResolveCommand } from './resolve'
+import { createReviewReplyCommand } from './review-reply'
 
 export function createPrCommand(): Command {
-  const command = new Command("pr")
+  const command = new Command('pr')
 
-  command.description("Manage pull requests")
+  command.description('Manage pull requests')
 
   command.addCommand(createReviewReplyCommand())
   command.addCommand(createResolveCommand())
@@ -504,17 +508,17 @@ Add deprecated command:
 
 ```typescript
 // Deprecated: backward compatibility
-const deprecatedReviewReply = new Command("review-reply")
-  .description("(Deprecated) Use 'gh please pr review-reply' instead")
-  .argument("<comment-id>", "ID of the review comment")
-  .option("-b, --body <text>", "Reply body text")
+const deprecatedReviewReply = new Command('review-reply')
+  .description('(Deprecated) Use \'gh please pr review-reply\' instead')
+  .argument('<comment-id>', 'ID of the review comment')
+  .option('-b, --body <text>', 'Reply body text')
   .action(async (commentId: string, options: { body?: string }) => {
-    console.warn("⚠️  Warning: 'gh please review-reply' is deprecated.")
-    console.warn("   Please use 'gh please pr review-reply' instead.")
-    console.warn("")
+    console.warn('⚠️  Warning: \'gh please review-reply\' is deprecated.')
+    console.warn('   Please use \'gh please pr review-reply\' instead.')
+    console.warn('')
 
     // Import and execute the new command
-    const { createReviewReplyCommand } = await import("./commands/pr/review-reply")
+    const { createReviewReplyCommand } = await import('./commands/pr/review-reply')
     const cmd = createReviewReplyCommand()
     await cmd.parseAsync([commentId, ...(options.body ? ['-b', options.body] : [])], { from: 'user' })
   })
@@ -535,27 +539,27 @@ program.addCommand(deprecatedReviewReply)
 **`src/commands/pr/resolve.ts`**
 
 ```typescript
-import { Command } from "commander"
-import { getRepoInfo } from "../../lib/github-api"
-import { getPrNodeId, listReviewThreads, resolveReviewThread } from "../../lib/github-graphql"
+import { Command } from 'commander'
+import { getRepoInfo } from '../../lib/github-api'
+import { getPrNodeId, listReviewThreads, resolveReviewThread } from '../../lib/github-graphql'
 
 export function createResolveCommand(): Command {
-  const command = new Command("resolve")
+  const command = new Command('resolve')
 
   command
-    .description("Resolve review threads on a pull request")
-    .argument("<pr-number>", "Pull request number")
-    .option("--thread <id>", "Specific thread ID to resolve")
-    .option("--all", "Resolve all unresolved threads")
-    .action(async (prNumberStr: string, options: { thread?: string; all?: boolean }) => {
+    .description('Resolve review threads on a pull request')
+    .argument('<pr-number>', 'Pull request number')
+    .option('--thread <id>', 'Specific thread ID to resolve')
+    .option('--all', 'Resolve all unresolved threads')
+    .action(async (prNumberStr: string, options: { thread?: string, all?: boolean }) => {
       try {
-        const prNumber = parseInt(prNumberStr, 10)
+        const prNumber = Number.parseInt(prNumberStr, 10)
         if (isNaN(prNumber)) {
-          throw new Error("PR number must be valid")
+          throw new TypeError('PR number must be valid')
         }
 
         if (!options.thread && !options.all) {
-          throw new Error("Must specify either --thread <id> or --all")
+          throw new Error('Must specify either --thread <id> or --all')
         }
 
         const { owner, repo } = await getRepoInfo()
@@ -576,14 +580,16 @@ export function createResolveCommand(): Command {
             await resolveReviewThread(thread.nodeId)
           }
           console.log(`✅ Resolved ${unresolved.length} thread(s)!`)
-        } else if (options.thread) {
+        }
+        else if (options.thread) {
           console.log(`📝 Resolving thread ${options.thread}...`)
           await resolveReviewThread(options.thread)
           console.log(`✅ Thread resolved!`)
         }
 
         console.log(`   View: https://github.com/${owner}/${repo}/pull/${prNumber}`)
-      } catch (error) {
+      }
+      catch (error) {
         console.error(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
         process.exit(1)
       }
@@ -608,18 +614,18 @@ export function createResolveCommand(): Command {
 ```typescript
 #!/usr/bin/env bun
 
-import { Command } from "commander"
-import { createAiCommand } from "./commands/ai"
-import { createIssueCommand } from "./commands/issue"
-import { createPrCommand } from "./commands/pr"
-import { createInitCommand } from "./commands/init"
+import { Command } from 'commander'
+import { createAiCommand } from './commands/ai'
+import { createInitCommand } from './commands/init'
+import { createIssueCommand } from './commands/issue'
+import { createPrCommand } from './commands/pr'
 
 const program = new Command()
 
 program
-  .name("gh-please")
-  .description("GitHub CLI extension for PleaseAI automation")
-  .version("0.2.0")
+  .name('gh-please')
+  .description('GitHub CLI extension for PleaseAI automation')
+  .version('0.2.0')
 
 // Add command groups
 program.addCommand(createAiCommand())
@@ -628,16 +634,16 @@ program.addCommand(createPrCommand())
 program.addCommand(createInitCommand())
 
 // Deprecated commands (backward compatibility)
-const deprecatedReviewReply = new Command("review-reply")
-  .description("(Deprecated) Use 'gh please pr review-reply' instead")
-  .argument("<comment-id>", "ID of the review comment")
-  .option("-b, --body <text>", "Reply body text")
+const deprecatedReviewReply = new Command('review-reply')
+  .description('(Deprecated) Use \'gh please pr review-reply\' instead')
+  .argument('<comment-id>', 'ID of the review comment')
+  .option('-b, --body <text>', 'Reply body text')
   .action(async (commentId: string, options: { body?: string }) => {
-    console.warn("⚠️  Warning: 'gh please review-reply' is deprecated.")
-    console.warn("   Please use 'gh please pr review-reply' instead.")
-    console.warn("")
+    console.warn('⚠️  Warning: \'gh please review-reply\' is deprecated.')
+    console.warn('   Please use \'gh please pr review-reply\' instead.')
+    console.warn('')
 
-    const { createReviewReplyCommand } = await import("./commands/pr/review-reply")
+    const { createReviewReplyCommand } = await import('./commands/pr/review-reply')
     const cmd = createReviewReplyCommand()
     await cmd.parseAsync([commentId, ...(options.body ? ['-b', options.body] : [])], { from: 'user' })
   })
@@ -665,6 +671,7 @@ program.parse()
 3. **Manual testing**: Real GitHub repository test cases
 
 **Test Coverage Goals**:
+
 - `lib/` functions: 90%+
 - Commands: 80%+
 - Critical paths (GraphQL queries, error handling): 100%
@@ -672,11 +679,13 @@ program.parse()
 #### Documentation Updates
 
 **`CLAUDE.md`** - Add sections:
+
 - New command structure overview
 - Examples for each command group
 - Migration guide from old `review-reply`
 
 **`README.md`** (create if needed):
+
 - Installation instructions
 - Quick start guide
 - Command reference

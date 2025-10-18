@@ -15,46 +15,46 @@
 export async function executeGraphQL(
   query: string,
   variables: Record<string, any> = {},
-  features?: string[]
+  features?: string[],
 ): Promise<any> {
-  const args = ["api", "graphql"];
+  const args = ['api', 'graphql']
 
   // Add GraphQL Features header if provided
   if (features && features.length > 0) {
-    args.push("-H", `GraphQL-Features: ${features.join(", ")}`);
+    args.push('-H', `GraphQL-Features: ${features.join(', ')}`)
   }
 
   // Add the query
-  args.push("-f", `query=${query}`);
+  args.push('-f', `query=${query}`)
 
   // Add variables
   for (const [key, value] of Object.entries(variables)) {
-    const serialized = typeof value === "string" ? value : JSON.stringify(value);
-    args.push("-F", `${key}=${serialized}`);
+    const serialized = typeof value === 'string' ? value : JSON.stringify(value)
+    args.push('-F', `${key}=${serialized}`)
   }
 
-  const proc = Bun.spawn(["gh", ...args], {
-    stdout: "pipe",
-    stderr: "pipe",
-  });
+  const proc = Bun.spawn(['gh', ...args], {
+    stdout: 'pipe',
+    stderr: 'pipe',
+  })
 
-  const output = await new Response(proc.stdout).text();
-  const exitCode = await proc.exited;
+  const output = await new Response(proc.stdout).text()
+  const exitCode = await proc.exited
 
   if (exitCode !== 0) {
-    const error = await new Response(proc.stderr).text();
-    throw new Error(`GraphQL query failed: ${error.trim()}`);
+    const error = await new Response(proc.stderr).text()
+    throw new Error(`GraphQL query failed: ${error.trim()}`)
   }
 
-  const result = JSON.parse(output);
+  const result = JSON.parse(output)
 
   // Check for GraphQL errors
   if (result.errors) {
-    const errorMessages = result.errors.map((e: any) => e.message).join(", ");
-    throw new Error(`GraphQL errors: ${errorMessages}`);
+    const errorMessages = result.errors.map((e: any) => e.message).join(', ')
+    throw new Error(`GraphQL errors: ${errorMessages}`)
   }
 
-  return result.data;
+  return result.data
 }
 
 /**
@@ -69,7 +69,7 @@ export async function executeGraphQL(
 export async function getIssueNodeId(
   owner: string,
   repo: string,
-  issueNumber: number
+  issueNumber: number,
 ): Promise<string> {
   const query = `
     query($owner: String!, $repo: String!, $number: Int!) {
@@ -79,15 +79,15 @@ export async function getIssueNodeId(
         }
       }
     }
-  `;
+  `
 
-  const data = await executeGraphQL(query, { owner, repo, number: issueNumber });
+  const data = await executeGraphQL(query, { owner, repo, number: issueNumber })
 
   if (!data.repository?.issue) {
-    throw new Error(`Issue #${issueNumber} not found in ${owner}/${repo}`);
+    throw new Error(`Issue #${issueNumber} not found in ${owner}/${repo}`)
   }
 
-  return data.repository.issue.id;
+  return data.repository.issue.id
 }
 
 /**
@@ -102,7 +102,7 @@ export async function getIssueNodeId(
 export async function getPrNodeId(
   owner: string,
   repo: string,
-  prNumber: number
+  prNumber: number,
 ): Promise<string> {
   const query = `
     query($owner: String!, $repo: String!, $number: Int!) {
@@ -112,15 +112,15 @@ export async function getPrNodeId(
         }
       }
     }
-  `;
+  `
 
-  const data = await executeGraphQL(query, { owner, repo, number: prNumber });
+  const data = await executeGraphQL(query, { owner, repo, number: prNumber })
 
   if (!data.repository?.pullRequest) {
-    throw new Error(`PR #${prNumber} not found in ${owner}/${repo}`);
+    throw new Error(`PR #${prNumber} not found in ${owner}/${repo}`)
   }
 
-  return data.repository.pullRequest.id;
+  return data.repository.pullRequest.id
 }
 
 /**
@@ -132,7 +132,7 @@ export async function getPrNodeId(
  */
 export async function addSubIssue(
   parentNodeId: string,
-  childNodeId: string
+  childNodeId: string,
 ): Promise<void> {
   const mutation = `
     mutation($parentId: ID!, $childId: ID!) {
@@ -148,13 +148,13 @@ export async function addSubIssue(
         }
       }
     }
-  `;
+  `
 
   await executeGraphQL(
     mutation,
     { parentId: parentNodeId, childId: childNodeId },
-    ["sub_issues"]
-  );
+    ['sub_issues'],
+  )
 }
 
 /**
@@ -166,7 +166,7 @@ export async function addSubIssue(
  */
 export async function removeSubIssue(
   parentNodeId: string,
-  childNodeId: string
+  childNodeId: string,
 ): Promise<void> {
   const mutation = `
     mutation($parentId: ID!, $childId: ID!) {
@@ -177,13 +177,13 @@ export async function removeSubIssue(
         }
       }
     }
-  `;
+  `
 
   await executeGraphQL(
     mutation,
     { parentId: parentNodeId, childId: childNodeId },
-    ["sub_issues"]
-  );
+    ['sub_issues'],
+  )
 }
 
 /**
@@ -193,13 +193,13 @@ export async function removeSubIssue(
  * @returns Array of sub-issue info
  */
 export async function listSubIssues(
-  parentNodeId: string
+  parentNodeId: string,
 ): Promise<
   Array<{
-    number: number;
-    title: string;
-    state: string;
-    nodeId: string;
+    number: number
+    title: string
+    state: string
+    nodeId: string
   }>
 > {
   const query = `
@@ -217,14 +217,14 @@ export async function listSubIssues(
         }
       }
     }
-  `;
+  `
 
   const data = await executeGraphQL(query, { issueId: parentNodeId }, [
-    "sub_issues",
-  ]);
+    'sub_issues',
+  ])
 
   if (!data.node?.subIssues) {
-    return [];
+    return []
   }
 
   return data.node.subIssues.nodes.map((issue: any) => ({
@@ -232,7 +232,7 @@ export async function listSubIssues(
     title: issue.title,
     state: issue.state,
     nodeId: issue.id,
-  }));
+  }))
 }
 
 /**
@@ -244,7 +244,7 @@ export async function listSubIssues(
  */
 export async function addBlockedBy(
   issueNodeId: string,
-  blockingIssueNodeId: string
+  blockingIssueNodeId: string,
 ): Promise<void> {
   const mutation = `
     mutation($issueId: ID!, $blockingIssueId: ID!) {
@@ -260,12 +260,12 @@ export async function addBlockedBy(
         }
       }
     }
-  `;
+  `
 
   await executeGraphQL(mutation, {
     issueId: issueNodeId,
     blockingIssueId: blockingIssueNodeId,
-  });
+  })
 }
 
 /**
@@ -277,7 +277,7 @@ export async function addBlockedBy(
  */
 export async function removeBlockedBy(
   issueNodeId: string,
-  blockingIssueNodeId: string
+  blockingIssueNodeId: string,
 ): Promise<void> {
   const mutation = `
     mutation($issueId: ID!, $blockingIssueId: ID!) {
@@ -292,12 +292,12 @@ export async function removeBlockedBy(
         }
       }
     }
-  `;
+  `
 
   await executeGraphQL(mutation, {
     issueId: issueNodeId,
     blockingIssueId: blockingIssueNodeId,
-  });
+  })
 }
 
 /**
@@ -307,13 +307,13 @@ export async function removeBlockedBy(
  * @returns Array of blocking issue info
  */
 export async function listBlockedBy(
-  issueNodeId: string
+  issueNodeId: string,
 ): Promise<
   Array<{
-    number: number;
-    title: string;
-    state: string;
-    nodeId: string;
+    number: number
+    title: string
+    state: string
+    nodeId: string
   }>
 > {
   const query = `
@@ -331,12 +331,12 @@ export async function listBlockedBy(
         }
       }
     }
-  `;
+  `
 
-  const data = await executeGraphQL(query, { issueId: issueNodeId });
+  const data = await executeGraphQL(query, { issueId: issueNodeId })
 
   if (!data.node?.blockedBy) {
-    return [];
+    return []
   }
 
   return data.node.blockedBy.nodes.map((issue: any) => ({
@@ -344,7 +344,7 @@ export async function listBlockedBy(
     title: issue.title,
     state: issue.state,
     nodeId: issue.id,
-  }));
+  }))
 }
 
 /**
@@ -363,9 +363,9 @@ export async function resolveReviewThread(threadNodeId: string): Promise<void> {
         }
       }
     }
-  `;
+  `
 
-  await executeGraphQL(mutation, { threadId: threadNodeId });
+  await executeGraphQL(mutation, { threadId: threadNodeId })
 }
 
 /**
@@ -375,14 +375,14 @@ export async function resolveReviewThread(threadNodeId: string): Promise<void> {
  * @returns Array of review thread info
  */
 export async function listReviewThreads(
-  prNodeId: string
+  prNodeId: string,
 ): Promise<
   Array<{
-    id: string;
-    nodeId: string;
-    isResolved: boolean;
-    path: string;
-    line: number | null;
+    id: string
+    nodeId: string
+    isResolved: boolean
+    path: string
+    line: number | null
   }>
 > {
   const query = `
@@ -400,12 +400,12 @@ export async function listReviewThreads(
         }
       }
     }
-  `;
+  `
 
-  const data = await executeGraphQL(query, { prId: prNodeId });
+  const data = await executeGraphQL(query, { prId: prNodeId })
 
   if (!data.node?.reviewThreads) {
-    return [];
+    return []
   }
 
   return data.node.reviewThreads.nodes.map((thread: any) => ({
@@ -414,5 +414,5 @@ export async function listReviewThreads(
     isResolved: thread.isResolved,
     path: thread.path,
     line: thread.line,
-  }));
+  }))
 }

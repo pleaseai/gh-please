@@ -19,21 +19,21 @@ GraphQL, REST API, PleaseAI 트리거를 위한 공통 라이브러리 구축
 
 ```typescript
 export async function getCurrentPrInfo(): Promise<PrInfo> {
-  const proc = Bun.spawn(["gh", "pr", "view", "--json", "number,owner,repository"], {
-    stdout: "pipe",
-    stderr: "pipe",
-  });
+  const proc = Bun.spawn(['gh', 'pr', 'view', '--json', 'number,owner,repository'], {
+    stdout: 'pipe',
+    stderr: 'pipe',
+  })
 
-  const output = await new Response(proc.stdout).text();
-  const exitCode = await proc.exited;
+  const output = await new Response(proc.stdout).text()
+  const exitCode = await proc.exited
 
   if (exitCode !== 0) {
-    const error = await new Response(proc.stderr).text();
-    throw new Error(`Failed to get PR info: ${error.trim()}`);
+    const error = await new Response(proc.stderr).text()
+    throw new Error(`Failed to get PR info: ${error.trim()}`)
   }
 
-  const data = JSON.parse(output);
-  return parsePrInfo(data);
+  const data = JSON.parse(output)
+  return parsePrInfo(data)
 }
 ```
 
@@ -44,11 +44,16 @@ export async function getCurrentPrInfo(): Promise<PrInfo> {
 **필수 헤더**: `-H "GraphQL-Features: sub_issues"`
 
 **Mutation 예시**:
+
 ```graphql
 mutation addSubIssue {
-  addSubIssue(input: {issueId: "$parent", subIssueId: "$child"}) {
-    issue { title }
-    subIssue { title }
+  addSubIssue(input: { issueId: "$parent", subIssueId: "$child" }) {
+    issue {
+      title
+    }
+    subIssue {
+      title
+    }
   }
 }
 ```
@@ -58,10 +63,13 @@ mutation addSubIssue {
 ### GraphQL API - Review Threads
 
 **Mutation**:
+
 ```graphql
-mutation($threadId: ID!) {
-  resolveReviewThread(input: {threadId: $threadId}) {
-    thread { isResolved }
+mutation ($threadId: ID!) {
+  resolveReviewThread(input: { threadId: $threadId }) {
+    thread {
+      isResolved
+    }
   }
 }
 ```
@@ -69,6 +77,7 @@ mutation($threadId: ID!) {
 ### REST API - Issue Dependencies
 
 **엔드포인트**:
+
 - `POST /repos/{owner}/{repo}/issues/{issue}/dependencies`
 - `DELETE /repos/{owner}/{repo}/issues/{issue}/dependencies/{blocker}`
 - `GET /repos/{owner}/{repo}/issues/{issue}/dependencies`
@@ -135,7 +144,7 @@ export async function createSubIssue(
   parentNodeId: string,
   title: string,
   body?: string
-): Promise<{ nodeId: string; number: number }>
+): Promise<{ nodeId: string, number: number }>
 
 /**
  * 기존 이슈를 하위 이슈로 추가
@@ -181,52 +190,54 @@ export async function listReviewThreads(
 #### 구현 세부사항
 
 **executeGraphQL 구현**:
+
 ```typescript
 export async function executeGraphQL(
   query: string,
   variables: Record<string, any>,
   features?: string[]
 ): Promise<any> {
-  const args = ["api", "graphql"];
+  const args = ['api', 'graphql']
 
   // GraphQL features 헤더 추가 (예: sub_issues)
   if (features && features.length > 0) {
-    args.push("-H", `GraphQL-Features: ${features.join(", ")}`);
+    args.push('-H', `GraphQL-Features: ${features.join(', ')}`)
   }
 
-  args.push("-f", `query=${query}`);
+  args.push('-f', `query=${query}`)
 
   // Variables 추가
   for (const [key, value] of Object.entries(variables)) {
-    args.push("-F", `${key}=${JSON.stringify(value)}`);
+    args.push('-F', `${key}=${JSON.stringify(value)}`)
   }
 
-  const proc = Bun.spawn(["gh", ...args], {
-    stdout: "pipe",
-    stderr: "pipe",
-  });
+  const proc = Bun.spawn(['gh', ...args], {
+    stdout: 'pipe',
+    stderr: 'pipe',
+  })
 
-  const output = await new Response(proc.stdout).text();
-  const exitCode = await proc.exited;
+  const output = await new Response(proc.stdout).text()
+  const exitCode = await proc.exited
 
   if (exitCode !== 0) {
-    const error = await new Response(proc.stderr).text();
-    throw new Error(`GraphQL query failed: ${error.trim()}`);
+    const error = await new Response(proc.stderr).text()
+    throw new Error(`GraphQL query failed: ${error.trim()}`)
   }
 
-  const result = JSON.parse(output);
+  const result = JSON.parse(output)
 
   if (result.errors) {
-    throw new Error(`GraphQL errors: ${JSON.stringify(result.errors)}`);
+    throw new Error(`GraphQL errors: ${JSON.stringify(result.errors)}`)
   }
 
-  return result.data;
+  return result.data
 }
 ```
 
 **Node ID 조회 쿼리**:
+
 ```graphql
-query($owner: String!, $repo: String!, $number: Int!) {
+query ($owner: String!, $repo: String!, $number: Int!) {
   repository(owner: $owner, name: $repo) {
     issue(number: $number) {
       id
@@ -236,6 +247,7 @@ query($owner: String!, $repo: String!, $number: Int!) {
 ```
 
 **Sub-issue 생성 Mutation**:
+
 ```graphql
 mutation($parentId: ID!, $title: String!, $body: String) {
   # 먼저 이슈 생성 후 addSubIssue 호출
@@ -255,33 +267,33 @@ export async function addIssueDependency(
   issueNumber: number,
   blockedByNumber: number
 ): Promise<void> {
-  const endpoint = `/repos/${owner}/${repo}/issues/${issueNumber}/dependencies`;
+  const endpoint = `/repos/${owner}/${repo}/issues/${issueNumber}/dependencies`
 
   const proc = Bun.spawn(
     [
-      "gh",
-      "api",
-      "--method",
-      "POST",
-      "-H",
-      "Accept: application/vnd.github+json",
-      "-H",
-      "X-GitHub-Api-Version: 2022-11-28",
+      'gh',
+      'api',
+      '--method',
+      'POST',
+      '-H',
+      'Accept: application/vnd.github+json',
+      '-H',
+      'X-GitHub-Api-Version: 2022-11-28',
       endpoint,
-      "-f",
+      '-f',
       `blocked_by=${blockedByNumber}`,
     ],
     {
-      stdout: "pipe",
-      stderr: "pipe",
+      stdout: 'pipe',
+      stderr: 'pipe',
     }
-  );
+  )
 
-  const exitCode = await proc.exited;
+  const exitCode = await proc.exited
 
   if (exitCode !== 0) {
-    const error = await new Response(proc.stderr).text();
-    throw new Error(`Failed to add dependency: ${error.trim()}`);
+    const error = await new Response(proc.stderr).text()
+    throw new Error(`Failed to add dependency: ${error.trim()}`)
   }
 }
 
@@ -318,7 +330,7 @@ export type PleaseTriggerType = 'triage' | 'investigate' | 'fix' | 'review' | 'a
  * 트리거 커멘트 본문 생성
  */
 export function buildTriggerComment(type: PleaseTriggerType): string {
-  return `/please ${type}`;
+  return `/please ${type}`
 }
 
 /**
@@ -330,12 +342,12 @@ export async function triggerPleaseAI(
   repo: string,
   issueOrPrNumber: number
 ): Promise<void> {
-  const body = buildTriggerComment(type);
+  const body = buildTriggerComment(type)
 
   // github-api.ts의 createIssueComment 재사용
-  await createIssueComment(owner, repo, issueOrPrNumber, body);
+  await createIssueComment(owner, repo, issueOrPrNumber, body)
 
-  console.log(`✅ PleaseAI ${type} trigger posted!`);
+  console.log(`✅ PleaseAI ${type} trigger posted!`)
 }
 ```
 
@@ -347,25 +359,25 @@ export async function triggerPleaseAI(
 /**
  * 현재 리포지토리 정보 조회
  */
-export async function getRepoInfo(): Promise<{ owner: string; repo: string }> {
-  const proc = Bun.spawn(["gh", "repo", "view", "--json", "owner,name"], {
-    stdout: "pipe",
-    stderr: "pipe",
-  });
+export async function getRepoInfo(): Promise<{ owner: string, repo: string }> {
+  const proc = Bun.spawn(['gh', 'repo', 'view', '--json', 'owner,name'], {
+    stdout: 'pipe',
+    stderr: 'pipe',
+  })
 
-  const output = await new Response(proc.stdout).text();
-  const exitCode = await proc.exited;
+  const output = await new Response(proc.stdout).text()
+  const exitCode = await proc.exited
 
   if (exitCode !== 0) {
-    const error = await new Response(proc.stderr).text();
-    throw new Error(`Failed to get repo info: ${error.trim()}`);
+    const error = await new Response(proc.stderr).text()
+    throw new Error(`Failed to get repo info: ${error.trim()}`)
   }
 
-  const data = JSON.parse(output);
+  const data = JSON.parse(output)
   return {
     owner: data.owner.login,
     repo: data.name,
-  };
+  }
 }
 
 /**
@@ -438,26 +450,26 @@ export type PleaseTriggerType = 'triage' | 'investigate' | 'fix' | 'review' | 'a
 
 ```typescript
 // test/lib/github-graphql.test.ts 예시
-describe("github-graphql", () => {
-  describe("executeGraphQL", () => {
-    test("should execute GraphQL query via gh CLI", async () => {
+describe('github-graphql', () => {
+  describe('executeGraphQL', () => {
+    test('should execute GraphQL query via gh CLI', async () => {
       // Mock Bun.spawn 필요 (현재 Bun 테스트에서는 어려움)
       // 대안: 실제 gh CLI 호출하거나 integration test로 분류
-    });
+    })
 
-    test("should handle GraphQL errors", async () => {
+    test('should handle GraphQL errors', async () => {
       // 에러 케이스 테스트
-    });
-  });
+    })
+  })
 
-  describe("getIssueNodeId", () => {
-    test("should convert issue number to node ID", async () => {
+  describe('getIssueNodeId', () => {
+    test('should convert issue number to node ID', async () => {
       // Arrange: Mock repository query response
       // Act: Call getIssueNodeId
       // Assert: Verify node ID returned
-    });
-  });
-});
+    })
+  })
+})
 ```
 
 ### 테스트 커버리지 목표
@@ -545,6 +557,7 @@ describe("github-graphql", () => {
 **문제**: Bun 테스트에서 Bun.spawn을 모킹하기 어려움
 
 **대안**:
+
 - Integration 테스트로 분류 (실제 gh CLI 사용)
 - 또는 wrapper 함수 만들어서 모킹 가능하게
 
@@ -555,11 +568,13 @@ describe("github-graphql", () => {
 ### 3. Node ID vs Issue Number
 
 **주의**: GraphQL은 node ID 사용, REST는 issue number 사용
+
 - 변환 함수 필수적으로 필요
 
 ### 4. API 권한
 
 **필요 권한**:
+
 - Repository: Contents - Read & Write
 - Issues - Read & Write
 - Pull Requests - Read & Write
@@ -574,6 +589,7 @@ describe("github-graphql", () => {
 ## 다음 단계
 
 문서 검토 완료 후:
+
 1. Plan mode 종료
 2. TDD 사이클 시작 (Red-Green-Refactor)
 3. Phase 1부터 순차적 구현

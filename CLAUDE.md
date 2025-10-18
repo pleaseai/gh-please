@@ -12,6 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is **@pleaseai/github**, a GitHub CLI extension for PleaseAI - an AI-powered code review and issue management automation service. It provides enhanced functionality for managing pull requests and issue workflows through the `gh` CLI.
 
 **Key Features:**
+
 - Initialize PleaseAI configuration (`.please/config.yml`)
 - Reply to PR review comments via GitHub API
 - Configure code review automation (severity thresholds, auto-review, draft PR handling)
@@ -114,6 +115,7 @@ gh please review-reply <comment-id> -b "text"   # → Use 'gh please pr review-r
 ```
 
 **Directory structure:**
+
 - **Entry point**: `src/index.ts` - Registers all command groups and deprecation handler
 - **Commands**: `src/commands/` - Organized by group:
   - `ai/` - PleaseAI trigger commands (triage, investigate, fix, review, apply)
@@ -150,6 +152,7 @@ gh please review-reply <comment-id> -b "text"   # → Use 'gh please pr review-r
 ### Configuration System
 
 **Schema**: `src/config/schema.ts` defines the configuration structure using Zod schemas:
+
 - `code_review`: Code review automation settings
 - `issue_workflow`: Issue triage → investigate → fix workflow
 - `code_workspace`: Workspace features
@@ -160,6 +163,7 @@ gh please review-reply <comment-id> -b "text"   # → Use 'gh please pr review-r
 ### Type Definitions
 
 `src/types.ts` contains core type definitions:
+
 - `PrInfo`: PR metadata (number, owner, repo)
 - `ReviewComment`: GitHub review comment structure
 - `ReplyOptions`: Parameters for creating replies
@@ -174,35 +178,40 @@ gh please review-reply <comment-id> -b "text"   # → Use 'gh please pr review-r
 This extension uses the GitHub CLI (`gh`) as the authentication and API client:
 
 ### REST API Pattern
+
 ```typescript
 // REST API calls use gh CLI subprocess pattern:
-const proc = Bun.spawn(["gh", "api", endpoint, ...options], {
-  stdout: "pipe",
-  stderr: "pipe",
-});
+const proc = Bun.spawn(['gh', 'api', endpoint, ...options], {
+  stdout: 'pipe',
+  stderr: 'pipe',
+})
 ```
 
 ### GraphQL API Pattern
+
 ```typescript
 // GraphQL queries/mutations via gh CLI:
-const proc = Bun.spawn(["gh", "api", "graphql", "-f", "query=...", "-F", "var=..."], {
-  stdout: "pipe",
-  stderr: "pipe",
-});
+const proc = Bun.spawn(['gh', 'api', 'graphql', '-f', 'query=...', '-F', 'var=...'], {
+  stdout: 'pipe',
+  stderr: 'pipe',
+})
 ```
 
 **Key API operations (REST):**
+
 - `gh pr view --json number,owner,repository` - Get current PR context
 - `GET /repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}` - Fetch comment
 - `POST /repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}/replies` - Create reply
 - `POST /repos/{owner}/{repo}/issues/{issue_number}/comments` - Create issue comment
 
 **Key API operations (GraphQL):**
+
 - `addSubIssue()` - Add sub-issue relationship (requires GraphQL-Features: sub_issues header)
 - `addBlockedBy()` - Create "blocked by" dependency
 - `resolveReviewThread()` - Resolve review thread comment
 
 **Important Notes:**
+
 - REST reply endpoint only supports top-level review comments (not nested replies)
 - GraphQL sub-issues mutations require `GraphQL-Features: sub_issues` header
 - Node IDs in GraphQL differ from numeric IDs in REST (format: I_kwDO...)
@@ -212,6 +221,7 @@ const proc = Bun.spawn(["gh", "api", "graphql", "-f", "query=...", "-F", "var=..
 Tests follow the **Arrange-Act-Assert** pattern and use Bun's built-in test runner:
 
 ### Library Tests (test/lib/)
+
 - **`github-graphql.test.ts`**: GraphQL API functions (11 functions tested)
   - `executeGraphQL()`, `getIssueNodeId()`, `getPrNodeId()`
   - Sub-issue operations: add, remove, list
@@ -226,6 +236,7 @@ Tests follow the **Arrange-Act-Assert** pattern and use Bun's built-in test runn
 - **`validation.test.ts`**: Input validation logic
 
 ### Command Tests (test/commands/)
+
 - **`ai/`**: AI trigger commands (5 commands)
   - triage.test.ts, investigate.test.ts, fix.test.ts, review.test.ts, apply.test.ts
 - **`issue/`**: Issue management commands
@@ -236,6 +247,7 @@ Tests follow the **Arrange-Act-Assert** pattern and use Bun's built-in test runn
 - **`init.test.ts`**: Configuration initialization
 
 ### Test Fixtures
+
 - **`test/fixtures/mock-data.ts`**: Mock data for PR, comments, and test helpers
 
 **Coverage**: 87 total test cases with 135 assertions across 13 test files (100% pass rate)
@@ -280,6 +292,7 @@ gh issue develop <issue-number>
 ```
 
 This command:
+
 - Creates a branch automatically named after the issue (e.g., `issue-<number>`)
 - Links the branch to the issue in GitHub
 - Helps track work in progress
@@ -367,6 +380,7 @@ Or use the convenient shorthand:
 ## Launcher Script
 
 `gh-extension-please` is a bash script that:
+
 1. Checks for Bun installation
 2. Runs compiled version from `dist/index.js` if available
 3. Falls back to source at `src/index.ts` for development

@@ -1,22 +1,13 @@
 {
   "name": "@pleaseai/github",
+  "type": "module",
   "version": "0.1.0",
   "description": "GitHub CLI extension for PleaseAI - AI-powered code review and issue management automation",
-  "type": "module",
-  "main": "dist/index.js",
-  "bin": {
-    "gh-please": "./dist/index.js"
-  },
+  "author": "PleaseAI",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/pleaseai/github.git"
-  },
-  "scripts": {
-    "build": "bun build src/index.ts --outdir dist --target bun --format esm",
-    "dev": "bun run src/index.ts",
-    "type-check": "tsc --noEmit",
-    "test": "bun test",
-    "test:watch": "bun test --watch"
   },
   "keywords": [
     "pleaseai",
@@ -30,19 +21,30 @@
     "issue-management",
     "triage"
   ],
-  "author": "PleaseAI",
-  "license": "MIT",
+  "main": "dist/index.js",
+  "bin": {
+    "gh-please": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "bun build src/index.ts --outdir dist --target bun --format esm",
+    "dev": "bun run src/index.ts",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "bun test",
+    "test:watch": "bun test --watch"
+  },
   "dependencies": {
     "@clack/prompts": "^0.11.0",
     "commander": "^12.1.0",
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@antfu/eslint-config": "^6.0.0",
     "@types/bun": "latest",
     "@types/node": "^22.10.2",
-    "typescript": "^5.7.2",
-    "@antfu/eslint-config": "^6.0.0",
     "eslint": "^9.37.0",
-    "eslint-plugin-format": "^1.0.2"
+    "eslint-plugin-format": "^1.0.2",
+    "typescript": "^5.7.2"
   }
 }

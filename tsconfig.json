@@ -1,17 +1,17 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "ESNext",
     "lib": ["ESNext"],
+    "module": "ESNext",
     "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "types": ["bun-types"],
     "allowImportingTsExtensions": true,
     "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
     "noEmit": true,
-    "types": ["bun-types"]
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

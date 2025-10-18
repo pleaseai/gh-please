@@ -3,8 +3,8 @@
  * Provides functions to trigger PleaseAI automation workflows
  */
 
-import type { PleaseTriggerType } from "../types";
-import { createIssueComment, createPrComment } from "./github-api";
+import type { PleaseTriggerType } from '../types'
+import { createIssueComment, createPrComment } from './github-api'
 
 /**
  * Build a trigger comment for PleaseAI
@@ -13,7 +13,7 @@ import { createIssueComment, createPrComment } from "./github-api";
  * @returns The trigger comment text
  */
 export function buildTriggerComment(type: PleaseTriggerType): string {
-  return `/please ${type}`;
+  return `/please ${type}`
 }
 
 /**
@@ -30,10 +30,10 @@ export async function triggerPleaseAIIssue(
   type: PleaseTriggerType,
   owner: string,
   repo: string,
-  issueNumber: number
+  issueNumber: number,
 ): Promise<number> {
-  const comment = buildTriggerComment(type);
-  return createIssueComment(owner, repo, issueNumber, comment);
+  const comment = buildTriggerComment(type)
+  return createIssueComment(owner, repo, issueNumber, comment)
 }
 
 /**
@@ -50,8 +50,8 @@ export async function triggerPleaseAIPr(
   type: PleaseTriggerType,
   owner: string,
   repo: string,
-  prNumber: number
+  prNumber: number,
 ): Promise<number> {
-  const comment = buildTriggerComment(type);
-  return createPrComment(owner, repo, prNumber, comment);
+  const comment = buildTriggerComment(type)
+  return createPrComment(owner, repo, prNumber, comment)
 }

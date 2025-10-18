@@ -7,6 +7,7 @@ GitHub CLI extension for **PleaseAI** - AI-powered code review and issue managem
 ## Overview
 
 `@pleaseai/github` is the command-line interface for PleaseAI, providing intelligent automation for:
+
 - **Code Review**: Automated PR reviews with AI-generated comments and suggestions
 - **Issue Workflow**: Streamlined triage → investigate → fix workflow for issues
 - **Review Management**: Reply to PR review comments and manage discussions
@@ -15,19 +16,23 @@ GitHub CLI extension for **PleaseAI** - AI-powered code review and issue managem
 ## Quick Start
 
 1. **Install the extension**
+
    ```bash
    gh extension install pleaseai/github
    ```
 
 2. **Navigate to your repository**
+
    ```bash
    cd your-project
    ```
 
 3. **Initialize PleaseAI configuration**
+
    ```bash
    gh please init
    ```
+
    This creates `.please/config.yml` with your preferences for code review automation, issue workflows, and more.
 
 4. **Start using PleaseAI features**
@@ -40,6 +45,7 @@ GitHub CLI extension for **PleaseAI** - AI-powered code review and issue managem
 ### `gh please init` - Initialize PleaseAI Configuration
 
 Set up `.please/config.yml` with interactive configuration for all PleaseAI features:
+
 - Code review automation (severity thresholds, auto-review, draft PR handling)
 - Issue workflow automation (auto-triage, investigation, fix workflows)
 - Code workspace features
@@ -111,6 +117,7 @@ echo "Thanks!" | gh please review-reply 1234567890
 To find the comment ID you want to reply to:
 
 1. **Via GitHub CLI API**:
+
    ```bash
    gh api /repos/OWNER/REPO/pulls/PR_NUMBER/comments
    ```
@@ -130,17 +137,20 @@ To find the comment ID you want to reply to:
 The `.please/config.yml` file controls all PleaseAI automation features:
 
 ### Code Review Settings
+
 - **comment_severity_threshold**: Minimum severity level for review comments (LOW/MEDIUM/HIGH)
 - **max_review_comments**: Maximum number of review comments (-1 for unlimited)
 - **auto review**: Automatically review PRs when opened
 - **include_drafts**: Include draft PRs in automatic reviews
 
 ### Issue Workflow Settings
+
 - **Triage**: Automatic or manual issue triage with type labeling
 - **Investigate**: AI-assisted bug investigation (org members only option)
 - **Fix**: Automated fix implementation with PR creation and test execution
 
 ### Code Workspace
+
 - Enable enhanced development workspace features
 
 ### Example Configuration
@@ -187,6 +197,7 @@ language: ko
 Initialize `.please/config.yml` with interactive configuration.
 
 **Options:**
+
 - `-f, --force` - Overwrite existing config file
 - `-y, --yes` - Skip prompts and use default configuration
 
@@ -208,9 +219,11 @@ gh please init --force
 Create a reply to a PR review comment.
 
 **Arguments:**
+
 - `<comment-id>` - The ID of the review comment to reply to (required)
 
 **Options:**
+
 - `-b, --body <text>` - The reply body text (required, or provide via stdin)
 
 **Examples:**
@@ -347,9 +360,11 @@ Manage pull request reviews and threads.
 Create a reply to a PR review comment. Replaces deprecated `gh please review-reply`.
 
 **Arguments:**
+
 - `<comment-id>` - ID of the review comment (found in comment URL)
 
 **Options:**
+
 - `-b, --body <text>` - Reply text (required if not piping)
 
 **Examples:**
@@ -378,9 +393,11 @@ EOF
 Resolve review threads on a pull request.
 
 **Arguments:**
+
 - `<pr-number>` - Pull request number
 
 **Options:**
+
 - `--thread <id>` - Resolve specific thread
 - `--all` - Resolve all unresolved threads
 
@@ -403,6 +420,7 @@ The old `gh please review-reply` command still works but shows a deprecation war
 ### Top-level Comments Only
 
 This extension uses the GitHub API endpoint:
+
 ```
 POST /repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}/replies
 ```
@@ -410,18 +428,22 @@ POST /repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}/replies
 **Important**: This endpoint only accepts top-level review comments as the `comment_id`. If you try to reply to a comment that is itself a reply, the API will return an error.
 
 **What works**:
+
 - ✅ Replying to a review comment on a specific line of code
 - ✅ Replying to a review comment on a file
 
 **What doesn't work**:
+
 - ❌ Replying to a reply (nested replies)
 
 ### Rate Limiting
 
 GitHub API has rate limits. For authenticated requests (which `gh` CLI uses), you typically get:
+
 - 5,000 requests per hour for user-to-server requests
 
 Check your current rate limit:
+
 ```bash
 gh api rate_limit
 ```
@@ -503,6 +525,7 @@ bun test --coverage
 ```
 
 **Test Coverage:**
+
 - Input validation (comment IDs, reply bodies)
 - GitHub API helpers (endpoint building, PR info parsing)
 - Comment type detection (top-level vs replies)

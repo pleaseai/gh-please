@@ -31,7 +31,7 @@ Objects passed around but never actually used. Typically fill parameter lists.
 
 ```typescript
 // Example: Dummy callback that's never called
-const dummyCallback = () => {}
+function dummyCallback() {}
 await someFunction(data, dummyCallback)
 ```
 
@@ -48,7 +48,7 @@ export class MockSyncAdapter extends SyncAdapter {
   async push(spec: SpecDocument): Promise<RemoteRef> {
     // Simplified implementation for testing
     this.mockSpecs.set(spec.name, { id: Math.random(), title: spec.name })
-    return { id: mockData.id, type: "parent" }
+    return { id: mockData.id, type: 'parent' }
   }
 }
 ```
@@ -73,7 +73,7 @@ Stubs that record information about how they were called.
 ```typescript
 // Example: Tracking calls in our test doubles
 class SpyGitHubClient {
-  public createIssueCalls: Array<{ title: string; body: string }> = []
+  public createIssueCalls: Array<{ title: string, body: string }> = []
 
   async createIssue(title: string, body: string): Promise<number> {
     this.createIssueCalls.push({ title, body }) // Records the call
@@ -91,8 +91,8 @@ Pre-programmed with expectations of the calls they should receive.
 ```typescript
 export class EnhancedMockGitHubClient extends GitHubClient {
   // Call tracking for behavior verification
-  public createIssueCalls: Array<{ title: string; body: string; labels?: string[] }> = []
-  public updateIssueCalls: Array<{ number: number; updates: GitHubIssueUpdate }> = []
+  public createIssueCalls: Array<{ title: string, body: string, labels?: string[] }> = []
+  public updateIssueCalls: Array<{ number: number, updates: GitHubIssueUpdate }> = []
 
   // Error injection capabilities
   private methodErrorMap = new Map<string, Error>()
@@ -102,7 +102,7 @@ export class EnhancedMockGitHubClient extends GitHubClient {
   }
 
   override async createIssue(title: string, body: string, labels?: string[]): Promise<number> {
-    this.checkMethodError("createIssue") // Can throw expected errors
+    this.checkMethodError('createIssue') // Can throw expected errors
     this.createIssueCalls.push({ title, body, labels })
     return this.mockCreateIssueResult ?? this.nextIssueId++
   }
@@ -116,17 +116,17 @@ export class EnhancedMockGitHubClient extends GitHubClient {
 Verify the final state after an operation.
 
 ```typescript
-test("should update issue state", async () => {
+test('should update issue state', async () => {
   // Arrange
   const mockClient = new EnhancedMockGitHubClient()
-  mockClient.setMockIssue(123, { number: 123, state: "OPEN" })
+  mockClient.setMockIssue(123, { number: 123, state: 'OPEN' })
 
   // Act
   await mockClient.closeIssue(123)
 
   // Assert - Check final state
   const issue = await mockClient.getIssue(123)
-  expect(issue?.state).toBe("CLOSED")
+  expect(issue?.state).toBe('CLOSED')
 })
 ```
 
@@ -135,10 +135,10 @@ test("should update issue state", async () => {
 Verify the interactions between objects.
 
 ```typescript
-test("should call GitHub API with correct parameters", async () => {
+test('should call GitHub API with correct parameters', async () => {
   // Arrange
   const mockClient = new MockGitHubClient()
-  const adapter = new GitHubAdapter({ owner: "test", repo: "test" })
+  const adapter = new GitHubAdapter({ owner: 'test', repo: 'test' })
   adapter.client = mockClient
 
   // Act
@@ -147,9 +147,9 @@ test("should call GitHub API with correct parameters", async () => {
   // Assert - Check behavior
   expect(mockClient.createIssueCalls).toHaveLength(1)
   expect(mockClient.createIssueCalls[0]).toEqual({
-    title: "Test Spec",
-    body: expect.stringContaining("This is a test"),
-    labels: ["spec"],
+    title: 'Test Spec',
+    body: expect.stringContaining('This is a test'),
+    labels: ['spec'],
   })
 })
 ```
@@ -162,21 +162,21 @@ Use descriptive test names that clearly indicate the scenario and expected behav
 
 ```typescript
 // ✅ Good - Group by method, clear scenario descriptions
-describe("GitHubAdapter", () => {
-  describe("push", () => {
-    test("should create GitHub issue when spec is valid", async () => {})
-    test("should handle missing labels gracefully", async () => {})
+describe('GitHubAdapter', () => {
+  describe('push', () => {
+    test('should create GitHub issue when spec is valid', async () => {})
+    test('should handle missing labels gracefully', async () => {})
   })
 
-  describe("getLabels", () => {
-    test("should fallback to file type when document type missing from config", () => {})
-    test("should combine common and type labels correctly", () => {})
+  describe('getLabels', () => {
+    test('should fallback to file type when document type missing from config', () => {})
+    test('should combine common and type labels correctly', () => {})
   })
 })
 
 // ❌ Avoid - unclear or too generic
-test("test push", async () => {})
-test("labels work correctly", () => {})
+test('test push', async () => {})
+test('labels work correctly', () => {})
 ```
 
 ### Arrange-Act-Assert (AAA) Pattern
@@ -184,22 +184,22 @@ test("labels work correctly", () => {})
 Structure tests in three clear sections:
 
 ```typescript
-test("should_combine_common_and_type_labels", () => {
+test('should_combine_common_and_type_labels', () => {
   // Arrange
   const adapter = new GitHubAdapter({
-    owner: "test",
-    repo: "test",
+    owner: 'test',
+    repo: 'test',
     labels: {
-      spec: ["spec", "feature"],
-      common: ["project", "epic"],
+      spec: ['spec', 'feature'],
+      common: ['project', 'epic'],
     },
   })
 
   // Act
-  const result = adapter.getLabels("spec")
+  const result = adapter.getLabels('spec')
 
   // Assert
-  expect(result).toEqual(["project", "epic", "spec", "feature"])
+  expect(result).toEqual(['project', 'epic', 'spec', 'feature'])
 })
 ```
 
@@ -208,15 +208,15 @@ test("should_combine_common_and_type_labels", () => {
 Group related tests using nested `describe` blocks:
 
 ```typescript
-describe("GitHubAdapter", () => {
-  describe("Label configuration", () => {
-    test("should use default labels when no config provided", () => {})
-    test("should use single string label from config", () => {})
-    test("should use array labels from config", () => {})
+describe('GitHubAdapter', () => {
+  describe('Label configuration', () => {
+    test('should use default labels when no config provided', () => {})
+    test('should use single string label from config', () => {})
+    test('should use array labels from config', () => {})
   })
 
-  describe("Repository configuration", () => {
-    test("should pass owner and repo to GitHubClient", () => {})
+  describe('Repository configuration', () => {
+    test('should pass owner and repo to GitHubClient', () => {})
   })
 })
 ```
@@ -228,7 +228,7 @@ describe("GitHubAdapter", () => {
 Each test should be independent and not rely on other tests:
 
 ```typescript
-describe("GitHubAdapter", () => {
+describe('GitHubAdapter', () => {
   let adapter: GitHubAdapter
   let mockClient: MockGitHubClient
 
@@ -244,7 +244,7 @@ describe("GitHubAdapter", () => {
 Test both success and failure scenarios:
 
 ```typescript
-test("should handle authentication failure", async () => {
+test('should handle authentication failure', async () => {
   // Arrange
   const mockClient = new EnhancedMockGitHubClient()
   mockClient.setMockAuthResult(false)
@@ -253,13 +253,13 @@ test("should handle authentication failure", async () => {
   await expect(adapter.authenticate()).resolves.toBe(false)
 })
 
-test("should handle API errors gracefully", async () => {
+test('should handle API errors gracefully', async () => {
   // Arrange
   const mockClient = new EnhancedMockGitHubClient()
-  mockClient.setMethodError("createIssue", new Error("API Error"))
+  mockClient.setMethodError('createIssue', new Error('API Error'))
 
   // Act & Assert
-  await expect(adapter.push(mockSpec)).rejects.toThrow("API Error")
+  await expect(adapter.push(mockSpec)).rejects.toThrow('API Error')
 })
 ```
 
@@ -269,13 +269,13 @@ Don't test private methods directly. Test them through public interfaces:
 
 ```typescript
 // ❌ Don't do this
-test("private method works", () => {
+test('private method works', () => {
   // @ts-expect-error - accessing private method
   expect(adapter.privateMethod()).toBe(expected)
 })
 
 // ✅ Do this instead
-test("public method that uses private method works", () => {
+test('public method that uses private method works', () => {
   const result = adapter.publicMethod()
   expect(result).toBe(expected)
 })
@@ -288,11 +288,11 @@ test("public method that uses private method works", () => {
 ```typescript
 // ❌ Avoid
 expect(result.id).toBe(123)
-expect(result.status).toBe("open")
+expect(result.status).toBe('open')
 
 // ✅ Better
 const EXPECTED_ISSUE_ID = 123
-const ISSUE_STATUS_OPEN = "open"
+const ISSUE_STATUS_OPEN = 'open'
 expect(result.id).toBe(EXPECTED_ISSUE_ID)
 expect(result.status).toBe(ISSUE_STATUS_OPEN)
 ```
@@ -301,7 +301,7 @@ expect(result.status).toBe(ISSUE_STATUS_OPEN)
 
 ```typescript
 // ❌ Avoid - testing internal structure
-expect(adapter.client.owner).toBe("test-owner")
+expect(adapter.client.owner).toBe('test-owner')
 
 // ✅ Better - testing behavior
 const result = await adapter.push(spec)
@@ -312,18 +312,18 @@ expect(result.id).toBeDefined()
 
 ```typescript
 // ❌ Avoid
-test("multiple operations", async () => {
+test('multiple operations', async () => {
   await adapter.createIssue() // First act
   await adapter.updateIssue() // Second act - confusing
 })
 
 // ✅ Better - separate tests
-test("should create issue", async () => {
+test('should create issue', async () => {
   const result = await adapter.createIssue()
   expect(result).toBeDefined()
 })
 
-test("should update issue", async () => {
+test('should update issue', async () => {
   const result = await adapter.updateIssue(123, updates)
   expect(result).toBeUndefined()
 })
@@ -333,15 +333,15 @@ test("should update issue", async () => {
 
 ```typescript
 // ❌ Avoid - complex setup obscures test intent
-test("complex scenario", () => {
+test('complex scenario', () => {
   const spec = createComplexSpecWithMultipleFilesAndDependencies()
   // ... 20 lines of setup
   expect(result).toBe(expected)
 })
 
 // ✅ Better - simple, focused setup
-test("should handle basic spec", () => {
-  const spec = createMockSpec("simple-feature")
+test('should handle basic spec', () => {
+  const spec = createMockSpec('simple-feature')
   expect(adapter.push(spec)).resolves.toBeDefined()
 })
 ```

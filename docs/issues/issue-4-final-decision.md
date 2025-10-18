@@ -4,16 +4,17 @@
 
 ### GraphQL API 지원 기능 (최신 확인)
 
-| 기능 | GraphQL API | REST API | 비고 |
-|------|-------------|----------|------|
-| **Sub-issues** | ✅ addSubIssue, removeSubIssue | ✅ POST/DELETE | 둘 다 지원 |
-| **Review threads** | ✅ resolveReviewThread | ❌ 미지원 | **GraphQL만** |
-| **Issue dependencies** | ✅ addBlockedBy, removeBlockedBy | ✅ POST/DELETE | 둘 다 지원 |
-| **ID 타입** | Node ID (문자열) | DB ID (숫자) | 둘 다 변환 필요 |
+| 기능                   | GraphQL API                      | REST API       | 비고            |
+| ---------------------- | -------------------------------- | -------------- | --------------- |
+| **Sub-issues**         | ✅ addSubIssue, removeSubIssue   | ✅ POST/DELETE | 둘 다 지원      |
+| **Review threads**     | ✅ resolveReviewThread           | ❌ 미지원      | **GraphQL만**   |
+| **Issue dependencies** | ✅ addBlockedBy, removeBlockedBy | ✅ POST/DELETE | 둘 다 지원      |
+| **ID 타입**            | Node ID (문자열)                 | DB ID (숫자)   | 둘 다 변환 필요 |
 
 ### 🌟 결론: **GraphQL 단일 접근 가능!**
 
 모든 필요한 기능이 GraphQL로 지원됩니다:
+
 - ✅ Sub-issues
 - ✅ Review threads
 - ✅ Issue dependencies (blocked_by)
@@ -81,6 +82,7 @@ src/types.ts  (타입 정의)
    - 단일 ID 타입 (Node ID)
 
 2. **단일 요청으로 복합 작업**
+
    ```graphql
    # 예: Sub-issue 생성 + Dependency 추가를 한 번에
    mutation {
@@ -135,44 +137,44 @@ export async function executeGraphQL(
   variables: Record<string, any> = {},
   features?: string[]
 ): Promise<any> {
-  const args = ["api", "graphql"];
+  const args = ['api', 'graphql']
 
   // GraphQL Features 헤더 추가
   if (features && features.length > 0) {
-    args.push("-H", `GraphQL-Features: ${features.join(", ")}`);
+    args.push('-H', `GraphQL-Features: ${features.join(', ')}`)
   }
 
   // 쿼리 추가
-  args.push("-f", `query=${query}`);
+  args.push('-f', `query=${query}`)
 
   // 변수 추가
   for (const [key, value] of Object.entries(variables)) {
-    const serialized = typeof value === 'string' ? value : JSON.stringify(value);
-    args.push("-F", `${key}=${serialized}`);
+    const serialized = typeof value === 'string' ? value : JSON.stringify(value)
+    args.push('-F', `${key}=${serialized}`)
   }
 
-  const proc = Bun.spawn(["gh", ...args], {
-    stdout: "pipe",
-    stderr: "pipe",
-  });
+  const proc = Bun.spawn(['gh', ...args], {
+    stdout: 'pipe',
+    stderr: 'pipe',
+  })
 
-  const output = await new Response(proc.stdout).text();
-  const exitCode = await proc.exited;
+  const output = await new Response(proc.stdout).text()
+  const exitCode = await proc.exited
 
   if (exitCode !== 0) {
-    const error = await new Response(proc.stderr).text();
-    throw new Error(`GraphQL query failed: ${error.trim()}`);
+    const error = await new Response(proc.stderr).text()
+    throw new Error(`GraphQL query failed: ${error.trim()}`)
   }
 
-  const result = JSON.parse(output);
+  const result = JSON.parse(output)
 
   // GraphQL 에러 체크
   if (result.errors) {
-    const errorMessages = result.errors.map((e: any) => e.message).join(", ");
-    throw new Error(`GraphQL errors: ${errorMessages}`);
+    const errorMessages = result.errors.map((e: any) => e.message).join(', ')
+    throw new Error(`GraphQL errors: ${errorMessages}`)
   }
 
-  return result.data;
+  return result.data
 }
 ```
 
@@ -195,15 +197,15 @@ export async function getIssueNodeId(
         }
       }
     }
-  `;
+  `
 
-  const data = await executeGraphQL(query, { owner, repo, number: issueNumber });
+  const data = await executeGraphQL(query, { owner, repo, number: issueNumber })
 
   if (!data.repository?.issue) {
-    throw new Error(`Issue #${issueNumber} not found in ${owner}/${repo}`);
+    throw new Error(`Issue #${issueNumber} not found in ${owner}/${repo}`)
   }
 
-  return data.repository.issue.id;
+  return data.repository.issue.id
 }
 
 /**
@@ -222,15 +224,15 @@ export async function getPrNodeId(
         }
       }
     }
-  `;
+  `
 
-  const data = await executeGraphQL(query, { owner, repo, number: prNumber });
+  const data = await executeGraphQL(query, { owner, repo, number: prNumber })
 
   if (!data.repository?.pullRequest) {
-    throw new Error(`PR #${prNumber} not found in ${owner}/${repo}`);
+    throw new Error(`PR #${prNumber} not found in ${owner}/${repo}`)
   }
 
-  return data.repository.pullRequest.id;
+  return data.repository.pullRequest.id
 }
 ```
 
@@ -258,13 +260,13 @@ export async function addSubIssue(
         }
       }
     }
-  `;
+  `
 
   await executeGraphQL(
     mutation,
     { parentId: parentNodeId, childId: childNodeId },
-    ["sub_issues"]
-  );
+    ['sub_issues']
+  )
 }
 
 /**
@@ -283,13 +285,13 @@ export async function removeSubIssue(
         }
       }
     }
-  `;
+  `
 
   await executeGraphQL(
     mutation,
     { parentId: parentNodeId, childId: childNodeId },
-    ["sub_issues"]
-  );
+    ['sub_issues']
+  )
 }
 
 /**
@@ -318,12 +320,12 @@ export async function listSubIssues(
         }
       }
     }
-  `;
+  `
 
-  const data = await executeGraphQL(query, { issueId: parentNodeId }, ["sub_issues"]);
+  const data = await executeGraphQL(query, { issueId: parentNodeId }, ['sub_issues'])
 
   if (!data.node?.subIssues) {
-    return [];
+    return []
   }
 
   return data.node.subIssues.nodes.map((issue: any) => ({
@@ -331,7 +333,7 @@ export async function listSubIssues(
     title: issue.title,
     state: issue.state,
     nodeId: issue.id,
-  }));
+  }))
 }
 ```
 
@@ -361,12 +363,12 @@ export async function addBlockedBy(
         }
       }
     }
-  `;
+  `
 
   await executeGraphQL(mutation, {
     issueId: issueNodeId,
     blockingIssueId: blockingIssueNodeId
-  });
+  })
 }
 
 /**
@@ -391,12 +393,12 @@ export async function removeBlockedBy(
         }
       }
     }
-  `;
+  `
 
   await executeGraphQL(mutation, {
     issueId: issueNodeId,
     blockingIssueId: blockingIssueNodeId
-  });
+  })
 }
 
 /**
@@ -425,12 +427,12 @@ export async function listBlockedBy(
         }
       }
     }
-  `;
+  `
 
-  const data = await executeGraphQL(query, { issueId: issueNodeId });
+  const data = await executeGraphQL(query, { issueId: issueNodeId })
 
   if (!data.node?.blockedBy) {
-    return [];
+    return []
   }
 
   return data.node.blockedBy.nodes.map((issue: any) => ({
@@ -438,7 +440,7 @@ export async function listBlockedBy(
     title: issue.title,
     state: issue.state,
     nodeId: issue.id,
-  }));
+  }))
 }
 ```
 
@@ -460,9 +462,9 @@ export async function resolveReviewThread(
         }
       }
     }
-  `;
+  `
 
-  await executeGraphQL(mutation, { threadId: threadNodeId });
+  await executeGraphQL(mutation, { threadId: threadNodeId })
 }
 
 /**
@@ -492,12 +494,12 @@ export async function listReviewThreads(
         }
       }
     }
-  `;
+  `
 
-  const data = await executeGraphQL(query, { prId: prNodeId });
+  const data = await executeGraphQL(query, { prId: prNodeId })
 
   if (!data.node?.reviewThreads) {
-    return [];
+    return []
   }
 
   return data.node.reviewThreads.nodes.map((thread: any) => ({
@@ -506,7 +508,7 @@ export async function listReviewThreads(
     isResolved: thread.isResolved,
     path: thread.path,
     line: thread.line,
-  }));
+  }))
 }
 ```
 
@@ -550,40 +552,48 @@ export type PleaseTriggerType = 'triage' | 'investigate' | 'fix' | 'review' | 'a
 ## 구현 순서 (업데이트)
 
 ### Phase 1: GraphQL 기반 구조 (2시간)
+
 1. ✅ 문서 작성 완료
 2. `src/lib/github-graphql.ts` 생성
    - `executeGraphQL()` 구현 + 테스트
    - `getIssueNodeId()`, `getPrNodeId()` 구현 + 테스트
 
 ### Phase 2: Sub-issue 관리 (1-2시간)
+
 3. `addSubIssue()` 구현 + 테스트
 4. `removeSubIssue()` 구현 + 테스트
 5. `listSubIssues()` 구현 + 테스트
 
 ### Phase 3: Issue Dependency 관리 (1-2시간)
+
 6. `addBlockedBy()` 구현 + 테스트
 7. `removeBlockedBy()` 구현 + 테스트
 8. `listBlockedBy()` 구현 + 테스트
 
 ### Phase 4: Review Thread 관리 (1시간)
+
 9. `resolveReviewThread()` 구현 + 테스트
 10. `listReviewThreads()` 구현 + 테스트
 
 ### Phase 5: 공통 유틸리티 (1시간)
+
 11. `github-api.ts` 확장
     - `getRepoInfo()` 구현 + 테스트
     - `createIssueComment()`, `createPrComment()` 구현 + 테스트
 
 ### Phase 6: PleaseAI 트리거 (30분)
+
 12. `please-trigger.ts` 생성
     - `buildTriggerComment()` 구현 + 테스트
     - `triggerPleaseAI()` 구현 + 테스트
 
 ### Phase 7: 타입 정의 및 통합 (30분)
+
 13. `types.ts` 확장
 14. 전체 통합 테스트
 
 ### Phase 8: 문서화 및 최종 검증 (1시간)
+
 15. CLAUDE.md 업데이트
 16. 테스트 커버리지 확인 (>90%)
 17. 최종 리뷰
@@ -593,45 +603,48 @@ export type PleaseTriggerType = 'triage' | 'investigate' | 'fix' | 'review' | 'a
 ## 테스트 전략
 
 ### 1. 단위 테스트
+
 ```typescript
-describe("github-graphql", () => {
-  describe("executeGraphQL", () => {
-    test("should execute query with features header", async () => {
+describe('github-graphql', () => {
+  describe('executeGraphQL', () => {
+    test('should execute query with features header', async () => {
       // GraphQL Features 헤더 검증
-    });
+    })
 
-    test("should handle GraphQL errors", async () => {
+    test('should handle GraphQL errors', async () => {
       // 에러 응답 처리 검증
-    });
-  });
+    })
+  })
 
-  describe("ID conversion", () => {
-    test("should convert issue number to node ID", async () => {
-      const nodeId = await getIssueNodeId("owner", "repo", 123);
-      expect(nodeId).toMatch(/^I_kwDO/);
-    });
-  });
+  describe('ID conversion', () => {
+    test('should convert issue number to node ID', async () => {
+      const nodeId = await getIssueNodeId('owner', 'repo', 123)
+      expect(nodeId).toMatch(/^I_kwDO/)
+    })
+  })
 
-  describe("Sub-issues", () => {
-    test("should add sub-issue with correct mutation", async () => {
+  describe('Sub-issues', () => {
+    test('should add sub-issue with correct mutation', async () => {
       // addSubIssue 검증
-    });
-  });
+    })
+  })
 
-  describe("Dependencies", () => {
-    test("should add blocked_by relationship", async () => {
+  describe('Dependencies', () => {
+    test('should add blocked_by relationship', async () => {
       // addBlockedBy 검증
-    });
-  });
-});
+    })
+  })
+})
 ```
 
 ### 2. 통합 테스트
+
 - 실제 테스트 저장소 사용
 - CI/CD에서 실행
 - 전체 워크플로우 검증
 
 ### 3. 커버리지 목표
+
 - **전체**: 90% 이상
 - **핵심 함수**: 100% (executeGraphQL, ID 변환)
 
