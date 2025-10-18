@@ -9,11 +9,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is **gh-extension-please**, a GitHub CLI extension for the pleaseai service. It provides enhanced functionality for managing pull requests and issue workflows through the `gh` CLI.
+This is **@pleaseai/github**, a GitHub CLI extension for PleaseAI - an AI-powered code review and issue management automation service. It provides enhanced functionality for managing pull requests and issue workflows through the `gh` CLI.
 
 **Key Features:**
+- Initialize PleaseAI configuration (`.please/config.yml`)
 - Reply to PR review comments via GitHub API
-- Initialize configuration for pleaseai service features (code review, issue triage/investigate/fix workflows)
+- Configure code review automation (severity thresholds, auto-review, draft PR handling)
+- Configure issue workflow automation (triage → investigate → fix)
+- Bilingual support (Korean/English)
 - Built with Bun runtime and TypeScript
 
 ## Development Commands

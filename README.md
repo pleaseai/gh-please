@@ -1,10 +1,60 @@
-# gh-extension-please
+# @pleaseai/github
 
 [![code style](https://antfu.me/badge-code-style.svg)](https://github.com/antfu/eslint-config)
 
-GitHub CLI extension for managing pull requests with enhanced functionality.
+GitHub CLI extension for **PleaseAI** - AI-powered code review and issue management automation.
+
+## Overview
+
+`@pleaseai/github` is the command-line interface for PleaseAI, providing intelligent automation for:
+- **Code Review**: Automated PR reviews with AI-generated comments and suggestions
+- **Issue Workflow**: Streamlined triage → investigate → fix workflow for issues
+- **Review Management**: Reply to PR review comments and manage discussions
+- **Code Workspace**: Enhanced development workspace features
+
+## Quick Start
+
+1. **Install the extension**
+   ```bash
+   gh extension install pleaseai/github
+   ```
+
+2. **Navigate to your repository**
+   ```bash
+   cd your-project
+   ```
+
+3. **Initialize PleaseAI configuration**
+   ```bash
+   gh please init
+   ```
+   This creates `.please/config.yml` with your preferences for code review automation, issue workflows, and more.
+
+4. **Start using PleaseAI features**
+   - Automatic PR reviews based on your configuration
+   - AI-powered issue triage and investigation
+   - Reply to review comments: `gh please review-reply <comment-id> -b "your reply"`
 
 ## Features
+
+### `gh please init` - Initialize PleaseAI Configuration
+
+Set up `.please/config.yml` with interactive configuration for all PleaseAI features:
+- Code review automation (severity thresholds, auto-review, draft PR handling)
+- Issue workflow automation (auto-triage, investigation, fix workflows)
+- Code workspace features
+- Language preferences (Korean/English)
+
+```bash
+# Interactive configuration
+gh please init
+
+# Use defaults (skip prompts)
+gh please init --yes
+
+# Overwrite existing config
+gh please init --force
+```
 
 ### `gh please review-reply` - Reply to PR Review Comments
 
@@ -22,14 +72,14 @@ Create a reply to a pull request review comment using the GitHub API.
 ### Install the extension
 
 ```bash
-gh extension install <your-username>/gh-extension-please
+gh extension install pleaseai/github
 ```
 
 ### Development Installation
 
 ```bash
-git clone https://github.com/<your-username>/gh-extension-please.git
-cd gh-extension-please
+git clone https://github.com/pleaseai/github.git
+cd github
 bun install
 gh extension install .
 ```
@@ -75,7 +125,83 @@ To find the comment ID you want to reply to:
    gh pr view --json comments --jq '.comments[] | "\(.id): \(.body)"'
    ```
 
+## PleaseAI Configuration
+
+The `.please/config.yml` file controls all PleaseAI automation features:
+
+### Code Review Settings
+- **comment_severity_threshold**: Minimum severity level for review comments (LOW/MEDIUM/HIGH)
+- **max_review_comments**: Maximum number of review comments (-1 for unlimited)
+- **auto review**: Automatically review PRs when opened
+- **include_drafts**: Include draft PRs in automatic reviews
+
+### Issue Workflow Settings
+- **Triage**: Automatic or manual issue triage with type labeling
+- **Investigate**: AI-assisted bug investigation (org members only option)
+- **Fix**: Automated fix implementation with PR creation and test execution
+
+### Code Workspace
+- Enable enhanced development workspace features
+
+### Example Configuration
+
+```yaml
+code_review:
+  disable: false
+  comment_severity_threshold: MEDIUM
+  max_review_comments: -1
+  pull_request_opened:
+    help: false
+    summary: true
+    code_review: true
+    include_drafts: true
+
+issue_workflow:
+  disable: false
+  triage:
+    auto: true
+    manual: true
+    update_issue_type: true
+  investigate:
+    enabled: true
+    org_members_only: true
+    auto_on_bug_label: false
+  fix:
+    enabled: true
+    org_members_only: true
+    require_investigation: false
+    auto_create_pr: true
+    auto_run_tests: true
+
+code_workspace:
+  enabled: true
+
+ignore_patterns: []
+language: ko
+```
+
 ## Command Reference
+
+### `gh please init`
+
+Initialize `.please/config.yml` with interactive configuration.
+
+**Options:**
+- `-f, --force` - Overwrite existing config file
+- `-y, --yes` - Skip prompts and use default configuration
+
+**Examples:**
+
+```bash
+# Interactive setup (recommended for first-time setup)
+gh please init
+
+# Quick setup with defaults
+gh please init --yes
+
+# Overwrite existing configuration
+gh please init --force
+```
 
 ### `gh please review-reply`
 
@@ -146,13 +272,17 @@ gh api rate_limit
 ### Project Structure
 
 ```
-gh-extension-please/
+@pleaseai/github/
 ├── src/
 │   ├── commands/         # Command implementations
-│   │   └── review-reply.ts
+│   │   ├── init.ts      # Initialize PleaseAI config
+│   │   └── review-reply.ts  # Reply to PR comments
+│   ├── config/          # Configuration schema and validation
+│   │   └── schema.ts    # Zod schemas for .please/config.yml
 │   ├── lib/             # Reusable utilities
-│   │   ├── github-api.ts
-│   │   └── validation.ts
+│   │   ├── github-api.ts    # GitHub API helpers
+│   │   ├── validation.ts    # Input validation
+│   │   └── i18n.ts         # Internationalization (ko/en)
 │   ├── index.ts         # CLI entry point
 │   └── types.ts         # TypeScript type definitions
 ├── test/
@@ -183,10 +313,12 @@ bun build src/index.ts --outdir dist --target bun --format esm
 ### Running Locally
 
 ```bash
-# Run directly with bun
+# Run commands directly with bun
+bun run src/index.ts init --help
 bun run src/index.ts review-reply --help
 
 # Or use the launcher script
+./gh-extension-please init --help
 ./gh-extension-please review-reply --help
 ```
 

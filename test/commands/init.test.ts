@@ -42,26 +42,30 @@ describe("init command", () => {
       const command = createInitCommand();
 
       expect(command.name()).toBe("init");
-      expect(command.description()).toBe("Initialize .please/config.yml with default configuration");
+      expect(command.description()).toBe("Initialize .please/config.yml with interactive configuration");
     });
 
-    test("should have force option", () => {
+    test("should have force and yes options", () => {
       const command = createInitCommand();
       const options = command.options;
 
       const forceOption = options.find(opt => opt.long === "--force");
       expect(forceOption).toBeDefined();
       expect(forceOption?.short).toBe("-f");
+
+      const yesOption = options.find(opt => opt.long === "--yes");
+      expect(yesOption).toBeDefined();
+      expect(yesOption?.short).toBe("-y");
     });
   });
 
-  describe("init execution", () => {
+  describe("init execution with --yes flag", () => {
     test("should create .please directory if it does not exist", async () => {
       const command = createInitCommand();
 
       expect(existsSync(configDir)).toBe(false);
 
-      await command.parseAsync(["node", "test", "init"], { from: "user" });
+      await command.parseAsync(["node", "test", "init", "--yes"], { from: "user" });
 
       expect(existsSync(configDir)).toBe(true);
     });
@@ -69,7 +73,7 @@ describe("init command", () => {
     test("should create config.yml file with correct content", async () => {
       const command = createInitCommand();
 
-      await command.parseAsync(["node", "test", "init"], { from: "user" });
+      await command.parseAsync(["node", "test", "init", "--yes"], { from: "user" });
 
       expect(existsSync(configPath)).toBe(true);
 
@@ -86,7 +90,7 @@ describe("init command", () => {
     test("should create config with default values", async () => {
       const command = createInitCommand();
 
-      await command.parseAsync(["node", "test", "init"], { from: "user" });
+      await command.parseAsync(["node", "test", "init", "--yes"], { from: "user" });
 
       const content = readFileSync(configPath, "utf-8");
 
@@ -94,13 +98,14 @@ describe("init command", () => {
       expect(content).toContain("disable: false");
       expect(content).toContain("comment_severity_threshold: MEDIUM");
       expect(content).toContain("max_review_comments: -1");
-      expect(content).toContain("language: ko");
+      // Language will be auto-detected (ko or en)
+      expect(content).toMatch(/language: (ko|en)/);
     });
 
     test("should include all pull_request_opened configuration", async () => {
       const command = createInitCommand();
 
-      await command.parseAsync(["node", "test", "init"], { from: "user" });
+      await command.parseAsync(["node", "test", "init", "--yes"], { from: "user" });
 
       const content = readFileSync(configPath, "utf-8");
 
@@ -114,7 +119,7 @@ describe("init command", () => {
     test("should include all issue_workflow configuration", async () => {
       const command = createInitCommand();
 
-      await command.parseAsync(["node", "test", "init"], { from: "user" });
+      await command.parseAsync(["node", "test", "init", "--yes"], { from: "user" });
 
       const content = readFileSync(configPath, "utf-8");
 
@@ -140,7 +145,7 @@ describe("init command", () => {
     test("should include helpful comments", async () => {
       const command = createInitCommand();
 
-      await command.parseAsync(["node", "test", "init"], { from: "user" });
+      await command.parseAsync(["node", "test", "init", "--yes"], { from: "user" });
 
       const content = readFileSync(configPath, "utf-8");
 
@@ -161,13 +166,13 @@ describe("init command", () => {
 
       try {
         // Create config first time
-        await command.parseAsync(["node", "test", "init"], { from: "user" });
+        await command.parseAsync(["node", "test", "init", "--yes"], { from: "user" });
 
         // Try to create again without --force
         const secondCommand = createInitCommand();
 
         await expect(
-          secondCommand.parseAsync(["node", "test", "init"], { from: "user" })
+          secondCommand.parseAsync(["node", "test", "init", "--yes"], { from: "user" })
         ).rejects.toThrow("process.exit called");
 
         // Verify exit was called with code 1
@@ -181,16 +186,16 @@ describe("init command", () => {
       const command = createInitCommand();
 
       // Create config first time
-      await command.parseAsync(["node", "test", "init"], { from: "user" });
+      await command.parseAsync(["node", "test", "init", "--yes"], { from: "user" });
 
       // Modify the file
       const originalContent = readFileSync(configPath, "utf-8");
       const modifiedContent = originalContent + "\n# Modified content";
       require("fs").writeFileSync(configPath, modifiedContent);
 
-      // Create again with --force
+      // Create again with --force and --yes
       const secondCommand = createInitCommand();
-      await secondCommand.parseAsync(["node", "test", "init", "--force"], { from: "user" });
+      await secondCommand.parseAsync(["node", "test", "init", "--force", "--yes"], { from: "user" });
 
       // Verify file was overwritten (doesn't contain modification)
       const newContent = readFileSync(configPath, "utf-8");
@@ -203,7 +208,7 @@ describe("init command", () => {
       mkdirSync(configDir, { recursive: true });
 
       const command = createInitCommand();
-      await command.parseAsync(["node", "test", "init"], { from: "user" });
+      await command.parseAsync(["node", "test", "init", "--yes"], { from: "user" });
 
       expect(existsSync(configPath)).toBe(true);
     });
@@ -211,7 +216,7 @@ describe("init command", () => {
     test("should create valid YAML structure", async () => {
       const command = createInitCommand();
 
-      await command.parseAsync(["node", "test", "init"], { from: "user" });
+      await command.parseAsync(["node", "test", "init", "--yes"], { from: "user" });
 
       const content = readFileSync(configPath, "utf-8");
 
