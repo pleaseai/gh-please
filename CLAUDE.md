@@ -123,6 +123,31 @@ gh please review-reply <comment-id> -b "text"   # → Use 'gh please pr review-r
   - `pr/` - Pull request management (review-reply, resolve)
   - `init.ts` - Initialize `.please/config.yml` configuration file
 
+### Internationalization (i18n)
+
+The CLI supports bilingual output (Korean/English) with automatic system language detection:
+
+- **`src/lib/i18n.ts`**: Internationalization module
+  - `detectSystemLanguage()`: Auto-detects language from `LANG`, `LANGUAGE`, or `LC_ALL` environment variables
+  - `getMessages(lang)`: Returns init command messages
+  - `getAiMessages(lang)`: Returns AI command messages
+  - `getIssueMessages(lang)`: Returns Issue command messages
+  - `getPrMessages(lang)`: Returns PR command messages
+  - Supports: Korean (ko) and English (en)
+
+**Usage in commands:**
+```typescript
+import { detectSystemLanguage, getAiMessages } from '../../lib/i18n'
+
+const lang = detectSystemLanguage()
+const msg = getAiMessages(lang)
+console.log(msg.triggeringTriage(123))
+// Korean: 🤖 이슈 #123에 대한 PleaseAI 분류 트리거 중...
+// English: 🤖 Triggering PleaseAI triage for issue #123...
+```
+
+All command output messages (success, errors, progress) are internationalized. GitHub API URLs remain in English.
+
 ### Core Libraries
 
 - **`src/lib/github-graphql.ts`**: GraphQL API layer for advanced GitHub operations

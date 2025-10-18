@@ -6,6 +6,7 @@ import {
   listBlockedBy,
   removeBlockedBy,
 } from '../../lib/github-graphql'
+import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
 
 /**
  * Creates a command to manage issue dependencies (blocked_by relationships)
@@ -23,39 +24,38 @@ export function createDependencyCommand(): Command {
     .requiredOption('--blocked-by <blocker>', 'Issue number that blocks this issue')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
     .action(async (issueStr: string, options: { blockedBy: string, repo?: string }) => {
+      const lang = detectSystemLanguage()
+      const msg = getIssueMessages(lang)
+
       try {
         const issueNumber = Number.parseInt(issueStr, 10)
         const blockerNumber = Number.parseInt(options.blockedBy, 10)
 
         if (Number.isNaN(issueNumber) || Number.isNaN(blockerNumber)) {
-          throw new TypeError('Issue numbers must be valid')
+          throw new TypeError(msg.issueNumberInvalid)
         }
 
         const { owner, repo } = await getRepoInfo(options.repo)
 
-        console.log(`🔍 Getting issue node IDs...`)
+        console.log(msg.gettingNodeIds)
         const issueNodeId = await getIssueNodeId(owner, repo, issueNumber)
         const blockerNodeId = await getIssueNodeId(owner, repo, blockerNumber)
 
-        console.log(
-          `🔗 Setting #${blockerNumber} as blocker for #${issueNumber}...`,
-        )
+        console.log(msg.settingBlocker(blockerNumber, issueNumber))
         await addBlockedBy(issueNodeId, blockerNodeId)
 
-        console.log(`✅ Dependency added successfully!`)
+        console.log(msg.dependencyAdded)
+        console.log(msg.issueBlockedBy(issueNumber, blockerNumber))
         console.log(
-          `   Issue #${issueNumber} is now blocked by #${blockerNumber}`,
+          `   ${msg.blocked}: https://github.com/${owner}/${repo}/issues/${issueNumber}`,
         )
         console.log(
-          `   Blocked: https://github.com/${owner}/${repo}/issues/${issueNumber}`,
-        )
-        console.log(
-          `   Blocker: https://github.com/${owner}/${repo}/issues/${blockerNumber}`,
+          `   ${msg.blocker}: https://github.com/${owner}/${repo}/issues/${blockerNumber}`,
         )
       }
       catch (error) {
         console.error(
-          `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          `${msg.errorPrefix}: ${error instanceof Error ? error.message : msg.unknownError}`,
         )
         process.exit(1)
       }
@@ -68,39 +68,38 @@ export function createDependencyCommand(): Command {
     .argument('<blocker>', 'Issue number that is no longer blocking')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
     .action(async (issueStr: string, blockerStr: string, options: { repo?: string }) => {
+      const lang = detectSystemLanguage()
+      const msg = getIssueMessages(lang)
+
       try {
         const issueNumber = Number.parseInt(issueStr, 10)
         const blockerNumber = Number.parseInt(blockerStr, 10)
 
         if (Number.isNaN(issueNumber) || Number.isNaN(blockerNumber)) {
-          throw new TypeError('Issue numbers must be valid')
+          throw new TypeError(msg.issueNumberInvalid)
         }
 
         const { owner, repo } = await getRepoInfo(options.repo)
 
-        console.log(`🔍 Getting issue node IDs...`)
+        console.log(msg.gettingNodeIds)
         const issueNodeId = await getIssueNodeId(owner, repo, issueNumber)
         const blockerNodeId = await getIssueNodeId(owner, repo, blockerNumber)
 
-        console.log(
-          `🔓 Removing #${blockerNumber} as blocker for #${issueNumber}...`,
-        )
+        console.log(msg.removingBlocker(blockerNumber, issueNumber))
         await removeBlockedBy(issueNodeId, blockerNodeId)
 
-        console.log(`✅ Dependency removed successfully!`)
+        console.log(msg.dependencyRemoved)
+        console.log(msg.issueNoLongerBlocked(issueNumber, blockerNumber))
         console.log(
-          `   Issue #${issueNumber} is no longer blocked by #${blockerNumber}`,
+          `   ${msg.blocked}: https://github.com/${owner}/${repo}/issues/${issueNumber}`,
         )
         console.log(
-          `   Blocked: https://github.com/${owner}/${repo}/issues/${issueNumber}`,
-        )
-        console.log(
-          `   Blocker: https://github.com/${owner}/${repo}/issues/${blockerNumber}`,
+          `   ${msg.blocker}: https://github.com/${owner}/${repo}/issues/${blockerNumber}`,
         )
       }
       catch (error) {
         console.error(
-          `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          `${msg.errorPrefix}: ${error instanceof Error ? error.message : msg.unknownError}`,
         )
         process.exit(1)
       }
@@ -112,24 +111,27 @@ export function createDependencyCommand(): Command {
     .argument('<issue>', 'Issue number')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
     .action(async (issueStr: string, options: { repo?: string }) => {
+      const lang = detectSystemLanguage()
+      const msg = getIssueMessages(lang)
+
       try {
         const issueNumber = Number.parseInt(issueStr, 10)
         if (Number.isNaN(issueNumber)) {
-          throw new TypeError('Issue number must be valid')
+          throw new TypeError(msg.issueNumberInvalid)
         }
 
         const { owner, repo } = await getRepoInfo(options.repo)
 
-        console.log(`📋 Fetching blockers for #${issueNumber}...`)
+        console.log(msg.fetchingBlockers(issueNumber))
         const issueNodeId = await getIssueNodeId(owner, repo, issueNumber)
         const blockers = await listBlockedBy(issueNodeId)
 
         if (blockers.length === 0) {
-          console.log(`✅ No blocking issues found for #${issueNumber}`)
+          console.log(msg.noBlockers(issueNumber))
           return
         }
 
-        console.log(`\n⚠️  Issue #${issueNumber} is blocked by ${blockers.length} issue(s):\n`)
+        console.log(msg.issueBlockedByCount(issueNumber, blockers.length))
         for (const blocker of blockers) {
           const status = blocker.state === 'OPEN' ? '🔴' : '🟢'
           console.log(`${status} #${blocker.number}: ${blocker.title}`)
@@ -140,7 +142,7 @@ export function createDependencyCommand(): Command {
       }
       catch (error) {
         console.error(
-          `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          `${msg.errorPrefix}: ${error instanceof Error ? error.message : msg.unknownError}`,
         )
         process.exit(1)
       }

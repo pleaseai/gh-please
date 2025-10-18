@@ -213,6 +213,38 @@ ignore_patterns: []
 language: ko
 ```
 
+## 다국어 지원
+
+모든 명령어는 시스템 언어를 자동으로 감지하여 한글 또는 영문 메시지를 출력합니다.
+
+**지원 언어:**
+- 한국어 (ko) - 시스템 언어가 한국어로 설정된 경우
+- English (en) - 기본값 및 기타 언어
+
+**언어 감지 방식:**
+CLI는 다음 환경 변수를 순서대로 확인하여 언어를 자동 감지합니다:
+1. `LANG`
+2. `LANGUAGE`
+3. `LC_ALL`
+
+환경 변수가 `ko`로 시작하면 한글 메시지가 표시되고, 그 외의 경우 영문 메시지가 표시됩니다.
+
+**예시:**
+```bash
+# 한글 메시지 출력
+LANG=ko_KR.UTF-8 gh please ai triage 123
+# 출력: 🤖 이슈 #123에 대한 PleaseAI 분류 트리거 중...
+
+# 영문 메시지 출력
+LANG=en_US.UTF-8 gh please ai triage 123
+# 출력: 🤖 Triggering PleaseAI triage for issue #123...
+```
+
+**적용 범위:**
+- ✅ 모든 명령어 출력 메시지 (성공, 오류, 진행 상황)
+- ✅ 대화형 프롬프트 (`gh please init`)
+- ⚠️ GitHub API URL 및 링크는 다국어화되지 않음
+
 ## 명령어 참조
 
 ### `gh please init`

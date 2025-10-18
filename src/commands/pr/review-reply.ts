@@ -1,5 +1,6 @@
 import { Command } from 'commander'
 import { createReviewReply, getCurrentPrInfo, getRepoInfo } from '../../lib/github-api'
+import { detectSystemLanguage, getPrMessages } from '../../lib/i18n'
 import { validateCommentId, validateReplyBody } from '../../lib/validation'
 
 /**
@@ -16,6 +17,9 @@ export function createReviewReplyCommand(): Command {
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format (required if not in PR context)')
     .option('--pr <number>', 'PR number (required with --repo)')
     .action(async (commentIdStr: string, options: { body?: string, repo?: string, pr?: string }) => {
+      const lang = detectSystemLanguage()
+      const msg = getPrMessages(lang)
+
       try {
         // Validate comment ID
         const commentId = validateCommentId(commentIdStr)
@@ -25,8 +29,8 @@ export function createReviewReplyCommand(): Command {
         // If no body provided, read from stdin
         if (!body) {
           if (process.stdin.isTTY) {
-            console.error('❌ Error: --body is required')
-            console.error('   Usage: gh please pr review-reply <comment-id> --body \'your reply\'')
+            console.error(msg.bodyRequired)
+            console.error(msg.usage)
             process.exit(1)
           }
 
@@ -41,7 +45,7 @@ export function createReviewReplyCommand(): Command {
         // Validate body
         body = validateReplyBody(body)
 
-        console.log('🔍 Fetching PR information...')
+        console.log(msg.fetchingPrInfo)
 
         let prInfo
         if (options.repo && options.pr) {
@@ -49,19 +53,17 @@ export function createReviewReplyCommand(): Command {
           const { owner, repo } = await getRepoInfo(options.repo)
           const prNumber = Number.parseInt(options.pr, 10)
           if (Number.isNaN(prNumber)) {
-            throw new TypeError('PR number must be a valid number')
+            throw new TypeError(msg.prNumberInvalid)
           }
           prInfo = { owner, repo, number: prNumber }
         } else if (options.repo || options.pr) {
-          throw new Error('Both --repo and --pr must be specified together')
+          throw new Error(msg.bothRepoAndPr)
         } else {
           // Get from current PR context
           prInfo = await getCurrentPrInfo()
         }
 
-        console.log(
-          `📝 Creating reply to comment ${commentId} on PR #${prInfo.number}...`,
-        )
+        console.log(msg.creatingReply(commentId, prInfo.number))
         await createReviewReply({
           commentId,
           body,
@@ -70,10 +72,10 @@ export function createReviewReplyCommand(): Command {
       }
       catch (error) {
         if (error instanceof Error) {
-          console.error(`❌ Error: ${error.message}`)
+          console.error(`${msg.errorPrefix}: ${error.message}`)
         }
         else {
-          console.error('❌ An unexpected error occurred')
+          console.error(msg.unknownError)
         }
         process.exit(1)
       }

@@ -213,6 +213,38 @@ ignore_patterns: []
 language: ko
 ```
 
+## Internationalization (i18n)
+
+All commands automatically detect the system language and display messages in Korean or English.
+
+**Supported Languages:**
+- Korean (ko) - When system language is set to Korean
+- English (en) - Default and for all other languages
+
+**Language Detection:**
+The CLI checks the following environment variables in order to auto-detect the language:
+1. `LANG`
+2. `LANGUAGE`
+3. `LC_ALL`
+
+If the environment variable starts with `ko`, Korean messages are displayed; otherwise, English messages are shown.
+
+**Examples:**
+```bash
+# Korean messages
+LANG=ko_KR.UTF-8 gh please ai triage 123
+# Output: 🤖 이슈 #123에 대한 PleaseAI 분류 트리거 중...
+
+# English messages
+LANG=en_US.UTF-8 gh please ai triage 123
+# Output: 🤖 Triggering PleaseAI triage for issue #123...
+```
+
+**Coverage:**
+- ✅ All command output messages (success, errors, progress)
+- ✅ Interactive prompts (`gh please init`)
+- ⚠️ GitHub API URLs and links are not internationalized
+
 ## Command Reference
 
 ### `gh please init`

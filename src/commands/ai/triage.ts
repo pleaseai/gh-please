@@ -1,5 +1,6 @@
 import { Command } from 'commander'
 import { getRepoInfo } from '../../lib/github-api'
+import { detectSystemLanguage, getAiMessages } from '../../lib/i18n'
 import { triggerPleaseAIIssue } from '../../lib/please-trigger'
 
 /**
@@ -14,22 +15,25 @@ export function createTriageCommand(): Command {
     .argument('<issue-number>', 'Issue number to triage')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
     .action(async (issueNumberStr: string, options: { repo?: string }) => {
+      const lang = detectSystemLanguage()
+      const msg = getAiMessages(lang)
+
       try {
         const issueNumber = Number.parseInt(issueNumberStr, 10)
         if (Number.isNaN(issueNumber)) {
-          throw new TypeError('Issue number must be a valid number')
+          throw new TypeError(msg.issueNumberInvalid)
         }
 
         const { owner, repo } = await getRepoInfo(options.repo)
 
-        console.log(`🤖 Triggering PleaseAI triage for issue #${issueNumber}...`)
+        console.log(msg.triggeringTriage(issueNumber))
         await triggerPleaseAIIssue('triage', owner, repo, issueNumber)
-        console.log(`✅ Triage request posted to issue #${issueNumber}`)
+        console.log(msg.triagePosted(issueNumber))
         console.log(`   View: https://github.com/${owner}/${repo}/issues/${issueNumber}`)
       }
       catch (error) {
         console.error(
-          `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          `${msg.errorPrefix}: ${error instanceof Error ? error.message : msg.unknownError}`,
         )
         process.exit(1)
       }

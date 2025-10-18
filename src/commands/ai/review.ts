@@ -1,5 +1,6 @@
 import { Command } from 'commander'
 import { getRepoInfo } from '../../lib/github-api'
+import { detectSystemLanguage, getAiMessages } from '../../lib/i18n'
 import { triggerPleaseAIPr } from '../../lib/please-trigger'
 
 /**
@@ -14,22 +15,25 @@ export function createReviewCommand(): Command {
     .argument('<pr-number>', 'Pull request number to review')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
     .action(async (prNumberStr: string, options: { repo?: string }) => {
+      const lang = detectSystemLanguage()
+      const msg = getAiMessages(lang)
+
       try {
         const prNumber = Number.parseInt(prNumberStr, 10)
         if (Number.isNaN(prNumber)) {
-          throw new TypeError('PR number must be a valid number')
+          throw new TypeError(msg.prNumberInvalid)
         }
 
         const { owner, repo } = await getRepoInfo(options.repo)
 
-        console.log(`🤖 Triggering PleaseAI review for PR #${prNumber}...`)
+        console.log(msg.triggeringReview(prNumber))
         await triggerPleaseAIPr('review', owner, repo, prNumber)
-        console.log(`✅ Review request posted to PR #${prNumber}`)
+        console.log(msg.reviewPosted(prNumber))
         console.log(`   View: https://github.com/${owner}/${repo}/pull/${prNumber}`)
       }
       catch (error) {
         console.error(
-          `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          `${msg.errorPrefix}: ${error instanceof Error ? error.message : msg.unknownError}`,
         )
         process.exit(1)
       }

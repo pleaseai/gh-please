@@ -6,6 +6,7 @@ import {
   listSubIssues,
   removeSubIssue,
 } from '../../lib/github-graphql'
+import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
 
 /**
  * Creates a command to manage issue sub-issue relationships
@@ -24,18 +25,21 @@ export function createSubIssueCommand(): Command {
     .option('--body <text>', 'Sub-issue body')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
     .action(async (parentStr: string, options: { title: string, body?: string, repo?: string }) => {
+      const lang = detectSystemLanguage()
+      const msg = getIssueMessages(lang)
+
       try {
         const parentNumber = Number.parseInt(parentStr, 10)
         if (Number.isNaN(parentNumber)) {
-          throw new TypeError('Parent issue number must be valid')
+          throw new TypeError(msg.issueNumberInvalid)
         }
 
         const { owner, repo } = await getRepoInfo(options.repo)
-        console.log(`🔍 Getting parent issue #${parentNumber}...`)
+        console.log(msg.gettingParentIssue(parentNumber))
 
         const parentNodeId = await getIssueNodeId(owner, repo, parentNumber)
 
-        console.log(`📝 Creating sub-issue...`)
+        console.log(msg.creatingSubIssue)
         // For now, create issue via gh CLI and then link it
         // Use getGhCommand to allow test mocking via GH_PATH env var
         function getGhCommand(): string {
@@ -64,13 +68,13 @@ export function createSubIssueCommand(): Command {
 
         if (exitCode !== 0) {
           const error = await new Response(proc.stderr).text()
-          throw new Error(`Failed to create issue: ${error.trim()}`)
+          throw new Error(msg.createFailed(error.trim()))
         }
 
         // Parse the issue number from the output URL
         const urlMatch = output.match(/\/issues\/(\d+)/)
         if (!urlMatch || !urlMatch[1]) {
-          throw new Error('Failed to parse created issue number')
+          throw new Error(msg.parseIssueFailed)
         }
         const childNumber = Number.parseInt(urlMatch[1], 10)
 
@@ -78,14 +82,14 @@ export function createSubIssueCommand(): Command {
         const childNodeId = await getIssueNodeId(owner, repo, childNumber)
         await addSubIssue(parentNodeId, childNodeId)
 
-        console.log(`✅ Sub-issue #${childNumber} created and linked to #${parentNumber}!`)
+        console.log(msg.subIssueCreatedLinked(childNumber, parentNumber))
         console.log(
           `   View: https://github.com/${owner}/${repo}/issues/${childNumber}`,
         )
       }
       catch (error) {
         console.error(
-          `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          `${msg.errorPrefix}: ${error instanceof Error ? error.message : msg.unknownError}`,
         )
         process.exit(1)
       }
@@ -98,34 +102,37 @@ export function createSubIssueCommand(): Command {
     .argument('<child-issue>', 'Child issue number to add as sub-issue')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
     .action(async (parentStr: string, childStr: string, options: { repo?: string }) => {
+      const lang = detectSystemLanguage()
+      const msg = getIssueMessages(lang)
+
       try {
         const parentNumber = Number.parseInt(parentStr, 10)
         const childNumber = Number.parseInt(childStr, 10)
 
         if (Number.isNaN(parentNumber) || Number.isNaN(childNumber)) {
-          throw new TypeError('Issue numbers must be valid')
+          throw new TypeError(msg.issueNumberInvalid)
         }
 
         const { owner, repo } = await getRepoInfo(options.repo)
 
-        console.log(`🔍 Getting issue node IDs...`)
+        console.log(msg.gettingNodeIds)
         const parentNodeId = await getIssueNodeId(owner, repo, parentNumber)
         const childNodeId = await getIssueNodeId(owner, repo, childNumber)
 
-        console.log(`🔗 Linking #${childNumber} as sub-issue of #${parentNumber}...`)
+        console.log(msg.linkingSubIssue(childNumber, parentNumber))
         await addSubIssue(parentNodeId, childNodeId)
 
-        console.log(`✅ Sub-issue linked successfully!`)
+        console.log(msg.subIssueLinked)
         console.log(
-          `   Parent: https://github.com/${owner}/${repo}/issues/${parentNumber}`,
+          `   ${msg.parent}: https://github.com/${owner}/${repo}/issues/${parentNumber}`,
         )
         console.log(
-          `   Child: https://github.com/${owner}/${repo}/issues/${childNumber}`,
+          `   ${msg.child}: https://github.com/${owner}/${repo}/issues/${childNumber}`,
         )
       }
       catch (error) {
         console.error(
-          `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          `${msg.errorPrefix}: ${error instanceof Error ? error.message : msg.unknownError}`,
         )
         process.exit(1)
       }
@@ -138,34 +145,37 @@ export function createSubIssueCommand(): Command {
     .argument('<child-issue>', 'Child issue number to remove')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
     .action(async (parentStr: string, childStr: string, options: { repo?: string }) => {
+      const lang = detectSystemLanguage()
+      const msg = getIssueMessages(lang)
+
       try {
         const parentNumber = Number.parseInt(parentStr, 10)
         const childNumber = Number.parseInt(childStr, 10)
 
         if (Number.isNaN(parentNumber) || Number.isNaN(childNumber)) {
-          throw new TypeError('Issue numbers must be valid')
+          throw new TypeError(msg.issueNumberInvalid)
         }
 
         const { owner, repo } = await getRepoInfo(options.repo)
 
-        console.log(`🔍 Getting issue node IDs...`)
+        console.log(msg.gettingNodeIds)
         const parentNodeId = await getIssueNodeId(owner, repo, parentNumber)
         const childNodeId = await getIssueNodeId(owner, repo, childNumber)
 
-        console.log(`🔓 Unlinking #${childNumber} from #${parentNumber}...`)
+        console.log(msg.unlinkingSubIssue(childNumber, parentNumber))
         await removeSubIssue(parentNodeId, childNodeId)
 
-        console.log(`✅ Sub-issue unlinked successfully!`)
+        console.log(msg.subIssueUnlinked)
         console.log(
-          `   Parent: https://github.com/${owner}/${repo}/issues/${parentNumber}`,
+          `   ${msg.parent}: https://github.com/${owner}/${repo}/issues/${parentNumber}`,
         )
         console.log(
-          `   Child: https://github.com/${owner}/${repo}/issues/${childNumber}`,
+          `   ${msg.child}: https://github.com/${owner}/${repo}/issues/${childNumber}`,
         )
       }
       catch (error) {
         console.error(
-          `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          `${msg.errorPrefix}: ${error instanceof Error ? error.message : msg.unknownError}`,
         )
         process.exit(1)
       }
@@ -177,24 +187,27 @@ export function createSubIssueCommand(): Command {
     .argument('<parent-issue>', 'Parent issue number')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
     .action(async (parentStr: string, options: { repo?: string }) => {
+      const lang = detectSystemLanguage()
+      const msg = getIssueMessages(lang)
+
       try {
         const parentNumber = Number.parseInt(parentStr, 10)
         if (Number.isNaN(parentNumber)) {
-          throw new TypeError('Parent issue number must be valid')
+          throw new TypeError(msg.issueNumberInvalid)
         }
 
         const { owner, repo } = await getRepoInfo(options.repo)
 
-        console.log(`📋 Fetching sub-issues of #${parentNumber}...`)
+        console.log(msg.fetchingSubIssues(parentNumber))
         const parentNodeId = await getIssueNodeId(owner, repo, parentNumber)
         const subIssues = await listSubIssues(parentNodeId)
 
         if (subIssues.length === 0) {
-          console.log(`No sub-issues found for #${parentNumber}`)
+          console.log(msg.noSubIssues(parentNumber))
           return
         }
 
-        console.log(`\n✅ Found ${subIssues.length} sub-issue(s):\n`)
+        console.log(msg.foundSubIssues(subIssues.length))
         for (const issue of subIssues) {
           const status = issue.state === 'OPEN' ? '🟢' : '🔴'
           console.log(`${status} #${issue.number}: ${issue.title}`)
@@ -205,7 +218,7 @@ export function createSubIssueCommand(): Command {
       }
       catch (error) {
         console.error(
-          `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          `${msg.errorPrefix}: ${error instanceof Error ? error.message : msg.unknownError}`,
         )
         process.exit(1)
       }
