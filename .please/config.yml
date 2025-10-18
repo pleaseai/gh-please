@@ -1,0 +1,82 @@
+# GitHub Please Configuration
+# This file configures the behavior of gh-please commands
+
+# Code review configuration
+code_review:
+  # Set to true to disable all code review features
+  disable: false
+
+  # Minimum severity level for review comments (LOW, MEDIUM, HIGH)
+  comment_severity_threshold: LOW
+
+  # Maximum number of review comments (-1 for unlimited)
+  max_review_comments: -1
+
+  # Pull request opened event behavior
+  pull_request_opened:
+    # Show help message when PR is opened
+    help: false
+
+    # Generate PR summary
+    summary: true
+
+    # Automatically perform code review
+    code_review: true
+
+    # Include draft PRs in automatic reviews
+    include_drafts: false
+
+# Issue workflow configuration (triage → investigate → fix)
+issue_workflow:
+  # Set to true to disable all issue workflow features
+  disable: false
+
+  # Triage configuration
+  triage:
+    # Automatically triage new issues
+    auto: true
+
+    # Allow manual triage via commands
+    manual: true
+
+    # Update issue type labels during triage
+    update_issue_type: true
+
+  # Investigation configuration
+  investigate:
+    # Enable investigation workflow
+    enabled: true
+
+    # Restrict investigation to organization members only
+    org_members_only: true
+
+    # Automatically investigate when 'bug' label is added
+    auto_on_bug_label: false
+
+  # Fix configuration
+  fix:
+    # Enable fix workflow
+    enabled: true
+
+    # Restrict fixes to organization members only
+    org_members_only: true
+
+    # Require investigation before allowing fix
+    require_investigation: false
+
+    # Automatically create PR after implementing fix
+    auto_create_pr: true
+
+    # Automatically run tests after implementing fix
+    auto_run_tests: true
+
+# Code workspace configuration
+code_workspace:
+  # Enable code workspace features
+  enabled: true
+
+# File patterns to ignore (glob patterns)
+ignore_patterns: []
+
+# Language for bot responses (ko, en)
+language: ko

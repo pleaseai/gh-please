@@ -4,88 +4,88 @@
 [![codecov](https://codecov.io/github/pleaseai/gh-please/graph/badge.svg?token=BQKO959X1M)](https://codecov.io/github/pleaseai/gh-please)
 [![code style](https://antfu.me/badge-code-style.svg)](https://github.com/antfu/eslint-config)
 
-GitHub CLI extension for **PleaseAI** - AI-powered code review and issue management automation.
+**PleaseAI**를 위한 GitHub CLI 확장 프로그램 - AI 기반 코드 리뷰 및 이슈 관리 자동화
 
-English | [한국어](./README.ko.md)
+한국어 | [English](./README.en.md)
 
-## Overview
+## 개요
 
-`@pleaseai/github` is the command-line interface for PleaseAI, providing intelligent automation for:
+`@pleaseai/github`는 PleaseAI를 위한 명령줄 인터페이스로, 다음과 같은 지능형 자동화 기능을 제공합니다:
 
-- **Code Review**: Automated PR reviews with AI-generated comments and suggestions
-- **Issue Workflow**: Streamlined triage → investigate → fix workflow for issues
-- **Review Management**: Reply to PR review comments and manage discussions
-- **Code Workspace**: Enhanced development workspace features
+- **코드 리뷰**: AI가 생성한 코멘트와 제안으로 자동화된 PR 리뷰
+- **이슈 워크플로우**: 이슈의 분류(triage) → 조사(investigate) → 수정(fix) 워크플로우
+- **리뷰 관리**: PR 리뷰 코멘트에 답변하고 토론 관리
+- **코드 워크스페이스**: 향상된 개발 워크스페이스 기능
 
-## Quick Start
+## 빠른 시작
 
-1. **Install the extension**
+1. **확장 프로그램 설치**
 
    ```bash
    gh extension install pleaseai/gh-please
    ```
 
-2. **Navigate to your repository**
+2. **저장소로 이동**
 
    ```bash
    cd your-project
    ```
 
-3. **Initialize PleaseAI configuration**
+3. **PleaseAI 설정 초기화**
 
    ```bash
    gh please init
    ```
 
-   This creates `.please/config.yml` with your preferences for code review automation, issue workflows, and more.
+   이 명령은 코드 리뷰 자동화, 이슈 워크플로우 등에 대한 설정이 포함된 `.please/config.yml` 파일을 생성합니다.
 
-4. **Start using PleaseAI features**
-   - Automatic PR reviews based on your configuration
-   - AI-powered issue triage and investigation
-   - Reply to review comments: `gh please review-reply <comment-id> -b "your reply"`
+4. **PleaseAI 기능 사용 시작**
+   - 설정에 따른 자동 PR 리뷰
+   - AI 기반 이슈 분류 및 조사
+   - 리뷰 코멘트에 답변: `gh please review-reply <comment-id> -b "답변 내용"`
 
-## Features
+## 주요 기능
 
-### `gh please init` - Initialize PleaseAI Configuration
+### `gh please init` - PleaseAI 설정 초기화
 
-Set up `.please/config.yml` with interactive configuration for all PleaseAI features:
+모든 PleaseAI 기능에 대한 대화형 설정으로 `.please/config.yml`을 구성합니다:
 
-- Code review automation (severity thresholds, auto-review, draft PR handling)
-- Issue workflow automation (auto-triage, investigation, fix workflows)
-- Code workspace features
-- Language preferences (Korean/English)
+- 코드 리뷰 자동화 (심각도 임계값, 자동 리뷰, 드래프트 PR 처리)
+- 이슈 워크플로우 자동화 (자동 분류, 조사, 수정 워크플로우)
+- 코드 워크스페이스 기능
+- 언어 설정 (한국어/영어)
 
 ```bash
-# Interactive configuration
+# 대화형 설정
 gh please init
 
-# Use defaults (skip prompts)
+# 기본값 사용 (프롬프트 건너뛰기)
 gh please init --yes
 
-# Overwrite existing config
+# 기존 설정 덮어쓰기
 gh please init --force
 ```
 
-### `gh please review-reply` - Reply to PR Review Comments
+### `gh please review-reply` - PR 리뷰 코멘트에 답변
 
-Create a reply to a pull request review comment using the GitHub API.
+GitHub API를 사용하여 풀 리퀘스트 리뷰 코멘트에 답변을 작성합니다.
 
-**Note**: This command only supports replying to **top-level review comments**. Replies to replies are not supported by the GitHub API.
+**참고**: 이 명령은 **최상위 리뷰 코멘트**에만 답변할 수 있습니다. 답글에 대한 답글은 GitHub API에서 지원하지 않습니다.
 
-## Installation
+## 설치
 
-### Prerequisites
+### 사전 요구사항
 
-- [GitHub CLI (`gh`)](https://cli.github.com/) - version 2.0 or later
-- [Bun](https://bun.sh) - JavaScript runtime and toolkit
+- [GitHub CLI (`gh`)](https://cli.github.com/) - 버전 2.0 이상
+- [Bun](https://bun.sh) - JavaScript 런타임 및 툴킷
 
-### Install the extension
+### 확장 프로그램 설치
 
 ```bash
 gh extension install pleaseai/gh-please
 ```
 
-### Development Installation
+### 개발용 설치
 
 ```bash
 git clone https://github.com/pleaseai/gh-please.git
@@ -94,70 +94,70 @@ bun install
 gh extension install .
 ```
 
-## Usage
+## 사용법
 
-### Reply to a Review Comment
+### 리뷰 코멘트에 답변하기
 
-Navigate to a repository with an open pull request and run:
+열린 풀 리퀘스트가 있는 저장소로 이동하여 실행:
 
 ```bash
-# Basic usage
-gh please review-reply <comment-id> --body "Your reply text here"
+# 기본 사용법
+gh please review-reply <comment-id> --body "답변 내용"
 
-# Using short flag
-gh please review-reply 1234567890 -b "Thanks for the review!"
+# 짧은 플래그 사용
+gh please review-reply 1234567890 -b "리뷰 감사합니다!"
 
-# Multiline reply
-gh please review-reply 1234567890 --body "Good catch!
+# 여러 줄 답변
+gh please review-reply 1234567890 --body "좋은 지적입니다!
 
-I'll update this in the next commit."
+다음 커밋에서 수정하겠습니다."
 
-# Pipe from stdin
-echo "Thanks!" | gh please review-reply 1234567890
+# stdin에서 파이프
+echo "감사합니다!" | gh please review-reply 1234567890
 ```
 
-### Finding Comment IDs
+### 코멘트 ID 찾기
 
-To find the comment ID you want to reply to:
+답변하려는 코멘트 ID를 찾는 방법:
 
-1. **Via GitHub CLI API**:
+1. **GitHub CLI API 사용**:
 
    ```bash
    gh api /repos/OWNER/REPO/pulls/PR_NUMBER/comments
    ```
 
-2. **Via GitHub Web UI**:
-   - Navigate to the PR and click on a review comment
-   - The comment ID is in the URL: `github.com/.../pull/123#discussion_r1234567890`
-   - Use the number after `discussion_r` (e.g., `1234567890`)
+2. **GitHub 웹 UI 사용**:
+   - PR로 이동하여 리뷰 코멘트 클릭
+   - URL에서 코멘트 ID 확인: `github.com/.../pull/123#discussion_r1234567890`
+   - `discussion_r` 다음 숫자 사용 (예: `1234567890`)
 
-3. **Using gh CLI (list all PR comments)**:
+3. **gh CLI 사용 (모든 PR 코멘트 나열)**:
    ```bash
    gh pr view --json comments --jq '.comments[] | "\(.id): \(.body)"'
    ```
 
-## PleaseAI Configuration
+## PleaseAI 설정
 
-The `.please/config.yml` file controls all PleaseAI automation features:
+`.please/config.yml` 파일은 모든 PleaseAI 자동화 기능을 제어합니다:
 
-### Code Review Settings
+### 코드 리뷰 설정
 
-- **comment_severity_threshold**: Minimum severity level for review comments (LOW/MEDIUM/HIGH)
-- **max_review_comments**: Maximum number of review comments (-1 for unlimited)
-- **auto review**: Automatically review PRs when opened
-- **include_drafts**: Include draft PRs in automatic reviews
+- **comment_severity_threshold**: 리뷰 코멘트의 최소 심각도 수준 (LOW/MEDIUM/HIGH)
+- **max_review_comments**: 최대 리뷰 코멘트 수 (무제한은 -1)
+- **auto review**: PR이 열릴 때 자동으로 리뷰
+- **include_drafts**: 자동 리뷰에 드래프트 PR 포함
 
-### Issue Workflow Settings
+### 이슈 워크플로우 설정
 
-- **Triage**: Automatic or manual issue triage with type labeling
-- **Investigate**: AI-assisted bug investigation (org members only option)
-- **Fix**: Automated fix implementation with PR creation and test execution
+- **Triage**: 타입 라벨링을 통한 자동 또는 수동 이슈 분류
+- **Investigate**: AI 지원 버그 조사 (조직 멤버만 옵션)
+- **Fix**: PR 생성 및 테스트 실행을 통한 자동화된 수정 구현
 
-### Code Workspace
+### 코드 워크스페이스
 
-- Enable enhanced development workspace features
+- 향상된 개발 워크스페이스 기능 활성화
 
-### Example Configuration
+### 설정 예시
 
 ```yaml
 code_review:
@@ -194,75 +194,75 @@ ignore_patterns: []
 language: ko
 ```
 
-## Command Reference
+## 명령어 참조
 
 ### `gh please init`
 
-Initialize `.please/config.yml` with interactive configuration.
+대화형 설정으로 `.please/config.yml`을 초기화합니다.
 
-**Options:**
+**옵션:**
 
-- `-f, --force` - Overwrite existing config file
-- `-y, --yes` - Skip prompts and use default configuration
+- `-f, --force` - 기존 설정 파일 덮어쓰기
+- `-y, --yes` - 프롬프트 건너뛰고 기본 설정 사용
 
-**Examples:**
+**예시:**
 
 ```bash
-# Interactive setup (recommended for first-time setup)
+# 대화형 설정 (첫 설정 시 권장)
 gh please init
 
-# Quick setup with defaults
+# 기본값으로 빠른 설정
 gh please init --yes
 
-# Overwrite existing configuration
+# 기존 설정 덮어쓰기
 gh please init --force
 ```
 
 ### `gh please review-reply`
 
-Create a reply to a PR review comment.
+PR 리뷰 코멘트에 답변을 작성합니다.
 
-**Arguments:**
+**인자:**
 
-- `<comment-id>` - The ID of the review comment to reply to (required)
+- `<comment-id>` - 답변할 리뷰 코멘트의 ID (필수)
 
-**Options:**
+**옵션:**
 
-- `-b, --body <text>` - The reply body text (required, or provide via stdin)
+- `-b, --body <text>` - 답변 본문 텍스트 (필수, 또는 stdin으로 제공)
 
-**Examples:**
+**예시:**
 
 ```bash
-# Simple reply
-gh please review-reply 1234567890 -b "Fixed in the latest commit!"
+# 간단한 답변
+gh please review-reply 1234567890 -b "최신 커밋에서 수정했습니다!"
 
-# Reply with context from the current directory
-# (automatically detects the current PR)
+# 현재 디렉토리 컨텍스트로 답변
+# (현재 PR을 자동으로 감지)
 cd my-project
 git checkout my-feature-branch
-gh please review-reply 1234567890 -b "Good point, I'll refactor this."
+gh please review-reply 1234567890 -b "좋은 지적입니다. 리팩토링하겠습니다."
 
-# Using heredoc for multiline replies
+# heredoc을 사용한 여러 줄 답변
 gh please review-reply 1234567890 --body "$(cat <<'EOF'
-Thanks for catching this!
+지적해주셔서 감사합니다!
 
-I've updated the implementation to:
-1. Add proper error handling
-2. Include unit tests
-3. Update documentation
+다음과 같이 구현을 업데이트했습니다:
+1. 적절한 에러 처리 추가
+2. 단위 테스트 포함
+3. 문서 업데이트
 
-Let me know if you have any other concerns.
+다른 우려사항이 있으시면 알려주세요.
 EOF
 )"
 ```
 
-### AI Commands
+### AI 명령어
 
-Trigger PleaseAI automation workflows for code review and issue management.
+코드 리뷰 및 이슈 관리를 위한 PleaseAI 자동화 워크플로우를 트리거합니다.
 
 #### `gh please ai triage <issue-number>`
 
-Trigger PleaseAI to automatically triage an issue (categorize, add labels, etc.).
+이슈를 자동으로 분류하도록 PleaseAI를 트리거합니다 (분류, 라벨 추가 등).
 
 ```bash
 gh please ai triage 123
@@ -270,7 +270,7 @@ gh please ai triage 123
 
 #### `gh please ai investigate <issue-number>`
 
-Trigger PleaseAI to investigate a bug or issue in detail.
+버그 또는 이슈를 상세히 조사하도록 PleaseAI를 트리거합니다.
 
 ```bash
 gh please ai investigate 123
@@ -278,7 +278,7 @@ gh please ai investigate 123
 
 #### `gh please ai fix <issue-number>`
 
-Trigger PleaseAI to attempt an automated fix for an issue.
+이슈에 대한 자동화된 수정을 시도하도록 PleaseAI를 트리거합니다.
 
 ```bash
 gh please ai fix 123
@@ -286,7 +286,7 @@ gh please ai fix 123
 
 #### `gh please ai review <pr-number>`
 
-Trigger PleaseAI to perform code review on a pull request.
+풀 리퀘스트에 대한 코드 리뷰를 수행하도록 PleaseAI를 트리거합니다.
 
 ```bash
 gh please ai review 456
@@ -294,300 +294,300 @@ gh please ai review 456
 
 #### `gh please ai apply <pr-number>`
 
-Trigger PleaseAI to apply its suggestions to a pull request.
+풀 리퀘스트에 제안사항을 적용하도록 PleaseAI를 트리거합니다.
 
 ```bash
 gh please ai apply 456
 ```
 
-### Issue Management Commands
+### 이슈 관리 명령어
 
-Manage GitHub issues with sub-issues and dependencies.
+하위 이슈 및 의존성이 있는 GitHub 이슈를 관리합니다.
 
 #### `gh please issue sub-issue <subcommand> [options]`
 
-Manage issue sub-issues (hierarchical issue relationships).
+이슈 하위 이슈(계층적 이슈 관계)를 관리합니다.
 
-**Subcommands:**
+**하위 명령어:**
 
-- `create <parent-issue> --title "..."` - Create a new sub-issue linked to parent
-- `add <parent-issue> <child-issue>` - Link existing issue as sub-issue
-- `remove <parent-issue> <child-issue>` - Unlink sub-issue from parent
-- `list <parent-issue>` - List all sub-issues of a parent issue
+- `create <parent-issue> --title "..."` - 상위 이슈에 연결된 새 하위 이슈 생성
+- `add <parent-issue> <child-issue>` - 기존 이슈를 하위 이슈로 연결
+- `remove <parent-issue> <child-issue>` - 상위 이슈에서 하위 이슈 연결 해제
+- `list <parent-issue>` - 상위 이슈의 모든 하위 이슈 나열
 
-**Examples:**
+**예시:**
 
 ```bash
-# Create a new sub-issue
-gh please issue sub-issue create 100 --title "Fix validation logic" --body "Add validation for user input"
+# 새 하위 이슈 생성
+gh please issue sub-issue create 100 --title "검증 로직 수정" --body "사용자 입력 검증 추가"
 
-# Link existing issues
+# 기존 이슈 연결
 gh please issue sub-issue add 100 101
 gh please issue sub-issue add 100 102
 
-# List all sub-issues
+# 모든 하위 이슈 나열
 gh please issue sub-issue list 100
 
-# Remove a sub-issue link
+# 하위 이슈 연결 제거
 gh please issue sub-issue remove 100 101
 ```
 
 #### `gh please issue dependency <subcommand> [options]`
 
-Manage issue dependencies using "blocked by" relationships.
+"blocked by" 관계를 사용하여 이슈 의존성을 관리합니다.
 
-**Subcommands:**
+**하위 명령어:**
 
-- `add <issue> --blocked-by <blocker>` - Mark an issue as blocked by another
-- `remove <issue> <blocker>` - Remove a blocking dependency
-- `list <issue>` - List all issues blocking a given issue
+- `add <issue> --blocked-by <blocker>` - 이슈가 다른 이슈에 의해 차단됨으로 표시
+- `remove <issue> <blocker>` - 차단 의존성 제거
+- `list <issue>` - 특정 이슈를 차단하는 모든 이슈 나열
 
-**Examples:**
+**예시:**
 
 ```bash
-# Mark issue as blocked
+# 이슈를 차단됨으로 표시
 gh please issue dependency add 200 --blocked-by 199
 
-# View blocking issues
+# 차단 이슈 보기
 gh please issue dependency list 200
 
-# Remove blocking relationship
+# 차단 관계 제거
 gh please issue dependency remove 200 199
 ```
 
-### PR Management Commands
+### PR 관리 명령어
 
-Manage pull request reviews and threads.
+풀 리퀘스트 리뷰 및 스레드를 관리합니다.
 
 #### `gh please pr review-reply <comment-id> --body "..."`
 
-Create a reply to a PR review comment. Replaces deprecated `gh please review-reply`.
+PR 리뷰 코멘트에 답변을 작성합니다. 더 이상 사용되지 않는 `gh please review-reply`를 대체합니다.
 
-**Arguments:**
+**인자:**
 
-- `<comment-id>` - ID of the review comment (found in comment URL)
+- `<comment-id>` - 리뷰 코멘트의 ID (코멘트 URL에서 확인)
 
-**Options:**
+**옵션:**
 
-- `-b, --body <text>` - Reply text (required if not piping)
+- `-b, --body <text>` - 답변 텍스트 (파이프하지 않는 경우 필수)
 
-**Examples:**
+**예시:**
 
 ```bash
-# Direct reply
-gh please pr review-reply 1234567890 --body "Fixed in latest commit!"
+# 직접 답변
+gh please pr review-reply 1234567890 --body "최신 커밋에서 수정했습니다!"
 
-# Pipe from file
+# 파일에서 파이프
 cat reply.txt | gh please pr review-reply 1234567890
 
-# Multiline reply
+# 여러 줄 답변
 gh please pr review-reply 1234567890 --body "$(cat <<'EOF'
-Looks good, but:
+좋아 보이지만:
 
-1. Please add error handling
-2. Add unit tests for edge cases
+1. 에러 처리를 추가해주세요
+2. 엣지 케이스에 대한 단위 테스트 추가
 
-Thanks for the fix!
+수정 감사합니다!
 EOF
 )"
 ```
 
 #### `gh please pr resolve <pr-number> [--thread <id> | --all]`
 
-Resolve review threads on a pull request.
+풀 리퀘스트의 리뷰 스레드를 해결합니다.
 
-**Arguments:**
+**인자:**
 
-- `<pr-number>` - Pull request number
+- `<pr-number>` - 풀 리퀘스트 번호
 
-**Options:**
+**옵션:**
 
-- `--thread <id>` - Resolve specific thread
-- `--all` - Resolve all unresolved threads
+- `--thread <id>` - 특정 스레드 해결
+- `--all` - 모든 미해결 스레드 해결
 
-**Examples:**
+**예시:**
 
 ```bash
-# Resolve all threads
+# 모든 스레드 해결
 gh please pr resolve 456 --all
 
-# Resolve specific thread
+# 특정 스레드 해결
 gh please pr resolve 456 --thread MDEyOlB1bGxSZXF1ZXN0UmV2aWV3VGhyZWFk...
 ```
 
-### Backward Compatibility
+### 하위 호환성
 
-The old `gh please review-reply` command still works but shows a deprecation warning. Please migrate to `gh please pr review-reply`.
+이전 `gh please review-reply` 명령은 여전히 작동하지만 사용 중단 경고가 표시됩니다. `gh please pr review-reply`로 마이그레이션해주세요.
 
-## API Limitations
+## API 제한사항
 
-### Top-level Comments Only
+### 최상위 코멘트만 가능
 
-This extension uses the GitHub API endpoint:
+이 확장 프로그램은 GitHub API 엔드포인트를 사용합니다:
 
 ```
 POST /repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}/replies
 ```
 
-**Important**: This endpoint only accepts top-level review comments as the `comment_id`. If you try to reply to a comment that is itself a reply, the API will return an error.
+**중요**: 이 엔드포인트는 `comment_id`로 최상위 리뷰 코멘트만 허용합니다. 답글에 대한 답글을 시도하면 API가 에러를 반환합니다.
 
-**What works**:
+**작동하는 것**:
 
-- ✅ Replying to a review comment on a specific line of code
-- ✅ Replying to a review comment on a file
+- ✅ 코드의 특정 라인에 대한 리뷰 코멘트에 답변
+- ✅ 파일에 대한 리뷰 코멘트에 답변
 
-**What doesn't work**:
+**작동하지 않는 것**:
 
-- ❌ Replying to a reply (nested replies)
+- ❌ 답글에 대한 답글 (중첩된 답글)
 
-### Rate Limiting
+### 속도 제한
 
-GitHub API has rate limits. For authenticated requests (which `gh` CLI uses), you typically get:
+GitHub API에는 속도 제한이 있습니다. 인증된 요청(`gh` CLI 사용)의 경우 일반적으로:
 
-- 5,000 requests per hour for user-to-server requests
+- 사용자-서버 요청의 경우 시간당 5,000건
 
-Check your current rate limit:
+현재 속도 제한 확인:
 
 ```bash
 gh api rate_limit
 ```
 
-## Development
+## 개발
 
-### Project Structure
+### 프로젝트 구조
 
 ```
 @pleaseai/github/
 ├── src/
-│   ├── commands/         # Command implementations
-│   │   ├── init.ts      # Initialize PleaseAI config
-│   │   └── review-reply.ts  # Reply to PR comments
-│   ├── config/          # Configuration schema and validation
-│   │   └── schema.ts    # Zod schemas for .please/config.yml
-│   ├── lib/             # Reusable utilities
-│   │   ├── github-api.ts    # GitHub API helpers
-│   │   ├── validation.ts    # Input validation
-│   │   └── i18n.ts         # Internationalization (ko/en)
-│   ├── index.ts         # CLI entry point
-│   └── types.ts         # TypeScript type definitions
+│   ├── commands/         # 명령어 구현
+│   │   ├── init.ts      # PleaseAI 설정 초기화
+│   │   └── review-reply.ts  # PR 코멘트에 답변
+│   ├── config/          # 설정 스키마 및 검증
+│   │   └── schema.ts    # .please/config.yml용 Zod 스키마
+│   ├── lib/             # 재사용 가능한 유틸리티
+│   │   ├── github-api.ts    # GitHub API 헬퍼
+│   │   ├── validation.ts    # 입력 검증
+│   │   └── i18n.ts         # 다국어 지원 (한국어/영어)
+│   ├── index.ts         # CLI 진입점
+│   └── types.ts         # TypeScript 타입 정의
 ├── test/
-│   ├── commands/        # Command tests
-│   ├── lib/             # Library tests
+│   ├── commands/        # 명령어 테스트
+│   ├── lib/             # 라이브러리 테스트
 │   │   ├── github-api.test.ts
 │   │   └── validation.test.ts
-│   └── fixtures/        # Test data
+│   └── fixtures/        # 테스트 데이터
 │       └── mock-data.ts
 ├── script/
-│   └── build.sh         # Build script for releases
-├── gh-extension-please  # Launcher script
+│   └── build.sh         # 릴리스용 빌드 스크립트
+├── gh-extension-please  # 런처 스크립트
 ├── package.json
 ├── tsconfig.json
 └── README.md
 ```
 
-### Building
+### 빌드
 
 ```bash
-# Build for all platforms
+# 모든 플랫폼용 빌드
 ./script/build.sh
 
-# Build for development (single platform)
+# 개발용 빌드 (단일 플랫폼)
 bun build src/index.ts --outdir dist --target bun --format esm
 ```
 
-### Running Locally
+### 로컬 실행
 
 ```bash
-# Run commands directly with bun
+# bun으로 직접 명령어 실행
 bun run src/index.ts init --help
 bun run src/index.ts review-reply --help
 
-# Or use the launcher script
+# 또는 런처 스크립트 사용
 ./gh-extension-please init --help
 ./gh-extension-please review-reply --help
 ```
 
-### Type Checking
+### 타입 검사
 
 ```bash
 bun run type-check
 ```
 
-### Testing
+### 테스트
 
-The project includes a comprehensive multi-level testing strategy:
+프로젝트는 포괄적인 다단계 테스트 전략을 포함합니다:
 
-#### Quick Test Commands
+#### 빠른 테스트 명령어
 
 ```bash
-# Run all automated tests (unit + integration)
+# 모든 자동화 테스트 실행 (단위 + 통합)
 bun run test:all
 
-# Run unit tests only (fastest)
+# 단위 테스트만 실행 (가장 빠름)
 bun run test:unit
 
-# Run integration tests (CLI execution)
+# 통합 테스트 실행 (CLI 실행)
 bun run test:integration
 
-# Run E2E tests (requires GITHUB_TEST_TOKEN)
+# E2E 테스트 실행 (GITHUB_TEST_TOKEN 필요)
 export GITHUB_TEST_TOKEN=ghp_your_token
 bun run test:e2e
 
-# Run with coverage
+# 커버리지와 함께 실행
 bun run test:coverage
 
-# Watch mode for development
+# 개발용 워치 모드
 bun run test:watch
 
-# Manual smoke test (interactive)
+# 수동 스모크 테스트 (대화형)
 bun run test:manual
 ```
 
-#### Test Levels
+#### 테스트 레벨
 
-**1. Unit Tests** (`test/lib/`, `test/commands/`)
-- Fast execution (~100ms)
-- Isolated function testing
-- Mock GitHub API calls
-- **87 test cases** across 13 test files
+**1. 단위 테스트** (`test/lib/`, `test/commands/`)
+- 빠른 실행 (~100ms)
+- 격리된 함수 테스트
+- GitHub API 호출 모킹
+- 13개 테스트 파일에 걸쳐 **87개 테스트 케이스**
 
-**2. Integration Tests** (`test/integration/cli/`)
-- Medium speed (~2-5s)
-- Full CLI command execution
-- Mocked GitHub environment
-- Tests all command groups (AI, issue, PR)
+**2. 통합 테스트** (`test/integration/cli/`)
+- 중간 속도 (~2-5초)
+- 전체 CLI 명령어 실행
+- GitHub 환경 모킹
+- 모든 명령어 그룹 테스트 (AI, issue, PR)
 
-**3. E2E Tests** (`test/e2e/`) - Optional
-- Real GitHub API testing
-- Requires `GITHUB_TEST_TOKEN`
-- Auto-cleanup after tests
-- Tests critical workflows (sub-issue, dependency)
+**3. E2E 테스트** (`test/e2e/`) - 선택사항
+- 실제 GitHub API 테스트
+- `GITHUB_TEST_TOKEN` 필요
+- 테스트 후 자동 정리
+- 중요 워크플로우 테스트 (하위 이슈, 의존성)
 
-**4. Manual Testing**
-- Automated smoke test script: `./scripts/manual-test.sh`
-- Comprehensive guide: `docs/testing/manual-testing-guide.md`
+**4. 수동 테스트**
+- 자동화된 스모크 테스트 스크립트: `./scripts/manual-test.sh`
+- 종합 가이드: `docs/testing/manual-testing-guide.md`
 
-#### Coverage
+#### 커버리지
 
-| Component | Tests | Coverage Target |
+| 컴포넌트 | 테스트 | 커버리지 목표 |
 |-----------|-------|-----------------|
-| Unit Tests | 87 tests | 90%+ |
-| Integration | Comprehensive | 80%+ |
-| E2E | Critical paths | Sub-issue, Dependency |
+| 단위 테스트 | 87개 테스트 | 90%+ |
+| 통합 | 종합적 | 80%+ |
+| E2E | 중요 경로 | 하위 이슈, 의존성 |
 
-See [Testing Overview](docs/testing/testing-overview.md) for detailed documentation.
+자세한 내용은 [테스트 개요](docs/testing/testing-overview.md)를 참조하세요.
 
-## Contributing
+## 기여
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+기여를 환영합니다! 풀 리퀘스트를 자유롭게 제출해주세요.
 
-## License
+## 라이선스
 
 MIT
 
-## Related Documentation
+## 관련 문서
 
-- [GitHub CLI Manual](https://cli.github.com/manual/)
-- [Creating GitHub CLI Extensions](https://docs.github.com/en/enterprise-cloud@latest/github-cli/github-cli/creating-github-cli-extensions)
-- [GitHub REST API - Pull Request Review Comments](https://docs.github.com/en/rest/pulls/comments)
-- [Bun Documentation](https://bun.sh/docs)
+- [GitHub CLI 매뉴얼](https://cli.github.com/manual/)
+- [GitHub CLI 확장 프로그램 만들기](https://docs.github.com/en/enterprise-cloud@latest/github-cli/github-cli/creating-github-cli-extensions)
+- [GitHub REST API - 풀 리퀘스트 리뷰 코멘트](https://docs.github.com/en/rest/pulls/comments)
+- [Bun 문서](https://bun.sh/docs)
