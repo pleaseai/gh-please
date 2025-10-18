@@ -1,6 +1,6 @@
 {
   "name": "@pleaseai/gh-extension",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "GitHub CLI extension for replying to PR review comments",
   "type": "module",
   "main": "dist/index.js",
