@@ -12,14 +12,15 @@ export function createFixCommand(): Command {
   command
     .description('Trigger PleaseAI to create a fix for an issue')
     .argument('<issue-number>', 'Issue number to fix')
-    .action(async (issueNumberStr: string) => {
+    .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
+    .action(async (issueNumberStr: string, options: { repo?: string }) => {
       try {
         const issueNumber = Number.parseInt(issueNumberStr, 10)
         if (Number.isNaN(issueNumber)) {
           throw new TypeError('Issue number must be a valid number')
         }
 
-        const { owner, repo } = await getRepoInfo()
+        const { owner, repo } = await getRepoInfo(options.repo)
 
         console.log(`🤖 Triggering PleaseAI fix for issue #${issueNumber}...`)
         await triggerPleaseAIIssue('fix', owner, repo, issueNumber)

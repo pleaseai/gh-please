@@ -21,7 +21,8 @@ export function createDependencyCommand(): Command {
     .description('Add a blocking dependency to an issue')
     .argument('<issue>', 'Issue number that is blocked')
     .requiredOption('--blocked-by <blocker>', 'Issue number that blocks this issue')
-    .action(async (issueStr: string, options: { blockedBy: string }) => {
+    .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
+    .action(async (issueStr: string, options: { blockedBy: string, repo?: string }) => {
       try {
         const issueNumber = Number.parseInt(issueStr, 10)
         const blockerNumber = Number.parseInt(options.blockedBy, 10)
@@ -30,7 +31,7 @@ export function createDependencyCommand(): Command {
           throw new TypeError('Issue numbers must be valid')
         }
 
-        const { owner, repo } = await getRepoInfo()
+        const { owner, repo } = await getRepoInfo(options.repo)
 
         console.log(`🔍 Getting issue node IDs...`)
         const issueNodeId = await getIssueNodeId(owner, repo, issueNumber)
@@ -65,7 +66,8 @@ export function createDependencyCommand(): Command {
     .description('Remove a blocking dependency from an issue')
     .argument('<issue>', 'Issue number that is blocked')
     .argument('<blocker>', 'Issue number that is no longer blocking')
-    .action(async (issueStr: string, blockerStr: string) => {
+    .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
+    .action(async (issueStr: string, blockerStr: string, options: { repo?: string }) => {
       try {
         const issueNumber = Number.parseInt(issueStr, 10)
         const blockerNumber = Number.parseInt(blockerStr, 10)
@@ -74,7 +76,7 @@ export function createDependencyCommand(): Command {
           throw new TypeError('Issue numbers must be valid')
         }
 
-        const { owner, repo } = await getRepoInfo()
+        const { owner, repo } = await getRepoInfo(options.repo)
 
         console.log(`🔍 Getting issue node IDs...`)
         const issueNodeId = await getIssueNodeId(owner, repo, issueNumber)
@@ -108,14 +110,15 @@ export function createDependencyCommand(): Command {
   const listCmd = new Command('list')
     .description('List all issues blocking a given issue')
     .argument('<issue>', 'Issue number')
-    .action(async (issueStr: string) => {
+    .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
+    .action(async (issueStr: string, options: { repo?: string }) => {
       try {
         const issueNumber = Number.parseInt(issueStr, 10)
         if (Number.isNaN(issueNumber)) {
           throw new TypeError('Issue number must be valid')
         }
 
-        const { owner, repo } = await getRepoInfo()
+        const { owner, repo } = await getRepoInfo(options.repo)
 
         console.log(`📋 Fetching blockers for #${issueNumber}...`)
         const issueNodeId = await getIssueNodeId(owner, repo, issueNumber)

@@ -14,10 +14,11 @@ export function createResolveCommand(): Command {
     .argument('<pr-number>', 'Pull request number')
     .option('--thread <id>', 'Specific thread ID to resolve')
     .option('--all', 'Resolve all unresolved threads')
+    .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
     .action(
       async (
         prNumberStr: string,
-        options: { thread?: string, all?: boolean },
+        options: { thread?: string, all?: boolean, repo?: string },
       ) => {
         try {
           const prNumber = Number.parseInt(prNumberStr, 10)
@@ -29,7 +30,7 @@ export function createResolveCommand(): Command {
             throw new Error('Must specify either --thread <id> or --all')
           }
 
-          const { owner, repo } = await getRepoInfo()
+          const { owner, repo } = await getRepoInfo(options.repo)
           const prNodeId = await getPrNodeId(owner, repo, prNumber)
 
           if (options.all) {

@@ -1,5 +1,5 @@
 import { Command } from 'commander'
-import { createReviewReply, getCurrentPrInfo } from '../../lib/github-api'
+import { createReviewReply, getCurrentPrInfo, getRepoInfo } from '../../lib/github-api'
 import { validateCommentId, validateReplyBody } from '../../lib/validation'
 
 /**
@@ -13,7 +13,9 @@ export function createReviewReplyCommand(): Command {
     .description('Create a reply to a PR review comment')
     .argument('<comment-id>', 'ID of the review comment to reply to')
     .option('-b, --body <text>', 'Reply body text')
-    .action(async (commentIdStr: string, options: { body?: string }) => {
+    .option('-R, --repo <owner/repo>', 'Repository in owner/repo format (required if not in PR context)')
+    .option('--pr <number>', 'PR number (required with --repo)')
+    .action(async (commentIdStr: string, options: { body?: string, repo?: string, pr?: string }) => {
       try {
         // Validate comment ID
         const commentId = validateCommentId(commentIdStr)
@@ -40,7 +42,22 @@ export function createReviewReplyCommand(): Command {
         body = validateReplyBody(body)
 
         console.log('🔍 Fetching PR information...')
-        const prInfo = await getCurrentPrInfo()
+
+        let prInfo
+        if (options.repo && options.pr) {
+          // Use provided repo and PR number
+          const { owner, repo } = await getRepoInfo(options.repo)
+          const prNumber = Number.parseInt(options.pr, 10)
+          if (Number.isNaN(prNumber)) {
+            throw new TypeError('PR number must be a valid number')
+          }
+          prInfo = { owner, repo, number: prNumber }
+        } else if (options.repo || options.pr) {
+          throw new Error('Both --repo and --pr must be specified together')
+        } else {
+          // Get from current PR context
+          prInfo = await getCurrentPrInfo()
+        }
 
         console.log(
           `📝 Creating reply to comment ${commentId} on PR #${prInfo.number}...`,

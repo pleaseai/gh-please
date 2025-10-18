@@ -12,14 +12,15 @@ export function createReviewCommand(): Command {
   command
     .description('Trigger PleaseAI to review a pull request')
     .argument('<pr-number>', 'Pull request number to review')
-    .action(async (prNumberStr: string) => {
+    .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
+    .action(async (prNumberStr: string, options: { repo?: string }) => {
       try {
         const prNumber = Number.parseInt(prNumberStr, 10)
         if (Number.isNaN(prNumber)) {
           throw new TypeError('PR number must be a valid number')
         }
 
-        const { owner, repo } = await getRepoInfo()
+        const { owner, repo } = await getRepoInfo(options.repo)
 
         console.log(`🤖 Triggering PleaseAI review for PR #${prNumber}...`)
         await triggerPleaseAIPr('review', owner, repo, prNumber)

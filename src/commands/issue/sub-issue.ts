@@ -22,14 +22,15 @@ export function createSubIssueCommand(): Command {
     .argument('<parent-issue>', 'Parent issue number')
     .requiredOption('--title <text>', 'Sub-issue title')
     .option('--body <text>', 'Sub-issue body')
-    .action(async (parentStr: string, options: { title: string, body?: string }) => {
+    .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
+    .action(async (parentStr: string, options: { title: string, body?: string, repo?: string }) => {
       try {
         const parentNumber = Number.parseInt(parentStr, 10)
         if (Number.isNaN(parentNumber)) {
           throw new TypeError('Parent issue number must be valid')
         }
 
-        const { owner, repo } = await getRepoInfo()
+        const { owner, repo } = await getRepoInfo(options.repo)
         console.log(`🔍 Getting parent issue #${parentNumber}...`)
 
         const parentNodeId = await getIssueNodeId(owner, repo, parentNumber)
@@ -95,7 +96,8 @@ export function createSubIssueCommand(): Command {
     .description('Add existing issue as sub-issue to parent')
     .argument('<parent-issue>', 'Parent issue number')
     .argument('<child-issue>', 'Child issue number to add as sub-issue')
-    .action(async (parentStr: string, childStr: string) => {
+    .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
+    .action(async (parentStr: string, childStr: string, options: { repo?: string }) => {
       try {
         const parentNumber = Number.parseInt(parentStr, 10)
         const childNumber = Number.parseInt(childStr, 10)
@@ -104,7 +106,7 @@ export function createSubIssueCommand(): Command {
           throw new TypeError('Issue numbers must be valid')
         }
 
-        const { owner, repo } = await getRepoInfo()
+        const { owner, repo } = await getRepoInfo(options.repo)
 
         console.log(`🔍 Getting issue node IDs...`)
         const parentNodeId = await getIssueNodeId(owner, repo, parentNumber)
@@ -134,7 +136,8 @@ export function createSubIssueCommand(): Command {
     .description('Remove sub-issue from parent')
     .argument('<parent-issue>', 'Parent issue number')
     .argument('<child-issue>', 'Child issue number to remove')
-    .action(async (parentStr: string, childStr: string) => {
+    .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
+    .action(async (parentStr: string, childStr: string, options: { repo?: string }) => {
       try {
         const parentNumber = Number.parseInt(parentStr, 10)
         const childNumber = Number.parseInt(childStr, 10)
@@ -143,7 +146,7 @@ export function createSubIssueCommand(): Command {
           throw new TypeError('Issue numbers must be valid')
         }
 
-        const { owner, repo } = await getRepoInfo()
+        const { owner, repo } = await getRepoInfo(options.repo)
 
         console.log(`🔍 Getting issue node IDs...`)
         const parentNodeId = await getIssueNodeId(owner, repo, parentNumber)
@@ -172,14 +175,15 @@ export function createSubIssueCommand(): Command {
   const listCmd = new Command('list')
     .description('List all sub-issues of a parent issue')
     .argument('<parent-issue>', 'Parent issue number')
-    .action(async (parentStr: string) => {
+    .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
+    .action(async (parentStr: string, options: { repo?: string }) => {
       try {
         const parentNumber = Number.parseInt(parentStr, 10)
         if (Number.isNaN(parentNumber)) {
           throw new TypeError('Parent issue number must be valid')
         }
 
-        const { owner, repo } = await getRepoInfo()
+        const { owner, repo } = await getRepoInfo(options.repo)
 
         console.log(`📋 Fetching sub-issues of #${parentNumber}...`)
         const parentNodeId = await getIssueNodeId(owner, repo, parentNumber)

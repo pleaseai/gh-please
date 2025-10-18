@@ -151,9 +151,41 @@ export async function createReviewReply(options: ReplyOptions): Promise<void> {
 }
 
 /**
- * Get repository information (owner and name) from current context
+ * Parse repository string in owner/repo format
+ * @param repoString - Repository string in "owner/repo" format
+ * @returns Object with owner and repo properties
+ * @throws Error if format is invalid
  */
-export async function getRepoInfo(): Promise<{ owner: string, repo: string }> {
+export function parseRepoString(repoString: string): { owner: string, repo: string } {
+  const trimmed = repoString.trim()
+  const parts = trimmed.split('/')
+
+  if (parts.length !== 2 || !parts[0] || !parts[1]) {
+    throw new Error(
+      `Invalid repository format: "${repoString}". Expected format: "owner/repo"`,
+    )
+  }
+
+  return {
+    owner: parts[0],
+    repo: parts[1],
+  }
+}
+
+/**
+ * Get repository information (owner and name) from current context or parse from string
+ * @param repoString - Optional repository string in "owner/repo" format
+ * @returns Repository information with owner and repo
+ */
+export async function getRepoInfo(
+  repoString?: string,
+): Promise<{ owner: string, repo: string }> {
+  // If repo string is provided, parse it directly
+  if (repoString) {
+    return parseRepoString(repoString)
+  }
+
+  // Otherwise, get from current context using gh CLI
   const proc = Bun.spawn([getGhCommand(), 'repo', 'view', '--json', 'owner,name'], {
     stdout: 'pipe',
     stderr: 'pipe',

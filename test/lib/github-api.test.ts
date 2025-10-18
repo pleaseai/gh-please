@@ -8,6 +8,7 @@ import {
   getRepoInfo,
   isTopLevelComment,
   parsePrInfo,
+  parseRepoString,
 } from '../../src/lib/github-api'
 
 describe('github-api', () => {
@@ -174,6 +175,62 @@ describe('github-api', () => {
   describe('createPrComment', () => {
     test('should export function with correct signature', () => {
       expect(typeof createPrComment).toBe('function')
+    })
+  })
+
+  describe('parseRepoString', () => {
+    test('should parse valid repo string with owner/repo format', () => {
+      const result = parseRepoString('owner/repo')
+      expect(result).toEqual({
+        owner: 'owner',
+        repo: 'repo',
+      })
+    })
+
+    test('should parse repo string with hyphens and underscores', () => {
+      const result = parseRepoString('my-org/my_repo')
+      expect(result).toEqual({
+        owner: 'my-org',
+        repo: 'my_repo',
+      })
+    })
+
+    test('should trim whitespace', () => {
+      const result = parseRepoString('  owner/repo  ')
+      expect(result).toEqual({
+        owner: 'owner',
+        repo: 'repo',
+      })
+    })
+
+    test('should throw error for invalid format without slash', () => {
+      expect(() => parseRepoString('invalidrepo')).toThrow(
+        'Invalid repository format: "invalidrepo". Expected format: "owner/repo"',
+      )
+    })
+
+    test('should throw error for too many slashes', () => {
+      expect(() => parseRepoString('owner/repo/extra')).toThrow(
+        'Invalid repository format',
+      )
+    })
+
+    test('should throw error for empty owner', () => {
+      expect(() => parseRepoString('/repo')).toThrow(
+        'Invalid repository format',
+      )
+    })
+
+    test('should throw error for empty repo', () => {
+      expect(() => parseRepoString('owner/')).toThrow(
+        'Invalid repository format',
+      )
+    })
+
+    test('should throw error for empty string', () => {
+      expect(() => parseRepoString('')).toThrow(
+        'Invalid repository format',
+      )
     })
   })
 })

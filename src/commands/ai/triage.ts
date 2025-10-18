@@ -12,14 +12,15 @@ export function createTriageCommand(): Command {
   command
     .description('Trigger PleaseAI to triage an issue')
     .argument('<issue-number>', 'Issue number to triage')
-    .action(async (issueNumberStr: string) => {
+    .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
+    .action(async (issueNumberStr: string, options: { repo?: string }) => {
       try {
         const issueNumber = Number.parseInt(issueNumberStr, 10)
         if (Number.isNaN(issueNumber)) {
           throw new TypeError('Issue number must be a valid number')
         }
 
-        const { owner, repo } = await getRepoInfo()
+        const { owner, repo } = await getRepoInfo(options.repo)
 
         console.log(`🤖 Triggering PleaseAI triage for issue #${issueNumber}...`)
         await triggerPleaseAIIssue('triage', owner, repo, issueNumber)
