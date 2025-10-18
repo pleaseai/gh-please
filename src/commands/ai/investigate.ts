@@ -15,7 +15,7 @@ export function createInvestigateCommand(): Command {
     .action(async (issueNumberStr: string) => {
       try {
         const issueNumber = Number.parseInt(issueNumberStr, 10)
-        if (isNaN(issueNumber)) {
+        if (Number.isNaN(issueNumber)) {
           throw new TypeError('Issue number must be a valid number')
         }
 

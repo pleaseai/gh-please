@@ -197,7 +197,7 @@ export function createInitCommand(): Command {
             initialValue: '-1',
             validate: (value) => {
               const num = Number.parseInt(value)
-              if (isNaN(num))
+              if (Number.isNaN(num))
                 return 'Please enter a valid number'
               if (num < -1)
                 return 'Value must be -1 or greater'

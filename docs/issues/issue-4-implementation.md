@@ -250,8 +250,12 @@ query ($owner: String!, $repo: String!, $number: Int!) {
 
 ```graphql
 mutation($parentId: ID!, $title: String!, $body: String) {
-  # 먼저 이슈 생성 후 addSubIssue 호출
-  # 또는 TaskList API 사용
+  createIssue(input: { title: $title, body: $body }) {
+    issue {
+      id
+      number
+    }
+  }
 }
 ```
 

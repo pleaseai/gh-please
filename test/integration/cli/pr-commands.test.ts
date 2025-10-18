@@ -1,0 +1,408 @@
+/**
+ * CLI Integration Tests for PR Commands
+ * Tests review-reply and resolve commands through CLI
+ */
+
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
+import {
+  assertExitCode,
+  assertOutputContains,
+  createGhMock,
+  runCli,
+  runCliExpectFailure,
+  runCliExpectSuccess,
+  type GhMockRule,
+} from '../../helpers/cli-runner'
+import {
+  createGetPrNodeIdResponse,
+  createGetReviewCommentResponse,
+  createListReviewThreadsResponse,
+  createResolveThreadResponse,
+  createReviewReplyResponse,
+  ghCliResponses,
+  mockPr,
+  mockRepoInfo,
+  mockReviewComment,
+  mockReviewThread,
+} from '../../fixtures/github-responses'
+
+describe('PR Commands - CLI Integration', () => {
+  let cleanupMock: (() => void) | null = null
+
+  beforeEach(async () => {
+    const mockRules: GhMockRule[] = [
+      // Mock repo view
+      {
+        args: ['repo', 'view', '--json', 'owner,name'],
+        response: {
+          stdout: ghCliResponses.repoView,
+          exitCode: 0,
+        },
+      },
+      // Mock get review comment
+      {
+        args: /\/pulls\/comments\/\d+$/,
+        response: {
+          stdout: JSON.stringify(
+            createGetReviewCommentResponse(
+              mockReviewComment.id,
+              mockReviewComment.body,
+              mockPr.number,
+              mockReviewComment.path,
+              mockReviewComment.line,
+            ),
+          ),
+          exitCode: 0,
+        },
+      },
+      // Mock create review reply
+      {
+        args: /\/pulls\/\d+\/comments\/\d+\/replies/,
+        response: {
+          stdout: JSON.stringify(
+            createReviewReplyResponse(
+              999888777,
+              'Reply text',
+              mockReviewComment.id,
+            ),
+          ),
+          exitCode: 0,
+        },
+      },
+      // Mock get PR node ID
+      {
+        args: /getPrNodeId/,
+        response: {
+          stdout: JSON.stringify(
+            createGetPrNodeIdResponse(mockPr.number, mockPr.nodeId),
+          ),
+          exitCode: 0,
+        },
+      },
+      // Mock list review threads
+      {
+        args: /reviewThreads.*first/,
+        response: {
+          stdout: JSON.stringify(
+            createListReviewThreadsResponse([
+              {
+                id: mockReviewThread.id,
+                isResolved: false,
+                path: mockReviewThread.path,
+                line: mockReviewThread.line,
+              },
+              {
+                id: 'PRRT_kwDOABCDEF67890',
+                isResolved: false,
+                path: 'src/lib/api.ts',
+                line: 100,
+              },
+            ]),
+          ),
+          exitCode: 0,
+        },
+      },
+      // Mock resolve review thread
+      {
+        args: /resolveReviewThread/,
+        response: {
+          stdout: JSON.stringify(
+            createResolveThreadResponse(mockReviewThread.id),
+          ),
+          exitCode: 0,
+        },
+      },
+    ]
+
+    cleanupMock = await createGhMock(mockRules)
+  })
+
+  afterEach(() => {
+    if (cleanupMock) {
+      cleanupMock()
+      cleanupMock = null
+    }
+  })
+
+  describe('gh please pr review-reply', () => {
+    test('should reply to review comment', async () => {
+      const result = await runCliExpectSuccess([
+        'pr',
+        'review-reply',
+        String(mockReviewComment.id),
+        '-b',
+        'Thanks for the review!',
+      ])
+
+      assertOutputContains(result, 'Fetching review comment')
+      assertOutputContains(result, 'Reply posted successfully')
+      assertOutputContains(result, 'View:')
+      assertExitCode(result, 0)
+    })
+
+    test('should show help with --help flag', async () => {
+      const result = await runCliExpectSuccess(['pr', 'review-reply', '--help'])
+
+      assertOutputContains(result, 'Usage:')
+      assertOutputContains(result, 'Reply to PR review comment')
+      assertOutputContains(result, '--body')
+    })
+
+    test('should fail without --body option', async () => {
+      const result = await runCliExpectFailure([
+        'pr',
+        'review-reply',
+        String(mockReviewComment.id),
+      ])
+
+      assertOutputContains(result, 'error', 'any')
+      assertOutputContains(result, 'body', 'any')
+    })
+
+    test('should fail with invalid comment ID', async () => {
+      const result = await runCliExpectFailure([
+        'pr',
+        'review-reply',
+        'not-a-number',
+        '-b',
+        'Test',
+      ])
+
+      assertOutputContains(result, 'error', 'any')
+    })
+
+    test('should fail with empty body', async () => {
+      const result = await runCliExpectFailure([
+        'pr',
+        'review-reply',
+        String(mockReviewComment.id),
+        '-b',
+        '',
+      ])
+
+      assertOutputContains(result, 'error', 'any')
+    })
+  })
+
+  describe('gh please pr resolve', () => {
+    test('should resolve specific thread with --thread option', async () => {
+      const result = await runCliExpectSuccess([
+        'pr',
+        'resolve',
+        String(mockPr.number),
+        '--thread',
+        mockReviewThread.id,
+      ])
+
+      assertOutputContains(result, 'Resolving review thread')
+      assertOutputContains(result, 'Thread resolved successfully')
+      assertExitCode(result, 0)
+    })
+
+    test('should resolve all threads with --all option', async () => {
+      const result = await runCliExpectSuccess([
+        'pr',
+        'resolve',
+        String(mockPr.number),
+        '--all',
+      ])
+
+      assertOutputContains(result, 'Finding all unresolved threads')
+      assertOutputContains(result, 'Resolving')
+      assertOutputContains(result, 'threads resolved successfully')
+      assertExitCode(result, 0)
+    })
+
+    test('should show help with --help flag', async () => {
+      const result = await runCliExpectSuccess(['pr', 'resolve', '--help'])
+
+      assertOutputContains(result, 'Usage:')
+      assertOutputContains(result, 'Resolve PR review threads')
+      assertOutputContains(result, '--thread')
+      assertOutputContains(result, '--all')
+    })
+
+    test('should fail without --thread or --all option', async () => {
+      const result = await runCliExpectFailure([
+        'pr',
+        'resolve',
+        String(mockPr.number),
+      ])
+
+      assertOutputContains(result, 'error', 'any')
+      assertOutputContains(result, 'thread', 'any')
+    })
+
+    test('should fail with invalid PR number', async () => {
+      const result = await runCliExpectFailure([
+        'pr',
+        'resolve',
+        'not-a-number',
+        '--all',
+      ])
+
+      assertOutputContains(result, 'error', 'any')
+    })
+
+    test('should handle no unresolved threads gracefully', async () => {
+      // Mock with no unresolved threads
+      if (cleanupMock) {
+        cleanupMock()
+      }
+
+      const noThreadsMockRules: GhMockRule[] = [
+        {
+          args: ['repo', 'view', '--json', 'owner,name'],
+          response: {
+            stdout: ghCliResponses.repoView,
+            exitCode: 0,
+          },
+        },
+        {
+          args: /getPrNodeId/,
+          response: {
+            stdout: JSON.stringify(
+              createGetPrNodeIdResponse(mockPr.number, mockPr.nodeId),
+            ),
+            exitCode: 0,
+          },
+        },
+        {
+          args: /reviewThreads.*first/,
+          response: {
+            stdout: JSON.stringify(
+              createListReviewThreadsResponse([]),
+            ),
+            exitCode: 0,
+          },
+        },
+      ]
+
+      cleanupMock = await createGhMock(noThreadsMockRules)
+
+      const result = await runCliExpectSuccess([
+        'pr',
+        'resolve',
+        String(mockPr.number),
+        '--all',
+      ])
+
+      assertOutputContains(result, 'No unresolved threads', 'any')
+      assertExitCode(result, 0)
+    })
+  })
+
+  describe('gh please pr (command group)', () => {
+    test('should show help when no subcommand provided', async () => {
+      const result = await runCli(['pr'])
+
+      assertOutputContains(result, 'Manage pull requests', 'any')
+    })
+
+    test('should show help with --help flag', async () => {
+      const result = await runCliExpectSuccess(['pr', '--help'])
+
+      assertOutputContains(result, 'Usage:')
+      assertOutputContains(result, 'review-reply')
+      assertOutputContains(result, 'resolve')
+    })
+  })
+
+  describe('Deprecated review-reply command', () => {
+    test('should show deprecation warning and still work', async () => {
+      const result = await runCliExpectSuccess([
+        'review-reply',
+        String(mockReviewComment.id),
+        '-b',
+        'Test reply',
+      ])
+
+      // Should show deprecation warning
+      assertOutputContains(result, 'Warning', 'any')
+      assertOutputContains(result, 'deprecated', 'any')
+      assertOutputContains(result, 'gh please pr review-reply', 'any')
+
+      // Should still post reply successfully
+      assertOutputContains(result, 'Reply posted successfully', 'any')
+      assertExitCode(result, 0)
+    })
+
+    test('should show help for deprecated command', async () => {
+      const result = await runCliExpectSuccess(['review-reply', '--help'])
+
+      assertOutputContains(result, 'Deprecated')
+      assertOutputContains(result, 'gh please pr review-reply')
+    })
+  })
+
+  describe('Error handling', () => {
+    test('should handle comment not found error', async () => {
+      if (cleanupMock) {
+        cleanupMock()
+      }
+
+      const errorMockRules: GhMockRule[] = [
+        {
+          args: ['repo', 'view', '--json', 'owner,name'],
+          response: {
+            stdout: ghCliResponses.repoView,
+            exitCode: 0,
+          },
+        },
+        {
+          args: /\/pulls\/comments\/\d+$/,
+          response: {
+            stderr: 'HTTP 404: Not Found',
+            exitCode: 1,
+          },
+        },
+      ]
+
+      cleanupMock = await createGhMock(errorMockRules)
+
+      const result = await runCliExpectFailure([
+        'pr',
+        'review-reply',
+        '999999999',
+        '-b',
+        'Test',
+      ])
+
+      assertOutputContains(result, 'error', 'any')
+    })
+
+    test('should handle PR not found error', async () => {
+      if (cleanupMock) {
+        cleanupMock()
+      }
+
+      const errorMockRules: GhMockRule[] = [
+        {
+          args: ['repo', 'view', '--json', 'owner,name'],
+          response: {
+            stdout: ghCliResponses.repoView,
+            exitCode: 0,
+          },
+        },
+        {
+          args: /getPrNodeId/,
+          response: {
+            stderr: 'Could not resolve to a PullRequest',
+            exitCode: 1,
+          },
+        },
+      ]
+
+      cleanupMock = await createGhMock(errorMockRules)
+
+      const result = await runCliExpectFailure([
+        'pr',
+        'resolve',
+        '999999',
+        '--all',
+      ])
+
+      assertOutputContains(result, 'error', 'any')
+    })
+  })
+})

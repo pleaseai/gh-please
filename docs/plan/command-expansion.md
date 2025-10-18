@@ -304,7 +304,7 @@ export function createTriageCommand(): Command {
     .action(async (issueNumberStr: string) => {
       try {
         const issueNumber = Number.parseInt(issueNumberStr, 10)
-        if (isNaN(issueNumber)) {
+        if (Number.Number.isNaN(issueNumber)) {
           throw new TypeError('Issue number must be a valid number')
         }
 
@@ -388,7 +388,7 @@ export function createSubIssueCommand(): Command {
     .action(async (parentStr: string, options: { title: string, body?: string }) => {
       try {
         const parentNumber = Number.parseInt(parentStr, 10)
-        if (isNaN(parentNumber)) {
+        if (Number.isNaN(parentNumber)) {
           throw new TypeError('Parent issue number must be valid')
         }
 
@@ -554,7 +554,7 @@ export function createResolveCommand(): Command {
     .action(async (prNumberStr: string, options: { thread?: string, all?: boolean }) => {
       try {
         const prNumber = Number.parseInt(prNumberStr, 10)
-        if (isNaN(prNumber)) {
+        if (Number.isNaN(prNumber)) {
           throw new TypeError('PR number must be valid')
         }
 

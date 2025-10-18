@@ -1,5 +1,7 @@
 # @pleaseai/github
 
+[![CI](https://github.com/pleaseai/github/actions/workflows/ci.yml/badge.svg)](https://github.com/pleaseai/github/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/pleaseai/github/branch/main/graph/badge.svg)](https://codecov.io/gh/pleaseai/github)
 [![code style](https://antfu.me/badge-code-style.svg)](https://github.com/antfu/eslint-config)
 
 GitHub CLI extension for **PleaseAI** - AI-powered code review and issue management automation.
@@ -511,25 +513,67 @@ bun run type-check
 
 ### Testing
 
-The project includes comprehensive unit tests:
+The project includes a comprehensive multi-level testing strategy:
+
+#### Quick Test Commands
 
 ```bash
-# Run all tests
-bun test
+# Run all automated tests (unit + integration)
+bun run test:all
 
-# Run tests in watch mode
-bun test --watch
+# Run unit tests only (fastest)
+bun run test:unit
 
-# Run tests with coverage
-bun test --coverage
+# Run integration tests (CLI execution)
+bun run test:integration
+
+# Run E2E tests (requires GITHUB_TEST_TOKEN)
+export GITHUB_TEST_TOKEN=ghp_your_token
+bun run test:e2e
+
+# Run with coverage
+bun run test:coverage
+
+# Watch mode for development
+bun run test:watch
+
+# Manual smoke test (interactive)
+bun run test:manual
 ```
 
-**Test Coverage:**
+#### Test Levels
 
-- Input validation (comment IDs, reply bodies)
-- GitHub API helpers (endpoint building, PR info parsing)
-- Comment type detection (top-level vs replies)
-- 16 test cases with 29 assertions
+**1. Unit Tests** (`test/lib/`, `test/commands/`)
+- Fast execution (~100ms)
+- Isolated function testing
+- Mock GitHub API calls
+- **87 test cases** across 13 test files
+
+**2. Integration Tests** (`test/integration/cli/`)
+- Medium speed (~2-5s)
+- Full CLI command execution
+- Mocked GitHub environment
+- Tests all command groups (AI, issue, PR)
+
+**3. E2E Tests** (`test/e2e/`) - Optional
+- Real GitHub API testing
+- Requires `GITHUB_TEST_TOKEN`
+- Auto-cleanup after tests
+- Tests critical workflows (sub-issue, dependency)
+
+**4. Manual Testing**
+- Automated smoke test script: `./scripts/manual-test.sh`
+- Comprehensive guide: `docs/testing/manual-testing-guide.md`
+
+#### Coverage
+
+| Component | Tests | Coverage Target |
+|-----------|-------|-----------------|
+| Unit Tests | 87 tests | 90%+ |
+| Integration | Comprehensive | 80%+ |
+| E2E | Critical paths | Sub-issue, Dependency |
+
+See [Testing Overview](docs/testing/testing-overview.md) for detailed documentation.
 
 ## Contributing
 

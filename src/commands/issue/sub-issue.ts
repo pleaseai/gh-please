@@ -25,7 +25,7 @@ export function createSubIssueCommand(): Command {
     .action(async (parentStr: string, options: { title: string, body?: string }) => {
       try {
         const parentNumber = Number.parseInt(parentStr, 10)
-        if (isNaN(parentNumber)) {
+        if (Number.isNaN(parentNumber)) {
           throw new TypeError('Parent issue number must be valid')
         }
 
@@ -35,19 +35,6 @@ export function createSubIssueCommand(): Command {
         const parentNodeId = await getIssueNodeId(owner, repo, parentNumber)
 
         console.log(`📝 Creating sub-issue...`)
-        // Using GraphQL mutation to create issue with parent relationship
-        const createMutation = `
-          mutation($owner: String!, $repo: String!, $title: String!, $body: String, $parentId: ID!) {
-            createIssue(input: {repositoryId: "", title: $title, body: $body}) {
-              issue {
-                id
-                number
-                title
-              }
-            }
-          }
-        `
-
         // For now, create issue via gh CLI and then link it
         const proc = Bun.spawn(
           [
@@ -108,7 +95,7 @@ export function createSubIssueCommand(): Command {
         const parentNumber = Number.parseInt(parentStr, 10)
         const childNumber = Number.parseInt(childStr, 10)
 
-        if (isNaN(parentNumber) || isNaN(childNumber)) {
+        if (Number.isNaN(parentNumber) || Number.isNaN(childNumber)) {
           throw new TypeError('Issue numbers must be valid')
         }
 
@@ -147,7 +134,7 @@ export function createSubIssueCommand(): Command {
         const parentNumber = Number.parseInt(parentStr, 10)
         const childNumber = Number.parseInt(childStr, 10)
 
-        if (isNaN(parentNumber) || isNaN(childNumber)) {
+        if (Number.isNaN(parentNumber) || Number.isNaN(childNumber)) {
           throw new TypeError('Issue numbers must be valid')
         }
 
@@ -183,7 +170,7 @@ export function createSubIssueCommand(): Command {
     .action(async (parentStr: string) => {
       try {
         const parentNumber = Number.parseInt(parentStr, 10)
-        if (isNaN(parentNumber)) {
+        if (Number.isNaN(parentNumber)) {
           throw new TypeError('Parent issue number must be valid')
         }
 

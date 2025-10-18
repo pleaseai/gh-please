@@ -1,0 +1,88 @@
+name: Manual E2E Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_owner:
+        description: 'GitHub test repository owner'
+        required: false
+        default: 'gh-please-e2e'
+      test_repo:
+        description: 'GitHub test repository name'
+        required: false
+        default: 'test-repo'
+      skip_cleanup:
+        description: 'Skip cleanup after tests (for debugging)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Setup GitHub CLI
+        run: |
+          type -p gh > /dev/null || (
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+            sudo apt update
+            sudo apt install gh
+          )
+
+      - name: Run E2E tests
+        env:
+          GITHUB_TEST_TOKEN: ${{ secrets.GITHUB_TEST_TOKEN }}
+          GITHUB_TEST_OWNER: ${{ inputs.test_owner }}
+          GITHUB_TEST_REPO: ${{ inputs.test_repo }}
+          E2E_SKIP_CLEANUP: ${{ inputs.skip_cleanup && 'true' || 'false' }}
+        run: |
+          if [ -z "$GITHUB_TEST_TOKEN" ]; then
+            echo "❌ Error: GITHUB_TEST_TOKEN secret is not configured"
+            echo "Please add GITHUB_TEST_TOKEN to repository secrets"
+            exit 1
+          fi
+
+          echo "🚀 Running E2E tests..."
+          echo "   Owner: $GITHUB_TEST_OWNER"
+          echo "   Repo: $GITHUB_TEST_REPO"
+          echo "   Skip cleanup: $E2E_SKIP_CLEANUP"
+
+          bun run test:e2e
+
+      - name: Upload E2E test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results-${{ github.run_id }}
+          path: |
+            test/e2e/**/*.log
+            coverage/
+          retention-days: 14
+
+      - name: Test Summary
+        if: always()
+        run: |
+          echo "## E2E Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Repository**: ${{ inputs.test_owner }}/${{ inputs.test_repo }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Skip Cleanup**: ${{ inputs.skip_cleanup }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ All E2E tests passed!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Some E2E tests failed. Check the logs above." >> $GITHUB_STEP_SUMMARY
+          fi

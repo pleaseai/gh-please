@@ -8,7 +8,7 @@ export function validateCommentId(id: string): number {
   }
 
   const parsed = Number.parseInt(id, 10)
-  if (isNaN(parsed) || parsed <= 0) {
+  if (Number.isNaN(parsed) || parsed <= 0) {
     throw new Error('Comment ID must be a positive integer')
   }
   return parsed

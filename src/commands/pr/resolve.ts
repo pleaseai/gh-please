@@ -21,7 +21,7 @@ export function createResolveCommand(): Command {
       ) => {
         try {
           const prNumber = Number.parseInt(prNumberStr, 10)
-          if (isNaN(prNumber)) {
+          if (Number.isNaN(prNumber)) {
             throw new TypeError('PR number must be valid')
           }
 

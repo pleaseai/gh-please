@@ -26,7 +26,7 @@ export function createDependencyCommand(): Command {
         const issueNumber = Number.parseInt(issueStr, 10)
         const blockerNumber = Number.parseInt(options.blockedBy, 10)
 
-        if (isNaN(issueNumber) || isNaN(blockerNumber)) {
+        if (Number.isNaN(issueNumber) || Number.isNaN(blockerNumber)) {
           throw new TypeError('Issue numbers must be valid')
         }
 
@@ -70,7 +70,7 @@ export function createDependencyCommand(): Command {
         const issueNumber = Number.parseInt(issueStr, 10)
         const blockerNumber = Number.parseInt(blockerStr, 10)
 
-        if (isNaN(issueNumber) || isNaN(blockerNumber)) {
+        if (Number.isNaN(issueNumber) || Number.isNaN(blockerNumber)) {
           throw new TypeError('Issue numbers must be valid')
         }
 
@@ -111,7 +111,7 @@ export function createDependencyCommand(): Command {
     .action(async (issueStr: string) => {
       try {
         const issueNumber = Number.parseInt(issueStr, 10)
-        if (isNaN(issueNumber)) {
+        if (Number.isNaN(issueNumber)) {
           throw new TypeError('Issue number must be valid')
         }
 

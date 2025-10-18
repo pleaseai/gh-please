@@ -15,7 +15,7 @@ export function createApplyCommand(): Command {
     .action(async (prNumberStr: string) => {
       try {
         const prNumber = Number.parseInt(prNumberStr, 10)
-        if (isNaN(prNumber)) {
+        if (Number.isNaN(prNumber)) {
           throw new TypeError('PR number must be a valid number')
         }
 

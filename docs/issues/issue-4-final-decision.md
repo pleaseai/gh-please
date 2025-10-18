@@ -86,9 +86,9 @@ src/types.ts  (타입 정의)
    ```graphql
    # 예: Sub-issue 생성 + Dependency 추가를 한 번에
    mutation {
-     createIssue(...) { ... }
-     addSubIssue(...) { ... }
-     addBlockedBy(...) { ... }
+     createIssue(input: {}) { id }
+     addSubIssue(input: {}) { issue { id } }
+     addBlockedBy(input: {}) { issue { id } }
    }
    ```
 
