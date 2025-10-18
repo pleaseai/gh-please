@@ -7,7 +7,10 @@
       "Bash(bun test)",
       "Bash(bun test:*)",
       "Bash(gh:repo:view:*)",
-      "Bash(gh:issue:view:*)"
+      "Bash(gh:issue:view:*)",
+      "Bash(gh:issue:develop:*)",
+      "Bash(gh --version)",
+      "WebFetch(domain:docs.github.com)"
     ],
     "deny": [],
     "ask": []
