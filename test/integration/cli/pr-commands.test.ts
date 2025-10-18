@@ -50,7 +50,7 @@ describe('PR Commands - CLI Integration', () => {
       },
       // Mock get review comment (REST API)
       {
-        args: /api .*\/repos\/.*\/.*\/pulls\/comments\/\d+/,
+        args: /api .*\/repos\/.*\/.*\/pulls\/comments\/[0-9]+/,
         response: {
           stdout: JSON.stringify(
             createGetReviewCommentResponse(
@@ -66,7 +66,7 @@ describe('PR Commands - CLI Integration', () => {
       },
       // Mock create review reply (REST API)
       {
-        args: /api --method POST .*\/repos\/.*\/.*\/pulls\/\d+\/comments\/\d+\/replies -f body=/,
+        args: /api --method POST .*\/repos\/.*\/.*\/pulls\/[0-9]+\/comments\/[0-9]+\/replies -f body=/,
         response: {
           stdout: JSON.stringify(
             createReviewReplyResponse(
@@ -80,7 +80,7 @@ describe('PR Commands - CLI Integration', () => {
       },
       // Mock get PR node ID (GraphQL)
       {
-        args: /api graphql -f query=.*pullRequest.*-F owner=.*-F repo=.*-F number=\d+/,
+        args: /api graphql -f query=.*pullRequest.*-F owner=.*-F repo=.*-F number=[0-9]+/,
         response: {
           stdout: JSON.stringify(
             createGetPrNodeIdResponse(mockPr.number, mockPr.nodeId),
@@ -290,7 +290,7 @@ describe('PR Commands - CLI Integration', () => {
           },
         },
         {
-          args: /api graphql -f query=.*pullRequest.*-F owner=.*-F repo=.*-F number=\d+/,
+          args: /api graphql -f query=.*pullRequest.*-F owner=.*-F repo=.*-F number=[0-9]+/,
           response: {
             stdout: JSON.stringify(
               createGetPrNodeIdResponse(mockPr.number, mockPr.nodeId),
@@ -393,7 +393,7 @@ describe('PR Commands - CLI Integration', () => {
           },
         },
         {
-          args: /api .*\/repos\/.*\/.*\/pulls\/comments\/\d+/,
+          args: /api .*\/repos\/.*\/.*\/pulls\/comments\/[0-9]+/,
           response: {
             stderr: 'HTTP 404: Not Found',
             exitCode: 1,
@@ -432,7 +432,7 @@ describe('PR Commands - CLI Integration', () => {
           },
         },
         {
-          args: /api graphql -f query=.*pullRequest.*-F owner=.*-F repo=.*-F number=\d+/,
+          args: /api graphql -f query=.*pullRequest.*-F owner=.*-F repo=.*-F number=[0-9]+/,
           response: {
             stderr: 'Could not resolve to a PullRequest',
             exitCode: 1,

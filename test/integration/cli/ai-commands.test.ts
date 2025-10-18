@@ -39,7 +39,7 @@ describe('AI Commands - CLI Integration', () => {
       },
       // Mock issue comment creation (for triage, investigate, fix)
       {
-        args: /api --method POST .* \/repos\/.*\/.*\/issues\/\d+\/comments -f body=/,
+        args: /api --method POST .* \/repos\/.*\/.*\/issues\/[0-9]+\/comments -f body=/,
         response: {
           stdout: JSON.stringify(
             createIssueCommentResponse(123456, '/please [command]', mockIssue.number),
@@ -49,7 +49,7 @@ describe('AI Commands - CLI Integration', () => {
       },
       // Mock PR comment creation (for review, apply) - same pattern but defined separately
       {
-        args: /api --method POST .* \/repos\/.*\/.*\/issues\/\d+\/comments -f body=/,
+        args: /api --method POST .* \/repos\/.*\/.*\/issues\/[0-9]+\/comments -f body=/,
         response: {
           stdout: JSON.stringify(
             createPrCommentResponse(234567, '/please [command]', mockPr.number),

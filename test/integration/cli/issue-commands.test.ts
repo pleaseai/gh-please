@@ -47,7 +47,7 @@ describe('Issue Commands - CLI Integration', () => {
       },
       // Mock GraphQL queries - Get Issue Node ID (matches any issue number)
       {
-        args: /api graphql -f query=.*repository.*issue.*-F owner=.*-F repo=.*-F number=\d+/,
+        args: /api graphql -f query=.*repository.*issue.*-F owner=.*-F repo=.*-F number=[0-9]+/,
         response: {
           stdout: JSON.stringify(
             createGetIssueNodeIdResponse(mockParentIssue.number, mockParentIssue.nodeId),
