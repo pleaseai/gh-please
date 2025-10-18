@@ -25,8 +25,13 @@ This is **@pleaseai/github**, a GitHub CLI extension for PleaseAI - an AI-powere
 ### Building and Running
 
 ```bash
-# Build the project
-bun build src/index.ts --outdir dist --target bun --format esm
+# Development build
+bun run build
+
+# Production build (optimized, compiled executable)
+bun run build:prod
+# Creates: dist/gh-please (105MB compiled binary)
+# Features: minified, sourcemap, bytecode compilation for faster startup
 
 # Run directly from source (development)
 bun run src/index.ts <command> [options]
@@ -37,6 +42,12 @@ bun run src/index.ts <command> [options]
 # Type checking
 bun run type-check
 ```
+
+**Production Build Optimizations:**
+- `--compile`: Creates standalone executable
+- `--minify`: Optimizes code size (-0.32 MB)
+- `--sourcemap`: Embeds compressed sourcemaps for debugging
+- `--bytecode`: Pre-compiles to bytecode for 2x faster startup
 
 ### Testing
 

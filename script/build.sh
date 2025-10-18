@@ -51,9 +51,12 @@ for bun_target in "${!platforms[@]}"; do
     output="dist/gh-please_${VERSION}_${gh_platform}"
   fi
 
-  # Build with bun compile
+  # Build with bun compile (production optimizations)
   bun build src/index.ts \
     --compile \
+    --minify \
+    --sourcemap \
+    --bytecode \
     --target="bun-${os}-${arch}" \
     --outfile="$output"
 
