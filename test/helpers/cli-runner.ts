@@ -200,8 +200,9 @@ ${mockRules.map((rule, index) => {
     ? rule.args.source
     : rule.args.join(' ')
 
-  const stdout = rule.response.stdout ?? ''
-  const stderr = rule.response.stderr ?? ''
+  // Escape stdout/stderr for bash - replace " with \" and $ with \$
+  const stdout = (rule.response.stdout ?? '').replace(/"/g, '\\"').replace(/\$/g, '\\$')
+  const stderr = (rule.response.stderr ?? '').replace(/"/g, '\\"').replace(/\$/g, '\\$')
   const exitCode = rule.response.exitCode ?? 0
   const delay = rule.response.delay ?? 0
 

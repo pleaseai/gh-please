@@ -84,7 +84,9 @@ describe('AI Commands - CLI Integration', () => {
     })
 
     test('should show help with --help flag', async () => {
-      const result = await runCliExpectSuccess(['ai', 'triage', '--help'])
+      const result = await runCliExpectSuccess(['ai', 'triage', '--help'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'triage')
@@ -92,14 +94,18 @@ describe('AI Commands - CLI Integration', () => {
     })
 
     test('should fail with missing issue number', async () => {
-      const result = await runCliExpectFailure(['ai', 'triage'])
+      const result = await runCliExpectFailure(['ai', 'triage'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'error', 'any')
       assertOutputContains(result, 'issue-number', 'any')
     })
 
     test('should fail with invalid issue number', async () => {
-      const result = await runCliExpectFailure(['ai', 'triage', 'not-a-number'])
+      const result = await runCliExpectFailure(['ai', 'triage', 'not-a-number'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'error', 'any')
     })
@@ -107,7 +113,9 @@ describe('AI Commands - CLI Integration', () => {
 
   describe('gh please ai investigate', () => {
     test('should trigger investigation on valid issue', async () => {
-      const result = await runCliExpectSuccess(['ai', 'investigate', String(mockIssue.number)])
+      const result = await runCliExpectSuccess(['ai', 'investigate', String(mockIssue.number)], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Triggering PleaseAI investigation')
       assertOutputContains(result, `issue #${mockIssue.number}`)
@@ -116,7 +124,9 @@ describe('AI Commands - CLI Integration', () => {
     })
 
     test('should show help with --help flag', async () => {
-      const result = await runCliExpectSuccess(['ai', 'investigate', '--help'])
+      const result = await runCliExpectSuccess(['ai', 'investigate', '--help'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'investigate')
@@ -124,7 +134,9 @@ describe('AI Commands - CLI Integration', () => {
     })
 
     test('should fail with missing issue number', async () => {
-      const result = await runCliExpectFailure(['ai', 'investigate'])
+      const result = await runCliExpectFailure(['ai', 'investigate'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'error', 'any')
       assertOutputContains(result, 'issue-number', 'any')
@@ -133,7 +145,9 @@ describe('AI Commands - CLI Integration', () => {
 
   describe('gh please ai fix', () => {
     test('should trigger fix on valid issue', async () => {
-      const result = await runCliExpectSuccess(['ai', 'fix', String(mockIssue.number)])
+      const result = await runCliExpectSuccess(['ai', 'fix', String(mockIssue.number)], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Triggering PleaseAI fix')
       assertOutputContains(result, `issue #${mockIssue.number}`)
@@ -142,7 +156,9 @@ describe('AI Commands - CLI Integration', () => {
     })
 
     test('should show help with --help flag', async () => {
-      const result = await runCliExpectSuccess(['ai', 'fix', '--help'])
+      const result = await runCliExpectSuccess(['ai', 'fix', '--help'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'fix')
@@ -150,7 +166,9 @@ describe('AI Commands - CLI Integration', () => {
     })
 
     test('should fail with missing issue number', async () => {
-      const result = await runCliExpectFailure(['ai', 'fix'])
+      const result = await runCliExpectFailure(['ai', 'fix'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'error', 'any')
       assertOutputContains(result, 'issue-number', 'any')
@@ -159,7 +177,9 @@ describe('AI Commands - CLI Integration', () => {
 
   describe('gh please ai review', () => {
     test('should trigger review on valid PR', async () => {
-      const result = await runCliExpectSuccess(['ai', 'review', String(mockPr.number)])
+      const result = await runCliExpectSuccess(['ai', 'review', String(mockPr.number)], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Triggering PleaseAI code review')
       assertOutputContains(result, `PR #${mockPr.number}`)
@@ -168,7 +188,9 @@ describe('AI Commands - CLI Integration', () => {
     })
 
     test('should show help with --help flag', async () => {
-      const result = await runCliExpectSuccess(['ai', 'review', '--help'])
+      const result = await runCliExpectSuccess(['ai', 'review', '--help'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'review')
@@ -176,7 +198,9 @@ describe('AI Commands - CLI Integration', () => {
     })
 
     test('should fail with missing PR number', async () => {
-      const result = await runCliExpectFailure(['ai', 'review'])
+      const result = await runCliExpectFailure(['ai', 'review'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'error', 'any')
       assertOutputContains(result, 'pr-number', 'any')
@@ -185,7 +209,9 @@ describe('AI Commands - CLI Integration', () => {
 
   describe('gh please ai apply', () => {
     test('should trigger apply on valid PR', async () => {
-      const result = await runCliExpectSuccess(['ai', 'apply', String(mockPr.number)])
+      const result = await runCliExpectSuccess(['ai', 'apply', String(mockPr.number)], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Triggering PleaseAI apply')
       assertOutputContains(result, `PR #${mockPr.number}`)
@@ -194,7 +220,9 @@ describe('AI Commands - CLI Integration', () => {
     })
 
     test('should show help with --help flag', async () => {
-      const result = await runCliExpectSuccess(['ai', 'apply', '--help'])
+      const result = await runCliExpectSuccess(['ai', 'apply', '--help'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'apply')
@@ -202,7 +230,9 @@ describe('AI Commands - CLI Integration', () => {
     })
 
     test('should fail with missing PR number', async () => {
-      const result = await runCliExpectFailure(['ai', 'apply'])
+      const result = await runCliExpectFailure(['ai', 'apply'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'error', 'any')
       assertOutputContains(result, 'pr-number', 'any')
@@ -211,14 +241,18 @@ describe('AI Commands - CLI Integration', () => {
 
   describe('gh please ai (command group)', () => {
     test('should show help when no subcommand provided', async () => {
-      const result = await runCli(['ai'])
+      const result = await runCli(['ai'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       // Commander shows help and exits with 0 or shows error
       assertOutputContains(result, 'Trigger PleaseAI workflows', 'any')
     })
 
     test('should show help with --help flag', async () => {
-      const result = await runCliExpectSuccess(['ai', '--help'])
+      const result = await runCliExpectSuccess(['ai', '--help'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'triage')
@@ -229,7 +263,9 @@ describe('AI Commands - CLI Integration', () => {
     })
 
     test('should fail with unknown subcommand', async () => {
-      const result = await runCliExpectFailure(['ai', 'unknown-command'])
+      const result = await runCliExpectFailure(['ai', 'unknown-command'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'error', 'any')
       assertOutputContains(result, 'unknown', 'any')

@@ -146,7 +146,9 @@ describe('PR Commands - CLI Integration', () => {
     })
 
     test('should show help with --help flag', async () => {
-      const result = await runCliExpectSuccess(['pr', 'review-reply', '--help'])
+      const result = await runCliExpectSuccess(['pr', 'review-reply', '--help'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'Reply to PR review comment')
@@ -158,7 +160,9 @@ describe('PR Commands - CLI Integration', () => {
         'pr',
         'review-reply',
         String(mockReviewComment.id),
-      ])
+      ], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'error', 'any')
       assertOutputContains(result, 'body', 'any')
@@ -171,7 +175,9 @@ describe('PR Commands - CLI Integration', () => {
         'not-a-number',
         '-b',
         'Test',
-      ])
+      ], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'error', 'any')
     })
@@ -183,7 +189,9 @@ describe('PR Commands - CLI Integration', () => {
         String(mockReviewComment.id),
         '-b',
         '',
-      ])
+      ], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'error', 'any')
     })
@@ -197,7 +205,9 @@ describe('PR Commands - CLI Integration', () => {
         String(mockPr.number),
         '--thread',
         mockReviewThread.id,
-      ])
+      ], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Resolving review thread')
       assertOutputContains(result, 'Thread resolved successfully')
@@ -210,7 +220,9 @@ describe('PR Commands - CLI Integration', () => {
         'resolve',
         String(mockPr.number),
         '--all',
-      ])
+      ], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Finding all unresolved threads')
       assertOutputContains(result, 'Resolving')
@@ -219,7 +231,9 @@ describe('PR Commands - CLI Integration', () => {
     })
 
     test('should show help with --help flag', async () => {
-      const result = await runCliExpectSuccess(['pr', 'resolve', '--help'])
+      const result = await runCliExpectSuccess(['pr', 'resolve', '--help'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'Resolve PR review threads')
@@ -232,7 +246,9 @@ describe('PR Commands - CLI Integration', () => {
         'pr',
         'resolve',
         String(mockPr.number),
-      ])
+      ], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'error', 'any')
       assertOutputContains(result, 'thread', 'any')
@@ -244,7 +260,9 @@ describe('PR Commands - CLI Integration', () => {
         'resolve',
         'not-a-number',
         '--all',
-      ])
+      ], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'error', 'any')
     })
@@ -303,13 +321,17 @@ describe('PR Commands - CLI Integration', () => {
 
   describe('gh please pr (command group)', () => {
     test('should show help when no subcommand provided', async () => {
-      const result = await runCli(['pr'])
+      const result = await runCli(['pr'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Manage pull requests', 'any')
     })
 
     test('should show help with --help flag', async () => {
-      const result = await runCliExpectSuccess(['pr', '--help'])
+      const result = await runCliExpectSuccess(['pr', '--help'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'review-reply')
@@ -324,7 +346,9 @@ describe('PR Commands - CLI Integration', () => {
         String(mockReviewComment.id),
         '-b',
         'Test reply',
-      ])
+      ], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       // Should show deprecation warning
       assertOutputContains(result, 'Warning', 'any')
@@ -337,7 +361,9 @@ describe('PR Commands - CLI Integration', () => {
     })
 
     test('should show help for deprecated command', async () => {
-      const result = await runCliExpectSuccess(['review-reply', '--help'])
+      const result = await runCliExpectSuccess(['review-reply', '--help'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Deprecated')
       assertOutputContains(result, 'gh please pr review-reply')

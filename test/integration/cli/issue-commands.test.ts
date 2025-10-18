@@ -202,14 +202,18 @@ describe('Issue Commands - CLI Integration', () => {
         String(mockParentIssue.number),
         '--title',
         'Title Only Sub-issue',
-      ])
+      ], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Sub-issue #102 created')
       assertExitCode(result, 0)
     })
 
     test('should show help with --help flag', async () => {
-      const result = await runCliExpectSuccess(['issue', 'sub-issue', 'create', '--help'])
+      const result = await runCliExpectSuccess(['issue', 'sub-issue', 'create', '--help'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'Create a new sub-issue')
@@ -222,7 +226,9 @@ describe('Issue Commands - CLI Integration', () => {
         'sub-issue',
         'create',
         String(mockParentIssue.number),
-      ])
+      ], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'error', 'any')
       assertOutputContains(result, 'title', 'any')
@@ -236,7 +242,9 @@ describe('Issue Commands - CLI Integration', () => {
         'not-a-number',
         '--title',
         'Test',
-      ])
+      ], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'error', 'any')
     })
@@ -250,7 +258,9 @@ describe('Issue Commands - CLI Integration', () => {
         'add',
         String(mockParentIssue.number),
         String(mockChildIssue.number),
-      ])
+      ], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Getting parent issue')
       assertOutputContains(result, 'Getting child issue')
@@ -260,14 +270,18 @@ describe('Issue Commands - CLI Integration', () => {
     })
 
     test('should show help with --help flag', async () => {
-      const result = await runCliExpectSuccess(['issue', 'sub-issue', 'add', '--help'])
+      const result = await runCliExpectSuccess(['issue', 'sub-issue', 'add', '--help'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'Add existing issue as sub-issue')
     })
 
     test('should fail with missing arguments', async () => {
-      const result = await runCliExpectFailure(['issue', 'sub-issue', 'add'])
+      const result = await runCliExpectFailure(['issue', 'sub-issue', 'add'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'error', 'any')
     })
@@ -281,7 +295,9 @@ describe('Issue Commands - CLI Integration', () => {
         'remove',
         String(mockParentIssue.number),
         String(mockChildIssue.number),
-      ])
+      ], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Removing sub-issue link')
       assertOutputContains(result, 'unlinked')
@@ -289,7 +305,9 @@ describe('Issue Commands - CLI Integration', () => {
     })
 
     test('should show help with --help flag', async () => {
-      const result = await runCliExpectSuccess(['issue', 'sub-issue', 'remove', '--help'])
+      const result = await runCliExpectSuccess(['issue', 'sub-issue', 'remove', '--help'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'Unlink sub-issue')
@@ -303,7 +321,9 @@ describe('Issue Commands - CLI Integration', () => {
         'sub-issue',
         'list',
         String(mockParentIssue.number),
-      ])
+      ], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Sub-issues of')
       assertOutputContains(result, '#101')
@@ -314,7 +334,9 @@ describe('Issue Commands - CLI Integration', () => {
     })
 
     test('should show help with --help flag', async () => {
-      const result = await runCliExpectSuccess(['issue', 'sub-issue', 'list', '--help'])
+      const result = await runCliExpectSuccess(['issue', 'sub-issue', 'list', '--help'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'List all sub-issues')
@@ -330,7 +352,9 @@ describe('Issue Commands - CLI Integration', () => {
         String(mockBlockedIssue.number),
         '--blocked-by',
         String(mockBlockingIssue.number),
-      ])
+      ], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Getting issue')
       assertOutputContains(result, 'Getting blocking issue')
@@ -340,7 +364,9 @@ describe('Issue Commands - CLI Integration', () => {
     })
 
     test('should show help with --help flag', async () => {
-      const result = await runCliExpectSuccess(['issue', 'dependency', 'add', '--help'])
+      const result = await runCliExpectSuccess(['issue', 'dependency', 'add', '--help'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'Add issue dependency')
@@ -353,7 +379,9 @@ describe('Issue Commands - CLI Integration', () => {
         'dependency',
         'add',
         String(mockBlockedIssue.number),
-      ])
+      ], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'error', 'any')
       assertOutputContains(result, 'blocked-by', 'any')
@@ -368,7 +396,9 @@ describe('Issue Commands - CLI Integration', () => {
         'remove',
         String(mockBlockedIssue.number),
         String(mockBlockingIssue.number),
-      ])
+      ], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Removing dependency')
       assertOutputContains(result, 'no longer blocked')
@@ -376,7 +406,9 @@ describe('Issue Commands - CLI Integration', () => {
     })
 
     test('should show help with --help flag', async () => {
-      const result = await runCliExpectSuccess(['issue', 'dependency', 'remove', '--help'])
+      const result = await runCliExpectSuccess(['issue', 'dependency', 'remove', '--help'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'Remove issue dependency')
@@ -390,7 +422,9 @@ describe('Issue Commands - CLI Integration', () => {
         'dependency',
         'list',
         String(mockBlockedIssue.number),
-      ])
+      ], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Dependencies blocking')
       assertOutputContains(result, '#200')
@@ -399,7 +433,9 @@ describe('Issue Commands - CLI Integration', () => {
     })
 
     test('should show help with --help flag', async () => {
-      const result = await runCliExpectSuccess(['issue', 'dependency', 'list', '--help'])
+      const result = await runCliExpectSuccess(['issue', 'dependency', 'list', '--help'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'List issue dependencies')
@@ -408,13 +444,17 @@ describe('Issue Commands - CLI Integration', () => {
 
   describe('gh please issue (command group)', () => {
     test('should show help when no subcommand provided', async () => {
-      const result = await runCli(['issue'])
+      const result = await runCli(['issue'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Manage GitHub issues', 'any')
     })
 
     test('should show help with --help flag', async () => {
-      const result = await runCliExpectSuccess(['issue', '--help'])
+      const result = await runCliExpectSuccess(['issue', '--help'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'sub-issue')
@@ -424,13 +464,17 @@ describe('Issue Commands - CLI Integration', () => {
 
   describe('gh please issue sub-issue (subcommand group)', () => {
     test('should show help when no action provided', async () => {
-      const result = await runCli(['issue', 'sub-issue'])
+      const result = await runCli(['issue', 'sub-issue'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Manage sub-issues', 'any')
     })
 
     test('should show help with --help flag', async () => {
-      const result = await runCliExpectSuccess(['issue', 'sub-issue', '--help'])
+      const result = await runCliExpectSuccess(['issue', 'sub-issue', '--help'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'create')
@@ -442,13 +486,17 @@ describe('Issue Commands - CLI Integration', () => {
 
   describe('gh please issue dependency (subcommand group)', () => {
     test('should show help when no action provided', async () => {
-      const result = await runCli(['issue', 'dependency'])
+      const result = await runCli(['issue', 'dependency'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Manage issue dependencies', 'any')
     })
 
     test('should show help with --help flag', async () => {
-      const result = await runCliExpectSuccess(['issue', 'dependency', '--help'])
+      const result = await runCliExpectSuccess(['issue', 'dependency', '--help'], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'add')
