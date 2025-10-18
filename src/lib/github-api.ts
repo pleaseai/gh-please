@@ -1,6 +1,14 @@
 import type { PrInfo, ReplyOptions, ReviewComment } from '../types'
 
 /**
+ * Get the gh command path from environment variable or use default
+ * This allows tests to inject a mock gh command
+ */
+function getGhCommand(): string {
+  return process.env.GH_PATH || 'gh'
+}
+
+/**
  * Parse PR info from gh CLI output
  */
 export function parsePrInfo(data: any): PrInfo {
@@ -38,7 +46,7 @@ export function isTopLevelComment(comment: ReviewComment): boolean {
  * Get current PR information using gh CLI
  */
 export async function getCurrentPrInfo(): Promise<PrInfo> {
-  const proc = Bun.spawn(['gh', 'pr', 'view', '--json', 'number,owner,repository'], {
+  const proc = Bun.spawn([getGhCommand(), 'pr', 'view', '--json', 'number,owner,repository'], {
     stdout: 'pipe',
     stderr: 'pipe',
   })
@@ -66,7 +74,7 @@ export async function getReviewComment(
 
   const proc = Bun.spawn(
     [
-      'gh',
+      getGhCommand(),
       'api',
       '-H',
       'Accept: application/vnd.github+json',
@@ -110,7 +118,7 @@ export async function createReviewReply(options: ReplyOptions): Promise<void> {
 
   const proc = Bun.spawn(
     [
-      'gh',
+      getGhCommand(),
       'api',
       '--method',
       'POST',
@@ -146,7 +154,7 @@ export async function createReviewReply(options: ReplyOptions): Promise<void> {
  * Get repository information (owner and name) from current context
  */
 export async function getRepoInfo(): Promise<{ owner: string, repo: string }> {
-  const proc = Bun.spawn(['gh', 'repo', 'view', '--json', 'owner,name'], {
+  const proc = Bun.spawn([getGhCommand(), 'repo', 'view', '--json', 'owner,name'], {
     stdout: 'pipe',
     stderr: 'pipe',
   })
@@ -179,7 +187,7 @@ export async function createIssueComment(
 
   const proc = Bun.spawn(
     [
-      'gh',
+      getGhCommand(),
       'api',
       '--method',
       'POST',
@@ -222,7 +230,7 @@ export async function createPrComment(
 
   const proc = Bun.spawn(
     [
-      'gh',
+      getGhCommand(),
       'api',
       '--method',
       'POST',

@@ -31,7 +31,8 @@ import {
 } from '../../helpers/cli-runner'
 
 describe('Issue Commands - CLI Integration', () => {
-  let cleanupMock: (() => void) | null = null
+  let cleanupMock: (() => Promise<void>) | null = null
+  let mockGhPath: string | null = null
 
   beforeEach(async () => {
     // Setup comprehensive mock for issue commands
@@ -160,12 +161,14 @@ describe('Issue Commands - CLI Integration', () => {
       },
     ]
 
-    cleanupMock = await createGhMock(mockRules)
+    const { cleanup, mockPath } = await createGhMock(mockRules)
+    cleanupMock = cleanup
+    mockGhPath = mockPath
   })
 
-  afterEach(() => {
+  afterEach(async () => {
     if (cleanupMock) {
-      cleanupMock()
+      await cleanupMock()
       cleanupMock = null
     }
   })
@@ -181,7 +184,9 @@ describe('Issue Commands - CLI Integration', () => {
         'New Sub-issue',
         '--body',
         'Sub-issue description',
-      ])
+      ], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Getting parent issue')
       assertOutputContains(result, 'Creating sub-issue')

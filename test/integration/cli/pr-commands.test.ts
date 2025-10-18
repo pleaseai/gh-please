@@ -27,7 +27,8 @@ import {
 } from '../../helpers/cli-runner'
 
 describe('PR Commands - CLI Integration', () => {
-  let cleanupMock: (() => void) | null = null
+  let cleanupMock: (() => Promise<void>) | null = null
+  let mockGhPath: string | null = null
 
   beforeEach(async () => {
     const mockRules: GhMockRule[] = [
@@ -114,12 +115,14 @@ describe('PR Commands - CLI Integration', () => {
       },
     ]
 
-    cleanupMock = await createGhMock(mockRules)
+    const { cleanup, mockPath } = await createGhMock(mockRules)
+    cleanupMock = cleanup
+    mockGhPath = mockPath
   })
 
-  afterEach(() => {
+  afterEach(async () => {
     if (cleanupMock) {
-      cleanupMock()
+      await cleanupMock()
       cleanupMock = null
     }
   })
@@ -132,7 +135,9 @@ describe('PR Commands - CLI Integration', () => {
         String(mockReviewComment.id),
         '-b',
         'Thanks for the review!',
-      ])
+      ], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Fetching review comment')
       assertOutputContains(result, 'Reply posted successfully')
@@ -247,7 +252,7 @@ describe('PR Commands - CLI Integration', () => {
     test('should handle no unresolved threads gracefully', async () => {
       // Mock with no unresolved threads
       if (cleanupMock) {
-        cleanupMock()
+        await cleanupMock()
       }
 
       const noThreadsMockRules: GhMockRule[] = [
@@ -278,14 +283,18 @@ describe('PR Commands - CLI Integration', () => {
         },
       ]
 
-      cleanupMock = await createGhMock(noThreadsMockRules)
+      const { cleanup, mockPath } = await createGhMock(noThreadsMockRules)
+      cleanupMock = cleanup
+      mockGhPath = mockPath
 
       const result = await runCliExpectSuccess([
         'pr',
         'resolve',
         String(mockPr.number),
         '--all',
-      ])
+      ], {
+        env: { GH_PATH: mockGhPath },
+      })
 
       assertOutputContains(result, 'No unresolved threads', 'any')
       assertExitCode(result, 0)
@@ -338,7 +347,7 @@ describe('PR Commands - CLI Integration', () => {
   describe('Error handling', () => {
     test('should handle comment not found error', async () => {
       if (cleanupMock) {
-        cleanupMock()
+        await cleanupMock()
       }
 
       const errorMockRules: GhMockRule[] = [
@@ -358,7 +367,9 @@ describe('PR Commands - CLI Integration', () => {
         },
       ]
 
-      cleanupMock = await createGhMock(errorMockRules)
+      const { cleanup, mockPath } = await createGhMock(errorMockRules)
+      cleanupMock = cleanup
+      mockGhPath = mockPath
 
       const result = await runCliExpectFailure([
         'pr',
@@ -366,14 +377,16 @@ describe('PR Commands - CLI Integration', () => {
         '999999999',
         '-b',
         'Test',
-      ])
+      ], {
+        env: { GH_PATH: mockGhPath },
+      })
 
       assertOutputContains(result, 'error', 'any')
     })
 
     test('should handle PR not found error', async () => {
       if (cleanupMock) {
-        cleanupMock()
+        await cleanupMock()
       }
 
       const errorMockRules: GhMockRule[] = [
@@ -393,14 +406,18 @@ describe('PR Commands - CLI Integration', () => {
         },
       ]
 
-      cleanupMock = await createGhMock(errorMockRules)
+      const { cleanup, mockPath } = await createGhMock(errorMockRules)
+      cleanupMock = cleanup
+      mockGhPath = mockPath
 
       const result = await runCliExpectFailure([
         'pr',
         'resolve',
         '999999',
         '--all',
-      ])
+      ], {
+        env: { GH_PATH: mockGhPath },
+      })
 
       assertOutputContains(result, 'error', 'any')
     })

@@ -4,6 +4,14 @@
  */
 
 /**
+ * Get the gh command path from environment variable or use default
+ * This allows tests to inject a mock gh command
+ */
+function getGhCommand(): string {
+  return process.env.GH_PATH || 'gh'
+}
+
+/**
  * Execute a GraphQL query or mutation
  *
  * @param query - GraphQL query/mutation string
@@ -33,7 +41,7 @@ export async function executeGraphQL(
     args.push('-F', `${key}=${serialized}`)
   }
 
-  const proc = Bun.spawn(['gh', ...args], {
+  const proc = Bun.spawn([getGhCommand(), ...args], {
     stdout: 'pipe',
     stderr: 'pipe',
   })

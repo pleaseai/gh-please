@@ -23,7 +23,8 @@ import {
 } from '../../helpers/cli-runner'
 
 describe('AI Commands - CLI Integration', () => {
-  let cleanupMock: (() => void) | null = null
+  let cleanupMock: (() => Promise<void>) | null = null
+  let mockGhPath: string | null = null
 
   beforeEach(async () => {
     // Setup mock gh CLI for all AI command tests
@@ -58,19 +59,23 @@ describe('AI Commands - CLI Integration', () => {
       },
     ]
 
-    cleanupMock = await createGhMock(mockRules)
+    const { cleanup, mockPath } = await createGhMock(mockRules)
+    cleanupMock = cleanup
+    mockGhPath = mockPath
   })
 
-  afterEach(() => {
+  afterEach(async () => {
     if (cleanupMock) {
-      cleanupMock()
+      await cleanupMock()
       cleanupMock = null
     }
   })
 
   describe('gh please ai triage', () => {
     test('should trigger triage on valid issue', async () => {
-      const result = await runCliExpectSuccess(['ai', 'triage', String(mockIssue.number)])
+      const result = await runCliExpectSuccess(['ai', 'triage', String(mockIssue.number)], {
+        env: { GH_PATH: mockGhPath! },
+      })
 
       assertOutputContains(result, 'Triggering PleaseAI triage')
       assertOutputContains(result, `issue #${mockIssue.number}`)
@@ -235,7 +240,7 @@ describe('AI Commands - CLI Integration', () => {
     test('should handle network errors gracefully', async () => {
       // Create new mock that returns error
       if (cleanupMock) {
-        cleanupMock()
+        await cleanupMock()
       }
 
       const errorMockRules: GhMockRule[] = [
@@ -248,16 +253,20 @@ describe('AI Commands - CLI Integration', () => {
         },
       ]
 
-      cleanupMock = await createGhMock(errorMockRules)
+      const { cleanup, mockPath } = await createGhMock(errorMockRules)
+      cleanupMock = cleanup
+      mockGhPath = mockPath
 
-      const result = await runCliExpectFailure(['ai', 'triage', '123'])
+      const result = await runCliExpectFailure(['ai', 'triage', '123'], {
+        env: { GH_PATH: mockGhPath },
+      })
 
       assertOutputContains(result, 'error', 'any')
     })
 
     test('should handle authentication errors', async () => {
       if (cleanupMock) {
-        cleanupMock()
+        await cleanupMock()
       }
 
       const authErrorMockRules: GhMockRule[] = [
@@ -270,9 +279,13 @@ describe('AI Commands - CLI Integration', () => {
         },
       ]
 
-      cleanupMock = await createGhMock(authErrorMockRules)
+      const { cleanup, mockPath } = await createGhMock(authErrorMockRules)
+      cleanupMock = cleanup
+      mockGhPath = mockPath
 
-      const result = await runCliExpectFailure(['ai', 'triage', '123'])
+      const result = await runCliExpectFailure(['ai', 'triage', '123'], {
+        env: { GH_PATH: mockGhPath },
+      })
 
       assertOutputContains(result, 'error', 'any')
     })

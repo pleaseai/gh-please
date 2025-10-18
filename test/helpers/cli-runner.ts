@@ -181,11 +181,12 @@ export interface GhMockRule {
 /**
  * Creates a mock gh command script for testing
  * This allows testing CLI behavior without making real GitHub API calls
+ * Returns cleanup function and the path to the mock script
  */
 export async function createGhMock(
   mockRules: GhMockRule[],
   mockScriptPath = '/tmp/gh-mock.sh',
-): Promise<() => void> {
+): Promise<{ cleanup: () => Promise<void>, mockPath: string }> {
   // Generate mock script
   const mockScript = `#!/usr/bin/env bash
 # Mock GitHub CLI for testing
@@ -194,7 +195,8 @@ export async function createGhMock(
 ARGS="$@"
 
 ${mockRules.map((rule, index) => {
-  const pattern = rule.args instanceof RegExp
+  const isRegex = rule.args instanceof RegExp
+  const pattern = isRegex
     ? rule.args.source
     : rule.args.join(' ')
 
@@ -205,7 +207,7 @@ ${mockRules.map((rule, index) => {
 
   return `
 # Rule ${index + 1}
-if [[ "$ARGS" == ${pattern instanceof RegExp ? `*${pattern}*` : `"${pattern}"`} ]]; then
+if [[ "$ARGS" ${isRegex ? '=~' : '=='} ${isRegex ? pattern : `"${pattern}"`} ]]; then
   ${delay > 0 ? `sleep ${delay / 1000}` : ''}
   echo "${stdout}"
   >&2 echo "${stderr}"
@@ -221,23 +223,24 @@ exit 1
 
   // Write mock script
   await Bun.write(mockScriptPath, mockScript)
-  await Bun.spawn(['chmod', '+x', mockScriptPath]).exited
 
-  // Modify PATH to use mock
-  const originalPath = process.env.PATH
-  const mockDir = mockScriptPath.substring(0, mockScriptPath.lastIndexOf('/'))
-  process.env.PATH = `${mockDir}:${originalPath}`
+  // Make script executable using fs instead of chmod command
+  const fs = await import('node:fs')
+  await fs.promises.chmod(mockScriptPath, 0o755)
 
-  // Return cleanup function
-  return () => {
-    process.env.PATH = originalPath
-    // Clean up mock script
-    try {
-      Bun.spawn(['rm', mockScriptPath])
-    }
-    catch {
-      // Ignore cleanup errors
-    }
+  // Return cleanup function and mock path
+  return {
+    mockPath: mockScriptPath,
+    cleanup: async () => {
+      // Clean up mock script
+      try {
+        const fs = await import('node:fs')
+        await fs.promises.unlink(mockScriptPath)
+      }
+      catch {
+        // Ignore cleanup errors
+      }
+    },
   }
 }
 
