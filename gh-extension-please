@@ -1,35 +1,23 @@
 #!/usr/bin/env bash
 set -e
 
-echo "Hello gh-extension-please!"
+# GitHub CLI extension for gh-please
+# This script launches the Bun-based TypeScript application
 
-# Snippets to help get started:
+# Check if bun is available
+if ! type -p bun >/dev/null; then
+  echo "❌ Error: bun is not installed or not in PATH" >&2
+  echo "   Install bun from https://bun.sh" >&2
+  exit 1
+fi
 
-# Determine if an executable is in the PATH
-# if ! type -p ruby >/dev/null; then
-#   echo "Ruby not found on the system" >&2
-#   exit 1
-# fi
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Pass arguments through to another command
-# gh issue list "$@" -R cli/cli
-
-# Using the gh api command to retrieve and format information
-# QUERY='
-#   query($endCursor: String) {
-#     viewer {
-#       repositories(first: 100, after: $endCursor) {
-#         nodes {
-#           nameWithOwner
-#           stargazerCount
-#         }
-#       }
-#     }
-#   }
-# '
-# TEMPLATE='
-#   {{- range $repo := .data.viewer.repositories.nodes -}}
-#     {{- printf "name: %s - stargazers: %v\n" $repo.nameWithOwner $repo.stargazerCount -}}
-#   {{- end -}}
-# '
-# exec gh api graphql -f query="${QUERY}" --paginate --template="${TEMPLATE}"
+# Check if compiled version exists, otherwise run from source
+if [ -f "$SCRIPT_DIR/dist/index.js" ]; then
+  exec bun "$SCRIPT_DIR/dist/index.js" "$@"
+else
+  # Development mode: run from source
+  exec bun "$SCRIPT_DIR/src/index.ts" "$@"
+fi
