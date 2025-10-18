@@ -1,5 +1,7 @@
 # gh-extension-please
 
+[![code style](https://antfu.me/badge-code-style.svg)](https://github.com/antfu/eslint-config)
+
 GitHub CLI extension for managing pull requests with enhanced functionality.
 
 ## Features
