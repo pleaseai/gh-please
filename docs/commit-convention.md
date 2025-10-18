@@ -207,25 +207,3 @@ echo "fix: some message
 body with multiple lines
 but still no line is too long" # passes
 ```
-
-------------------------
-
-## Project-Specific Conventions
-
-1. **제목과 본문은 한글로 작성합니다** (type과 scope는 영어 유지)
-
-   ```sh
-   # Good examples
-   feat: 사용자 인증 기능 추가
-   fix(auth): 로그인 실패 시 에러 처리 개선
-   docs: 커밋 컨벤션 문서 업데이트
-
-   feat: 새로운 결제 시스템 구현
-
-   결제 모듈을 PG사 API와 연동하여
-   신용카드 및 간편결제를 지원합니다.
-
-   # Bad examples
-   feat: add user authentication  # 영어로 작성됨
-   Fix: 버그 수정  # type이 대문자로 시작
-   ```
