@@ -77,10 +77,25 @@ The CLI uses **commander.js** for command parsing with a modular command pattern
 
 ### Core Libraries
 
-- **`src/lib/github-api.ts`**: GitHub API interaction layer
+- **`src/lib/github-graphql.ts`**: GraphQL API layer for advanced GitHub operations
+  - Executes GraphQL queries and mutations via `gh api graphql`
+  - Handles Node ID conversions for issues and PRs
+  - Sub-issue management: `addSubIssue()`, `removeSubIssue()`, `listSubIssues()`
+  - Issue dependencies: `addBlockedBy()`, `removeBlockedBy()`, `listBlockedBy()`
+  - Review threads: `resolveReviewThread()`, `listReviewThreads()`
+  - Key functions: `executeGraphQL()`, `getIssueNodeId()`, `getPrNodeId()`
+  - Requires GraphQL-Features header for sub_issues mutations
+
+- **`src/lib/github-api.ts`**: REST API interaction layer
   - Wraps `gh api` CLI calls using `Bun.spawn`
   - Handles PR context detection, comment fetching, and reply creation
+  - Common utilities: `getRepoInfo()`, `createIssueComment()`, `createPrComment()`
   - Key functions: `getCurrentPrInfo()`, `getReviewComment()`, `createReviewReply()`
+
+- **`src/lib/please-trigger.ts`**: PleaseAI workflow automation
+  - Triggers automation workflows via GitHub comments
+  - Supports: triage, investigate, fix, review, apply triggers
+  - Key functions: `buildTriggerComment()`, `triggerPleaseAIIssue()`, `triggerPleaseAIPr()`
 
 - **`src/lib/validation.ts`**: Input validation
   - Validates comment IDs and reply body text
@@ -102,35 +117,69 @@ The CLI uses **commander.js** for command parsing with a modular command pattern
 - `PrInfo`: PR metadata (number, owner, repo)
 - `ReviewComment`: GitHub review comment structure
 - `ReplyOptions`: Parameters for creating replies
+- `IssueInfo`: Issue metadata with optional Node ID
+- `SubIssue`: Sub-issue information (number, title, state, nodeId)
+- `BlockedByIssue`: Blocking issue information
+- `ReviewThread`: Review thread metadata (id, isResolved, path, line)
+- `PleaseTriggerType`: Union type for automation triggers (triage | investigate | fix | review | apply)
 
 ## GitHub API Integration
 
 This extension uses the GitHub CLI (`gh`) as the authentication and API client:
 
+### REST API Pattern
 ```typescript
-// All API calls use gh CLI subprocess pattern:
+// REST API calls use gh CLI subprocess pattern:
 const proc = Bun.spawn(["gh", "api", endpoint, ...options], {
   stdout: "pipe",
   stderr: "pipe",
 });
 ```
 
-**Key API operations:**
+### GraphQL API Pattern
+```typescript
+// GraphQL queries/mutations via gh CLI:
+const proc = Bun.spawn(["gh", "api", "graphql", "-f", "query=...", "-F", "var=..."], {
+  stdout: "pipe",
+  stderr: "pipe",
+});
+```
+
+**Key API operations (REST):**
 - `gh pr view --json number,owner,repository` - Get current PR context
 - `GET /repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}` - Fetch comment
 - `POST /repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}/replies` - Create reply
+- `POST /repos/{owner}/{repo}/issues/{issue_number}/comments` - Create issue comment
 
-**Important**: The reply endpoint only supports top-level review comments. Replies to replies are not supported by GitHub's API.
+**Key API operations (GraphQL):**
+- `addSubIssue()` - Add sub-issue relationship (requires GraphQL-Features: sub_issues header)
+- `addBlockedBy()` - Create "blocked by" dependency
+- `resolveReviewThread()` - Resolve review thread comment
+
+**Important Notes:**
+- REST reply endpoint only supports top-level review comments (not nested replies)
+- GraphQL sub-issues mutations require `GraphQL-Features: sub_issues` header
+- Node IDs in GraphQL differ from numeric IDs in REST (format: I_kwDO...)
 
 ## Testing Strategy
 
 Tests follow the **Arrange-Act-Assert** pattern and use Bun's built-in test runner:
 
-- **`test/lib/github-api.test.ts`**: Tests for GitHub API helper functions (endpoint building, PR info parsing, comment type detection)
+- **`test/lib/github-graphql.test.ts`**: Tests for GraphQL API functions (11 functions tested)
+  - `executeGraphQL()`, `getIssueNodeId()`, `getPrNodeId()`
+  - Sub-issue operations: add, remove, list
+  - Dependency management: add, remove, list
+  - Review thread operations: resolve, list
+- **`test/lib/github-api.test.ts`**: Tests for REST API helper functions
+  - Endpoint building, PR info parsing, comment type detection
+  - Comment creation: issue and PR comments
+  - Repository information retrieval
+- **`test/lib/please-trigger.test.ts`**: Tests for PleaseAI automation triggers
+  - Trigger comment building for all automation types
 - **`test/lib/validation.test.ts`**: Tests for input validation logic
 - **`test/fixtures/`**: Mock data and test helpers
 
-**Coverage**: 16 test cases with 29 assertions covering validation, API helpers, and comment type detection.
+**Coverage**: 49 total test cases with 96 assertions across 5 test files (100% pass rate)
 
 ## Code Style
 
