@@ -50,7 +50,7 @@ describe('PR Commands - CLI Integration', () => {
       },
       // Mock get review comment (REST API)
       {
-        args: /api .*\/repos\/.*\/.*\/pulls\/comments\/[0-9]+/,
+        args: /api -H Accept: application\/vnd.github\+json -H X-GitHub-Api-Version: 2022-11-28 \/repos\/.*\/.*\/pulls\/[0-9]+\/comments\/[0-9]+/,
         response: {
           stdout: JSON.stringify(
             createGetReviewCommentResponse(
@@ -147,8 +147,8 @@ describe('PR Commands - CLI Integration', () => {
         env: { GH_PATH: mockGhPath! },
       })
 
-      assertOutputContains(result, 'Fetching review comment')
-      assertOutputContains(result, 'Reply posted successfully')
+      assertOutputContains(result, 'Fetching PR information')
+      assertOutputContains(result, 'Reply created successfully')
       assertOutputContains(result, 'View:')
       assertExitCode(result, 0)
     })
@@ -217,8 +217,8 @@ describe('PR Commands - CLI Integration', () => {
         env: { GH_PATH: mockGhPath! },
       })
 
-      assertOutputContains(result, 'Resolving review thread')
-      assertOutputContains(result, 'Thread resolved successfully')
+      assertOutputContains(result, 'Resolving thread')
+      assertOutputContains(result, 'Thread resolved!')
       assertExitCode(result, 0)
     })
 
@@ -232,9 +232,9 @@ describe('PR Commands - CLI Integration', () => {
         env: { GH_PATH: mockGhPath! },
       })
 
-      assertOutputContains(result, 'Finding all unresolved threads')
+      assertOutputContains(result, 'Fetching review threads')
       assertOutputContains(result, 'Resolving')
-      assertOutputContains(result, 'threads resolved successfully')
+      assertOutputContains(result, 'thread(s)!')
       assertExitCode(result, 0)
     })
 
@@ -322,7 +322,7 @@ describe('PR Commands - CLI Integration', () => {
         env: { GH_PATH: mockGhPath },
       })
 
-      assertOutputContains(result, 'No unresolved threads', 'any')
+      assertOutputContains(result, 'All threads are already resolved', 'any')
       assertExitCode(result, 0)
     })
   })
@@ -364,7 +364,7 @@ describe('PR Commands - CLI Integration', () => {
       assertOutputContains(result, 'gh please pr review-reply', 'any')
 
       // Should still post reply successfully
-      assertOutputContains(result, 'Reply posted successfully', 'any')
+      assertOutputContains(result, 'Reply created successfully', 'any')
       assertExitCode(result, 0)
     })
 
@@ -393,7 +393,7 @@ describe('PR Commands - CLI Integration', () => {
           },
         },
         {
-          args: /api .*\/repos\/.*\/.*\/pulls\/comments\/[0-9]+/,
+          args: /api -H Accept: application\/vnd.github\+json -H X-GitHub-Api-Version: 2022-11-28 \/repos\/.*\/.*\/pulls\/[0-9]+\/comments\/[0-9]+/,
           response: {
             stderr: 'HTTP 404: Not Found',
             exitCode: 1,

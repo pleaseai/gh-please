@@ -55,13 +55,11 @@ describe('Issue Commands - CLI Integration', () => {
           exitCode: 0,
         },
       },
-      // Mock GraphQL mutations - Create Sub-issue
+      // Mock gh issue create (used by sub-issue create command)
       {
-        args: /api graphql -H GraphQL-Features: sub_issues -f query=.*createSubIssue/,
+        args: /issue create -R .*\/.* -t .*/,
         response: {
-          stdout: JSON.stringify(
-            createSubIssueResponse(mockParentIssue.nodeId, 'New Sub-issue', 102, 'I_kwDOABCDEF102000'),
-          ),
+          stdout: `https://github.com/test-owner/test-repo/issues/102`,
           exitCode: 0,
         },
       },
@@ -238,10 +236,9 @@ describe('Issue Commands - CLI Integration', () => {
         env: { GH_PATH: mockGhPath! },
       })
 
-      assertOutputContains(result, 'Getting parent issue')
-      assertOutputContains(result, 'Getting child issue')
-      assertOutputContains(result, 'Adding')
-      assertOutputContains(result, 'linked as sub-issue')
+      assertOutputContains(result, 'Getting issue node IDs')
+      assertOutputContains(result, 'Linking')
+      assertOutputContains(result, 'Sub-issue linked successfully')
       assertExitCode(result, 0)
     })
 
@@ -275,8 +272,8 @@ describe('Issue Commands - CLI Integration', () => {
         env: { GH_PATH: mockGhPath! },
       })
 
-      assertOutputContains(result, 'Removing sub-issue link')
-      assertOutputContains(result, 'unlinked')
+      assertOutputContains(result, 'Unlinking')
+      assertOutputContains(result, 'Sub-issue unlinked successfully')
       assertExitCode(result, 0)
     })
 
@@ -301,7 +298,8 @@ describe('Issue Commands - CLI Integration', () => {
         env: { GH_PATH: mockGhPath! },
       })
 
-      assertOutputContains(result, 'Sub-issues of')
+      assertOutputContains(result, 'Fetching sub-issues')
+      assertOutputContains(result, 'Found')
       assertOutputContains(result, '#101')
       assertOutputContains(result, 'Child Issue')
       assertOutputContains(result, '#102')
@@ -332,10 +330,9 @@ describe('Issue Commands - CLI Integration', () => {
         env: { GH_PATH: mockGhPath! },
       })
 
-      assertOutputContains(result, 'Getting issue')
-      assertOutputContains(result, 'Getting blocking issue')
-      assertOutputContains(result, 'Adding dependency')
-      assertOutputContains(result, 'blocked by')
+      assertOutputContains(result, 'Getting issue node IDs')
+      assertOutputContains(result, 'Setting')
+      assertOutputContains(result, 'Dependency added successfully')
       assertExitCode(result, 0)
     })
 
@@ -376,8 +373,8 @@ describe('Issue Commands - CLI Integration', () => {
         env: { GH_PATH: mockGhPath! },
       })
 
-      assertOutputContains(result, 'Removing dependency')
-      assertOutputContains(result, 'no longer blocked')
+      assertOutputContains(result, 'Removing')
+      assertOutputContains(result, 'Dependency removed successfully')
       assertExitCode(result, 0)
     })
 
@@ -402,7 +399,8 @@ describe('Issue Commands - CLI Integration', () => {
         env: { GH_PATH: mockGhPath! },
       })
 
-      assertOutputContains(result, 'Dependencies blocking')
+      assertOutputContains(result, 'Fetching blockers')
+      assertOutputContains(result, 'blocked by')
       assertOutputContains(result, '#200')
       assertOutputContains(result, 'Blocking Issue')
       assertExitCode(result, 0)

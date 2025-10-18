@@ -162,7 +162,7 @@ describe('AI Commands - CLI Integration', () => {
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'fix')
-      assertOutputContains(result, 'Trigger PleaseAI to fix')
+      assertOutputContains(result, 'Trigger PleaseAI to create a fix')
     })
 
     test('should fail with missing issue number', async () => {
@@ -181,7 +181,7 @@ describe('AI Commands - CLI Integration', () => {
         env: { GH_PATH: mockGhPath! },
       })
 
-      assertOutputContains(result, 'Triggering PleaseAI code review')
+      assertOutputContains(result, 'Triggering PleaseAI review')
       assertOutputContains(result, `PR #${mockPr.number}`)
       assertOutputContains(result, 'Review request posted')
       assertExitCode(result, 0)
@@ -226,7 +226,7 @@ describe('AI Commands - CLI Integration', () => {
 
       assertOutputContains(result, 'Usage:')
       assertOutputContains(result, 'apply')
-      assertOutputContains(result, 'Apply PleaseAI suggestions')
+      assertOutputContains(result, 'Trigger PleaseAI to apply suggestions')
     })
 
     test('should fail with missing PR number', async () => {

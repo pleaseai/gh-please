@@ -36,9 +36,14 @@ export function createSubIssueCommand(): Command {
 
         console.log(`📝 Creating sub-issue...`)
         // For now, create issue via gh CLI and then link it
+        // Use getGhCommand to allow test mocking via GH_PATH env var
+        function getGhCommand(): string {
+          return process.env.GH_PATH || 'gh'
+        }
+
         const proc = Bun.spawn(
           [
-            'gh',
+            getGhCommand(),
             'issue',
             'create',
             '-R',
