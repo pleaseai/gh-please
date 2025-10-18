@@ -1,7 +1,7 @@
 # @pleaseai/github
 
-[![CI](https://github.com/pleaseai/github/actions/workflows/ci.yml/badge.svg)](https://github.com/pleaseai/github/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/github/pleaseai/github/graph/badge.svg?token=BQKO959X1M)](https://codecov.io/github/pleaseai/github)
+[![CI](https://github.com/pleaseai/gh-please/actions/workflows/ci.yml/badge.svg)](https://github.com/pleaseai/gh-please/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/github/pleaseai/gh-please/graph/badge.svg?token=BQKO959X1M)](https://codecov.io/github/pleaseai/gh-please)
 [![code style](https://antfu.me/badge-code-style.svg)](https://github.com/antfu/eslint-config)
 
 GitHub CLI extension for **PleaseAI** - AI-powered code review and issue management automation.
@@ -20,7 +20,7 @@ GitHub CLI extension for **PleaseAI** - AI-powered code review and issue managem
 1. **Install the extension**
 
    ```bash
-   gh extension install pleaseai/github
+   gh extension install pleaseai/gh-please
    ```
 
 2. **Navigate to your repository**
@@ -80,14 +80,14 @@ Create a reply to a pull request review comment using the GitHub API.
 ### Install the extension
 
 ```bash
-gh extension install pleaseai/github
+gh extension install pleaseai/gh-please
 ```
 
 ### Development Installation
 
 ```bash
-git clone https://github.com/pleaseai/github.git
-cd github
+git clone https://github.com/pleaseai/gh-please.git
+cd gh-please
 bun install
 gh extension install .
 ```

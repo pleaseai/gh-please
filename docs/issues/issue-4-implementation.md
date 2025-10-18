@@ -2,7 +2,7 @@
 
 ## 개요
 
-Issue: https://github.com/pleaseai/github/issues/4
+Issue: https://github.com/pleaseai/gh-please/issues/4
 
 GraphQL, REST API, PleaseAI 트리거를 위한 공통 라이브러리 구축
 

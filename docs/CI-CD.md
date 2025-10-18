@@ -237,7 +237,7 @@ Coverage reports are generated during unit tests and uploaded to Codecov.
 Add to README:
 
 ```markdown
-[![codecov](https://codecov.io/gh/pleaseai/github/branch/main/graph/badge.svg)](https://codecov.io/gh/pleaseai/github)
+[![codecov](https://codecov.io/gh/pleaseai/gh-please/branch/main/graph/badge.svg)](https://codecov.io/gh/pleaseai/gh-please)
 ```
 
 ### Coverage Thresholds

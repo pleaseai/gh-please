@@ -103,7 +103,7 @@ gh release list
 gh release view v0.2.0
 
 # Test installation
-gh extension install pleaseai/github
+gh extension install pleaseai/gh-please
 ```
 
 ## Version Management
