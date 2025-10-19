@@ -65,9 +65,7 @@ gh please init --force  # Reset configuration
 - Language preference: `ko | en`
 - Ignore patterns: for files/directories to skip
 
-📖 **Full Configuration Guide:** See [AI Plugin Configuration](../plugins/ai/docs/CONFIGURATION.md)
-
-For detailed options, installation instructions, and examples, see the plugin repository.
+📖 **Full Configuration Guide:** For detailed options, installation instructions, and examples, visit the [AI plugin repository](https://github.com/pleaseai/gh-please-ai) or see `plugins/ai/docs/CONFIGURATION.md` in development builds.
 
 ---
 

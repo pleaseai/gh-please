@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is **@pleaseai/github**, a GitHub CLI extension that provides enhanced functionality for managing pull requests and issue workflows through the `gh` CLI.
+This is **@pleaseai/gh-please**, a GitHub CLI extension that provides enhanced functionality for managing pull requests and issue workflows through the `gh` CLI.
 
 **Version**: 0.3.0
 

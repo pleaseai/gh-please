@@ -1,4 +1,4 @@
-# @pleaseai/github
+# @pleaseai/gh-please
 
 [![CI](https://github.com/pleaseai/gh-please/actions/workflows/ci.yml/badge.svg)](https://github.com/pleaseai/gh-please/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/github/pleaseai/gh-please/graph/badge.svg?token=BQKO959X1M)](https://codecov.io/github/pleaseai/gh-please)
@@ -10,7 +10,7 @@
 
 ## 개요
 
-`@pleaseai/github`는 GitHub CLI를 위한 강력한 확장 프로그램으로, 이슈 및 PR 관리를 향상시킵니다:
+`@pleaseai/gh-please`는 GitHub CLI를 위한 강력한 확장 프로그램으로, 이슈 및 PR 관리를 향상시킵니다:
 
 ### 핵심 기능 (내장)
 - **이슈 관리**: Sub-issue 및 의존성 관계 관리
@@ -615,7 +615,7 @@ gh api rate_limit
 ### 프로젝트 구조
 
 ```
-@pleaseai/github/
+@pleaseai/gh-please/
 ├── src/
 │   ├── commands/         # 명령어 구현
 │   │   ├── init.ts      # PleaseAI 설정 초기화
