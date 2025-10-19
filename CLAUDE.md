@@ -365,7 +365,7 @@ Tests follow the **Arrange-Act-Assert** pattern and use Bun's built-in test runn
 ## Development Workflow
 
 1. Make changes to `src/` files
-2. Run linting: `bun run lint:fix` (auto-fixes style issues)
+2. **Run linting: `bun run lint:fix` (REQUIRED - auto-fixes style issues)**
 3. Run type checking: `bun run type-check`
 4. Run tests: `bun test`
 5. Test manually: `bun run src/index.ts <command> [options]`
@@ -376,8 +376,15 @@ Tests follow the **Arrange-Act-Assert** pattern and use Bun's built-in test runn
 **Pre-commit checklist:**
 ```bash
 # Run all quality checks before committing
+# IMPORTANT: Always run lint:fix first to auto-fix style issues
 bun run lint:fix && bun run type-check && bun test
 ```
+
+**Note:** `bun run lint:fix` must be executed after any code changes to ensure all ESLint rules are applied before committing. This catches and auto-fixes:
+- Unused variables and imports
+- Const/let usage optimization
+- Formatting and style issues
+- Other lint rule violations
 
 ## Issue Workflow
 
