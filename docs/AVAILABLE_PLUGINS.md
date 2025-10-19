@@ -135,7 +135,7 @@ Want to create your own plugin? Check out our comprehensive guide:
 **Quick Start:**
 
 ```typescript
-import type { GhPleasePlugin } from '@pleaseai/github/plugins'
+import type { GhPleasePlugin } from '@pleaseai/gh-please/plugins'
 import { Command } from 'commander'
 
 const plugin: GhPleasePlugin = {

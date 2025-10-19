@@ -69,7 +69,7 @@ Add plugin metadata to `package.json`:
     "enabled": true
   },
   "peerDependencies": {
-    "@pleaseai/github": ">=0.3.0"
+    "@pleaseai/gh-please": ">=0.3.0"
   },
   "dependencies": {
     "commander": "^12.1.0"
@@ -82,7 +82,7 @@ Add plugin metadata to `package.json`:
 Create `src/index.ts`:
 
 ```typescript
-import type { GhPleasePlugin } from '@pleaseai/github/plugins'
+import type { GhPleasePlugin } from '@pleaseai/gh-please/plugins'
 import { Command } from 'commander'
 
 const plugin: GhPleasePlugin = {
@@ -374,7 +374,7 @@ const plugin: GhPleasePlugin = {
 
 ### Type Errors
 
-1. Install peer dependencies: `npm install @pleaseai/github commander`
+1. Install peer dependencies: `npm install @pleaseai/gh-please commander`
 2. Ensure TypeScript version >= 5.0
 3. Check `tsconfig.json` has correct module settings
 

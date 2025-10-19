@@ -1,5 +1,5 @@
 {
-  "name": "@pleaseai/github",
+  "name": "@pleaseai/gh-please",
   "type": "module",
   "version": "0.3.0",
   "description": "GitHub CLI extension for enhanced PR and issue management with plugin support",
