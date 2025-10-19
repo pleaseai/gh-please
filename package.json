@@ -1,8 +1,8 @@
 {
-  "name": "@pleaseai/github",
+  "name": "@pleaseai/gh-please",
   "type": "module",
   "version": "0.3.0",
-  "description": "GitHub CLI extension for PleaseAI - AI-powered code review and issue management automation",
+  "description": "GitHub CLI extension for enhanced PR and issue management with plugin support",
   "author": "PleaseAI",
   "license": "MIT",
   "repository": {
@@ -21,7 +21,17 @@
     "issue-management",
     "triage"
   ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./plugins": {
+      "types": "./dist/plugins/plugin-interface.d.ts"
+    }
+  },
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
     "gh-please": "./dist/index.js"
   },
