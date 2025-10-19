@@ -32,11 +32,16 @@ export async function extractTarball(
     stderr: 'pipe',
   })
 
-  const exitCode = await proc.exited
+  const [stderr, exitCode] = await Promise.all([
+    new Response(proc.stderr).text(),
+    proc.exited,
+  ])
 
   if (exitCode !== 0) {
-    const stderr = await new Response(proc.stderr).text()
-    throw new Error(`Failed to extract tarball: ${stderr}`)
+    const errorMsg = `Failed to extract tarball: ${stderr.trim() || `tar command exited with code ${exitCode}`}`
+    console.error(`[archive] ${errorMsg}`)
+    console.error(`[archive] Command: tar -xzf "${filePath}" -C "${targetDir}"`)
+    throw new Error(errorMsg)
   }
 }
 
@@ -45,8 +50,19 @@ export async function extractTarball(
  * @param filePath - Path to the tarball file to remove
  */
 export async function cleanupArchive(filePath: string): Promise<void> {
-  if (existsSync(filePath)) {
+  if (!existsSync(filePath)) {
+    return // File doesn't exist, nothing to clean up
+  }
+
+  try {
     rmSync(filePath, { force: true })
+    console.log(`[archive] Successfully removed tarball: ${filePath}`)
+  }
+  catch (error) {
+    // Log error but don't throw - cleanup is a best-effort operation
+    console.error(
+      `[archive] Warning: Failed to cleanup tarball at ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
+    )
   }
 }
 
@@ -58,6 +74,7 @@ export async function cleanupArchive(filePath: string): Promise<void> {
 export async function validateTarball(filePath: string): Promise<boolean> {
   // Check if file exists
   if (!existsSync(filePath)) {
+    console.error(`[archive] Tarball validation failed: File not found at ${filePath}`)
     return false
   }
 
@@ -67,6 +84,17 @@ export async function validateTarball(filePath: string): Promise<boolean> {
     stderr: 'pipe',
   })
 
-  const exitCode = await proc.exited
-  return exitCode === 0
+  const [stderr, exitCode] = await Promise.all([
+    new Response(proc.stderr).text(),
+    proc.exited,
+  ])
+
+  if (exitCode !== 0) {
+    console.error(
+      `[archive] Tarball validation failed for ${filePath}: ${stderr.trim() || `tar command exited with code ${exitCode}`}`,
+    )
+    return false
+  }
+
+  return true
 }
