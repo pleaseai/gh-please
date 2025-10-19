@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.1](https://github.com/pleaseai/gh-please/compare/github-v0.6.0...github-v0.6.1) (2025-10-19)
+
+
+### Bug Fixes
+
+* use GraphQL API for linked branches query instead of text parsing ([a55f07a](https://github.com/pleaseai/gh-please/commit/a55f07af70c04f0f758cf78827cee16caaf8861a))
+
+
+### Documentation
+
+* emphasize bun run lint:fix requirement in development workflow ([b626c98](https://github.com/pleaseai/gh-please/commit/b626c986f5d06f95ee45631d1d9240caae83b22e))
+
 ## [0.6.0](https://github.com/pleaseai/gh-please/compare/github-v0.5.0...github-v0.6.0) (2025-10-19)
 
 
