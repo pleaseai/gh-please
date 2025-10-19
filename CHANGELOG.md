@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2](https://github.com/pleaseai/gh-please/compare/github-v0.4.1...github-v0.4.2) (2025-10-19)
+
+
+### Bug Fixes
+
+* support --repo flag in issue develop command ([1c7267b](https://github.com/pleaseai/gh-please/commit/1c7267b023c624db26217d9bb83e0454981db789))
+
 ## [0.4.1](https://github.com/pleaseai/gh-please/compare/github-v0.4.0...github-v0.4.1) (2025-10-19)
 
 
