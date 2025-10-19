@@ -1,45 +1,4 @@
-import type { Language } from '../config/schema'
-
-export interface InitMessages {
-  intro: string
-  selectLanguage: string
-  languageKo: string
-  languageEn: string
-  configureSeverity: string
-  severityLow: string
-  severityMedium: string
-  severityHigh: string
-  configureMaxComments: string
-  maxCommentsPlaceholder: string
-  enableAutoReview: string
-  enableDraftReview: string
-  enableIssueWorkflow: string
-  enableAutoTriage: string
-  enableCodeWorkspace: string
-  creating: string
-  created: string
-  cancelled: string
-  setupComplete: string
-  errorExists: string
-  useForce: string
-}
-
-export interface AiMessages {
-  triggeringTriage: (issueNumber: number) => string
-  triagePosted: (issueNumber: number) => string
-  triggeringInvestigate: (issueNumber: number) => string
-  investigatePosted: (issueNumber: number) => string
-  triggeringFix: (issueNumber: number) => string
-  fixPosted: (issueNumber: number) => string
-  triggeringReview: (prNumber: number) => string
-  reviewPosted: (prNumber: number) => string
-  triggeringApply: (prNumber: number) => string
-  applyPosted: (prNumber: number) => string
-  issueNumberInvalid: string
-  prNumberInvalid: string
-  errorPrefix: string
-  unknownError: string
-}
+import type { Language } from '../types'
 
 export interface IssueMessages {
   gettingParentIssue: (parentNumber: number) => string
@@ -90,90 +49,6 @@ export interface PrMessages {
   mustSpecify: string
   errorPrefix: string
   unknownError: string
-}
-
-export const messages: Record<Language, InitMessages> = {
-  ko: {
-    intro: '🤖 PleaseAI 설정',
-    selectLanguage: '봇 응답 언어를 선택하세요',
-    languageKo: '🇰🇷 한국어 (Korean)',
-    languageEn: '🇺🇸 English',
-    configureSeverity: '리뷰 댓글의 최소 심각도를 선택하세요',
-    severityLow: 'LOW - 모든 제안 포함',
-    severityMedium: 'MEDIUM - 중요한 제안만',
-    severityHigh: 'HIGH - 심각한 문제만',
-    configureMaxComments: '최대 리뷰 댓글 수를 입력하세요',
-    maxCommentsPlaceholder: '-1 (무제한)',
-    enableAutoReview: 'PR이 열렸을 때 자동으로 코드 리뷰를 수행할까요?',
-    enableDraftReview: 'Draft PR도 자동 리뷰에 포함할까요?',
-    enableIssueWorkflow: 'Issue 워크플로우 (triage → investigate → fix)를 활성화할까요?',
-    enableAutoTriage: '새 이슈를 자동으로 분류할까요?',
-    enableCodeWorkspace: '코드 워크스페이스 기능을 활성화할까요?',
-    creating: '.please/config.yml 생성 중',
-    created: '✓ 설정이 성공적으로 생성되었습니다',
-    cancelled: '설정이 취소되었습니다',
-    setupComplete: '설정 완료!',
-    errorExists: '❌ .please/config.yml 파일이 이미 존재합니다',
-    useForce: '--force 플래그를 사용하여 덮어쓸 수 있습니다',
-  },
-  en: {
-    intro: '🤖 PleaseAI Configuration',
-    selectLanguage: 'Select bot response language',
-    languageKo: '🇰🇷 한국어 (Korean)',
-    languageEn: '🇺🇸 English',
-    configureSeverity: 'Select minimum severity level for review comments',
-    severityLow: 'LOW - Include all suggestions',
-    severityMedium: 'MEDIUM - Important suggestions only',
-    severityHigh: 'HIGH - Critical issues only',
-    configureMaxComments: 'Enter maximum number of review comments',
-    maxCommentsPlaceholder: '-1 (unlimited)',
-    enableAutoReview: 'Automatically perform code review when PR is opened?',
-    enableDraftReview: 'Include draft PRs in automatic reviews?',
-    enableIssueWorkflow: 'Enable issue workflow (triage → investigate → fix)?',
-    enableAutoTriage: 'Automatically triage new issues?',
-    enableCodeWorkspace: 'Enable code workspace features?',
-    creating: 'Creating .please/config.yml',
-    created: '✓ Configuration created successfully',
-    cancelled: 'Configuration cancelled',
-    setupComplete: 'Setup complete!',
-    errorExists: '❌ .please/config.yml already exists',
-    useForce: 'Use --force flag to overwrite',
-  },
-}
-
-export const aiMessages: Record<Language, AiMessages> = {
-  ko: {
-    triggeringTriage: (issueNumber: number) => `🤖 이슈 #${issueNumber}에 대한 PleaseAI 분류 트리거 중...`,
-    triagePosted: (issueNumber: number) => `✅ 이슈 #${issueNumber}에 분류 요청이 게시되었습니다`,
-    triggeringInvestigate: (issueNumber: number) => `🤖 이슈 #${issueNumber}에 대한 PleaseAI 조사 트리거 중...`,
-    investigatePosted: (issueNumber: number) => `✅ 이슈 #${issueNumber}에 조사 요청이 게시되었습니다`,
-    triggeringFix: (issueNumber: number) => `🤖 이슈 #${issueNumber}에 대한 PleaseAI 수정 트리거 중...`,
-    fixPosted: (issueNumber: number) => `✅ 이슈 #${issueNumber}에 수정 요청이 게시되었습니다`,
-    triggeringReview: (prNumber: number) => `🤖 PR #${prNumber}에 대한 PleaseAI 리뷰 트리거 중...`,
-    reviewPosted: (prNumber: number) => `✅ PR #${prNumber}에 리뷰 요청이 게시되었습니다`,
-    triggeringApply: (prNumber: number) => `🤖 PR #${prNumber}에 대한 PleaseAI 적용 트리거 중...`,
-    applyPosted: (prNumber: number) => `✅ PR #${prNumber}에 적용 요청이 게시되었습니다`,
-    issueNumberInvalid: '이슈 번호는 유효한 숫자여야 합니다',
-    prNumberInvalid: 'PR 번호는 유효한 숫자여야 합니다',
-    errorPrefix: '❌ 오류',
-    unknownError: '알 수 없는 오류',
-  },
-  en: {
-    triggeringTriage: (issueNumber: number) => `🤖 Triggering PleaseAI triage for issue #${issueNumber}...`,
-    triagePosted: (issueNumber: number) => `✅ Triage request posted to issue #${issueNumber}`,
-    triggeringInvestigate: (issueNumber: number) => `🤖 Triggering PleaseAI investigation for issue #${issueNumber}...`,
-    investigatePosted: (issueNumber: number) => `✅ Investigation request posted to issue #${issueNumber}`,
-    triggeringFix: (issueNumber: number) => `🤖 Triggering PleaseAI fix for issue #${issueNumber}...`,
-    fixPosted: (issueNumber: number) => `✅ Fix request posted to issue #${issueNumber}`,
-    triggeringReview: (prNumber: number) => `🤖 Triggering PleaseAI review for PR #${prNumber}...`,
-    reviewPosted: (prNumber: number) => `✅ Review request posted to PR #${prNumber}`,
-    triggeringApply: (prNumber: number) => `🤖 Triggering PleaseAI apply for PR #${prNumber}...`,
-    applyPosted: (prNumber: number) => `✅ Apply request posted to PR #${prNumber}`,
-    issueNumberInvalid: 'Issue number must be a valid number',
-    prNumberInvalid: 'PR number must be a valid number',
-    errorPrefix: '❌ Error',
-    unknownError: 'Unknown error',
-  },
 }
 
 export const issueMessages: Record<Language, IssueMessages> = {
@@ -278,14 +153,6 @@ export const prMessages: Record<Language, PrMessages> = {
     errorPrefix: '❌ Error',
     unknownError: '❌ An unexpected error occurred',
   },
-}
-
-export function getMessages(language: Language): InitMessages {
-  return messages[language]
-}
-
-export function getAiMessages(language: Language): AiMessages {
-  return aiMessages[language]
 }
 
 export function getIssueMessages(language: Language): IssueMessages {
