@@ -4,7 +4,10 @@
  * Handles installing plugins via npm or from custom sources
  */
 
-import { spawn } from 'node:child_process'
+import { mkdir } from 'node:fs/promises'
+import { checkGhAuth } from '../lib/gh-cli'
+import { extractTarball, cleanupArchive } from '../lib/archive'
+import { expandHome } from '../lib/path-utils'
 
 /**
  * Plugin installation result
@@ -62,9 +65,17 @@ export async function uninstallPlugin(
   try {
     const args = global ? ['uninstall', '-g', pluginName] : ['uninstall', pluginName]
 
-    const result = await execCommand('npm', args)
+    const proc = Bun.spawn(['npm', ...args], {
+      stdout: 'pipe',
+      stderr: 'pipe',
+    })
 
-    if (result.exitCode === 0) {
+    const [stderr, exitCode] = await Promise.all([
+      new Response(proc.stderr).text(),
+      proc.exited,
+    ])
+
+    if (exitCode === 0) {
       return {
         success: true,
         pluginName,
@@ -76,7 +87,7 @@ export async function uninstallPlugin(
         success: false,
         pluginName,
         message: `Failed to uninstall plugin '${pluginName}'`,
-        error: result.stderr,
+        error: stderr,
       }
     }
   }
@@ -91,25 +102,214 @@ export async function uninstallPlugin(
 }
 
 /**
+ * Map of premium plugin names to their GitHub repositories
+ */
+const PREMIUM_PLUGIN_REPOS: Record<string, string> = {
+  ai: 'pleaseai/gh-please-ai',
+}
+
+/**
  * Install a premium plugin
- * Requires authentication with PleaseAI service
+ * Requires authentication with GitHub CLI
  *
  * @param pluginName - Plugin name
  * @returns Installation result
  */
 async function installPremiumPlugin(pluginName: string): Promise<InstallResult> {
-  // TODO: Implement premium plugin installation
-  // This would involve:
-  // 1. Checking PleaseAI account credentials
-  // 2. Verifying subscription status
-  // 3. Downloading plugin from private registry
-  // 4. Installing to ~/.gh-please/plugins
+  try {
+    // 1. Check if user is authenticated with GitHub CLI
+    const isAuthenticated = await checkGhAuth()
+    if (!isAuthenticated) {
+      return {
+        success: false,
+        pluginName,
+        message: 'Authentication required for premium plugins',
+        error: 'Run: gh auth login',
+      }
+    }
 
-  return {
-    success: false,
-    pluginName,
-    message: 'Premium plugin installation not yet implemented',
-    error: 'Please install manually from @pleaseai organization',
+    // 2. Verify plugin exists in registry
+    const repo = PREMIUM_PLUGIN_REPOS[pluginName]
+    if (!repo) {
+      return {
+        success: false,
+        pluginName,
+        message: `Plugin '${pluginName}' not found in premium registry`,
+        error: 'Unknown plugin name',
+      }
+    }
+
+    // 3. Create installation directory
+    const pluginDir = expandHome(`~/.gh-please/plugins/${pluginName}`)
+    await mkdir(pluginDir, { recursive: true })
+
+    // 4. Download latest release using gh CLI
+    const downloadResult = await downloadRelease(repo, pluginDir)
+    if (!downloadResult.success) {
+      return {
+        success: false,
+        pluginName,
+        message: `Failed to download ${pluginName} from ${repo}`,
+        error: downloadResult.error,
+      }
+    }
+
+    // 5. Extract tarball
+    const extractResult = await extractPluginTarball(pluginDir)
+    if (!extractResult.success) {
+      return {
+        success: false,
+        pluginName,
+        message: `Failed to extract ${pluginName}`,
+        error: extractResult.error,
+      }
+    }
+
+    // 6. Verify installation
+    const verifyResult = await verifyPluginInstallation(pluginDir)
+    if (!verifyResult.success) {
+      return {
+        success: false,
+        pluginName,
+        message: `Plugin ${pluginName} installation verification failed`,
+        error: verifyResult.error,
+      }
+    }
+
+    return {
+      success: true,
+      pluginName,
+      message: `Plugin '${pluginName}' installed successfully to ${pluginDir}`,
+    }
+  }
+  catch (error) {
+    return {
+      success: false,
+      pluginName,
+      message: `Failed to install premium plugin '${pluginName}'`,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
+/**
+ * Get the gh command path from environment (for testing)
+ */
+function getGhCommand(): string {
+  return process.env.GH_PATH || 'gh'
+}
+
+/**
+ * Download release from GitHub repository
+ */
+async function downloadRelease(
+  repo: string,
+  targetDir: string,
+): Promise<{ success: boolean, error?: string }> {
+  try {
+    const ghCommand = getGhCommand()
+    const proc = Bun.spawn([ghCommand, 'release', 'download', '--repo', repo, '--pattern', '*.tar.gz', '--dir', targetDir, '--clobber'], {
+      stdout: 'pipe',
+      stderr: 'pipe',
+    })
+
+    const [stderr, exitCode] = await Promise.all([
+      new Response(proc.stderr).text(),
+      proc.exited,
+    ])
+
+    if (exitCode !== 0) {
+      return {
+        success: false,
+        error: stderr.trim() || `gh release download exited with code ${exitCode}`,
+      }
+    }
+
+    return { success: true }
+  }
+  catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error during download',
+    }
+  }
+}
+
+/**
+ * Extract plugin tarball in the plugin directory
+ */
+async function extractPluginTarball(pluginDir: string): Promise<{ success: boolean, error?: string }> {
+  try {
+    // Find the first .tar.gz file in the directory
+    let tarballPath: string | null = null
+
+    for await (const entry of Bun.file(pluginDir).type === 'directory' ? [] : []) {
+      if (entry.name.endsWith('.tar.gz')) {
+        tarballPath = `${pluginDir}/${entry.name}`
+        break
+      }
+    }
+
+    // Fallback: use find command if directory listing fails
+    if (!tarballPath) {
+      const proc = Bun.spawn(['find', pluginDir, '-name', '*.tar.gz', '-type', 'f'], {
+        stdout: 'pipe',
+        stderr: 'pipe',
+      })
+
+      const stdout = await new Response(proc.stdout).text()
+      const firstLine = stdout.split('\n')[0]?.trim()
+
+      if (firstLine) {
+        tarballPath = firstLine
+      }
+    }
+
+    if (!tarballPath) {
+      return {
+        success: false,
+        error: 'No tarball found in plugin directory',
+      }
+    }
+
+    // Extract the tarball
+    await extractTarball(tarballPath, pluginDir)
+
+    // Cleanup the tarball
+    await cleanupArchive(tarballPath)
+
+    return { success: true }
+  }
+  catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error during extraction',
+    }
+  }
+}
+
+/**
+ * Verify plugin installation by checking for package.json
+ */
+async function verifyPluginInstallation(pluginDir: string): Promise<{ success: boolean, error?: string }> {
+  try {
+    const packageJsonPath = `${pluginDir}/package.json`
+    const file = Bun.file(packageJsonPath)
+
+    if (await file.exists()) {
+      return { success: true }
+    }
+
+    return {
+      success: false,
+      error: 'package.json not found in plugin directory',
+    }
+  }
+  catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error during verification',
+    }
   }
 }
 
@@ -126,9 +326,17 @@ async function installFromNpm(packageName: string, global: boolean): Promise<Ins
 
     console.log(`📦 Installing ${packageName}...`)
 
-    const result = await execCommand('npm', args)
+    const proc = Bun.spawn(['npm', ...args], {
+      stdio: ['inherit', 'pipe', 'pipe'],
+    })
 
-    if (result.exitCode === 0) {
+    const [stdout, stderr, exitCode] = await Promise.all([
+      new Response(proc.stdout).text(),
+      new Response(proc.stderr).text(),
+      proc.exited,
+    ])
+
+    if (exitCode === 0) {
       return {
         success: true,
         pluginName: packageName,
@@ -140,7 +348,7 @@ async function installFromNpm(packageName: string, global: boolean): Promise<Ins
         success: false,
         pluginName: packageName,
         message: `Failed to install plugin '${packageName}'`,
-        error: result.stderr,
+        error: stderr,
       }
     }
   }
@@ -152,53 +360,4 @@ async function installFromNpm(packageName: string, global: boolean): Promise<Ins
       error: error instanceof Error ? error.message : 'Unknown error',
     }
   }
-}
-
-/**
- * Execute a command and capture output
- *
- * @param command - Command to execute
- * @param args - Command arguments
- * @returns Command result
- */
-function execCommand(
-  command: string,
-  args: string[],
-): Promise<{ exitCode: number, stdout: string, stderr: string }> {
-  return new Promise((resolve) => {
-    const proc = spawn(command, args, {
-      stdio: ['inherit', 'pipe', 'pipe'],
-    })
-
-    let stdout = ''
-    let stderr = ''
-
-    proc.stdout?.on('data', (data) => {
-      const output = data.toString()
-      stdout += output
-      process.stdout.write(output)
-    })
-
-    proc.stderr?.on('data', (data) => {
-      const output = data.toString()
-      stderr += output
-      process.stderr.write(output)
-    })
-
-    proc.on('close', (exitCode) => {
-      resolve({
-        exitCode: exitCode ?? 1,
-        stdout,
-        stderr,
-      })
-    })
-
-    proc.on('error', (error) => {
-      resolve({
-        exitCode: 1,
-        stdout,
-        stderr: error.message,
-      })
-    })
-  })
 }
