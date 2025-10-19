@@ -10,14 +10,23 @@
 
 ## 개요
 
-`@pleaseai/github`는 PleaseAI를 위한 명령줄 인터페이스로, 다음과 같은 지능형 자동화 기능을 제공합니다:
+`@pleaseai/github`는 GitHub CLI를 위한 강력한 확장 프로그램으로, 이슈 및 PR 관리를 향상시킵니다:
 
+### 핵심 기능 (내장)
+- **이슈 관리**: Sub-issue 및 의존성 관계 관리
+- **PR 관리**: 리뷰 코멘트 답변 및 스레드 해결
+- **플러그인 시스템**: 확장 가능한 아키텍처로 커스텀 기능 추가
+
+### AI 기능 (플러그인 필요)
 - **코드 리뷰**: AI가 생성한 코멘트와 제안으로 자동화된 PR 리뷰
 - **이슈 워크플로우**: 이슈의 분류(triage) → 조사(investigate) → 수정(fix) 워크플로우
-- **리뷰 관리**: PR 리뷰 코멘트에 답변하고 토론 관리
 - **코드 워크스페이스**: 향상된 개발 워크스페이스 기능
 
+> **v0.3.0 변경사항**: AI 기능이 별도 플러그인으로 분리되었습니다. [마이그레이션 가이드](./docs/MIGRATION_v0.3.md)를 참조하세요.
+
 ## 빠른 시작
+
+### 핵심 기능 사용 (플러그인 불필요)
 
 1. **확장 프로그램 설치**
 
@@ -25,13 +34,33 @@
    gh extension install pleaseai/gh-please
    ```
 
-2. **저장소로 이동**
+2. **즉시 사용 가능한 명령어**
 
    ```bash
-   cd your-project
+   # 이슈 관리
+   gh please issue sub-issue create 100 --title "서브 태스크"
+   gh please issue dependency add 200 --blocked-by 199
+
+   # PR 관리
+   gh please pr review-reply 1234567890 -b "수정했습니다!"
+   gh please pr resolve 456 --all
    ```
 
-3. **PleaseAI 설정 초기화**
+### AI 기능 사용 (플러그인 필요)
+
+1. **AI 플러그인 설치**
+
+   **프리미엄 클라우드 서비스 (권장):**
+   ```bash
+   gh please plugin install ai --premium
+   ```
+
+   **셀프 호스팅:**
+   ```bash
+   npm install -g @pleaseai/gh-please-ai
+   ```
+
+2. **PleaseAI 설정 초기화**
 
    ```bash
    gh please init
@@ -39,10 +68,13 @@
 
    이 명령은 코드 리뷰 자동화, 이슈 워크플로우 등에 대한 설정이 포함된 `.please/config.yml` 파일을 생성합니다.
 
-4. **PleaseAI 기능 사용 시작**
-   - 설정에 따른 자동 PR 리뷰
-   - AI 기반 이슈 분류 및 조사
-   - 리뷰 코멘트에 답변: `gh please review-reply <comment-id> -b "답변 내용"`
+3. **AI 기능 사용 시작**
+   ```bash
+   gh please ai triage 123
+   gh please ai review 456
+   ```
+
+> 📖 자세한 내용은 [사용 가능한 플러그인](./docs/AVAILABLE_PLUGINS.md)을 참조하세요.
 
 ## Claude Code 통합
 
@@ -103,9 +135,41 @@ gh please pr resolve 456 --all -R owner/repo
 
 **참고**: `--repo` 옵션이 없으면 현재 디렉토리의 저장소가 사용됩니다.
 
+## 플러그인 시스템
+
+v0.3.0부터 `gh-please`는 모듈형 플러그인 아키텍처를 사용합니다.
+
+### 플러그인 관리
+
+```bash
+# 설치된 플러그인 보기
+gh please plugin list
+
+# 플러그인 검색
+gh please plugin search [name]
+
+# 플러그인 설치
+gh please plugin install <name>
+
+# 플러그인 제거
+gh please plugin uninstall <name>
+```
+
+### 사용 가능한 플러그인
+
+- **@pleaseai/gh-please-ai** (프리미엄) - AI 기반 코드 리뷰 및 이슈 자동화
+
+더 많은 정보는 [사용 가능한 플러그인](./docs/AVAILABLE_PLUGINS.md)을 참조하세요.
+
+### 플러그인 개발
+
+자체 플러그인을 만들고 싶으신가요? [플러그인 개발 가이드](./docs/PLUGIN_DEVELOPMENT.md)를 확인하세요.
+
 ## 주요 기능
 
 ### `gh please init` - PleaseAI 설정 초기화
+
+> **플러그인 필요**: 이 명령은 AI 플러그인이 설치되어 있어야 합니다.
 
 모든 PleaseAI 기능에 대한 대화형 설정으로 `.please/config.yml`을 구성합니다:
 
@@ -348,6 +412,9 @@ EOF
 ```
 
 ### AI 명령어
+
+> **플러그인 필요**: 이러한 명령은 AI 플러그인이 설치되어 있어야 합니다.
+> 설치: `gh please plugin install ai`
 
 코드 리뷰 및 이슈 관리를 위한 PleaseAI 자동화 워크플로우를 트리거합니다.
 
@@ -676,8 +743,26 @@ bun run test:manual
 
 MIT
 
+## v0.3.0 히스토리 노트
+
+v0.3.0 이전에는 AI 명령이 메인 코드베이스에 포함되어 있었습니다. 오픈소스 모델을 지원하기 위해 별도 플러그인으로 분리되었습니다.
+
+**Git 히스토리에 포함된 내용:**
+- AI 명령 구현은 단순한 GitHub 코멘트 트리거였습니다
+- 실제 AI 처리는 서버 측에서 발생합니다
+- 트리거는 `/please-triage`, `/please-review` 등의 코멘트만 게시합니다
+
+이는 Git 히스토리에 독점 AI 로직이 포함되지 않고 트리거 메커니즘만 포함되었음을 의미합니다.
+
+### 마이그레이션
+
+v0.2.x에서 업그레이드하는 경우 [마이그레이션 가이드](./docs/MIGRATION_v0.3.md)를 참조하세요.
+
 ## 관련 문서
 
+- [플러그인 개발 가이드](./docs/PLUGIN_DEVELOPMENT.md)
+- [사용 가능한 플러그인](./docs/AVAILABLE_PLUGINS.md)
+- [v0.3.0 마이그레이션 가이드](./docs/MIGRATION_v0.3.md)
 - [GitHub CLI 매뉴얼](https://cli.github.com/manual/)
 - [GitHub CLI 확장 프로그램 만들기](https://docs.github.com/en/enterprise-cloud@latest/github-cli/github-cli/creating-github-cli-extensions)
 - [GitHub REST API - 풀 리퀘스트 리뷰 코멘트](https://docs.github.com/en/rest/pulls/comments)

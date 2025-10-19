@@ -9,16 +9,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is **@pleaseai/github**, a GitHub CLI extension for PleaseAI - an AI-powered code review and issue management automation service. It provides enhanced functionality for managing pull requests and issue workflows through the `gh` CLI.
+This is **@pleaseai/github**, a GitHub CLI extension that provides enhanced functionality for managing pull requests and issue workflows through the `gh` CLI.
 
-**Key Features:**
+**Version**: 0.3.0
 
-- Initialize PleaseAI configuration (`.please/config.yml`)
-- Reply to PR review comments via GitHub API
-- Configure code review automation (severity thresholds, auto-review, draft PR handling)
-- Configure issue workflow automation (triage → investigate → fix)
+**Core Features (Built-in):**
+
+- Issue management with sub-issues and dependencies
+- PR review comment replies and thread resolution
+- Plugin system for extensibility
 - Bilingual support (Korean/English)
 - Built with Bun runtime and TypeScript
+
+**AI Features (Plugin Required - `@pleaseai/gh-please-ai`):**
+
+- Initialize PleaseAI configuration (`.please/config.yml`)
+- AI-powered code review and issue automation
+- Issue triage → investigate → fix workflow
+- Code review automation (severity thresholds, auto-review, draft PR handling)
+
+**v0.3.0 Changes:**
+
+- Introduced plugin architecture for modularity
+- Moved AI features to separate private plugin
+- Core utilities remain open-source
+- Plugin discovery and management system
 
 ## Development Commands
 
@@ -72,19 +87,19 @@ bun test --coverage
 gh extension install .
 
 # Use the extension
-# AI commands
-gh please ai triage 123
-gh please ai review 456
+# Plugin management
+gh please plugin list
+gh please plugin install ai
 
-# Issue commands
+# Core commands (no plugin required)
 gh please issue sub-issue list 123
 gh please issue dependency add 123 --blocked-by 124
-
-# PR commands
 gh please pr review-reply 987654 -b "Great work!"
 gh please pr resolve 456 --all
 
-# Configuration
+# AI commands (requires AI plugin)
+gh please ai triage 123
+gh please ai review 456
 gh please init
 
 # Backward compatibility
@@ -93,19 +108,17 @@ gh please review-reply 987654 -b "text"  # Works but shows deprecation warning
 
 ## Architecture
 
-### Command Structure (v0.2.0)
+### Command Structure (v0.3.0)
 
-The CLI uses **commander.js** for command parsing with a modular, grouped command structure:
+The CLI uses **commander.js** for command parsing with a modular, plugin-based architecture:
 
 ```bash
-# AI Group (PleaseAI triggers)
-gh please ai triage <issue-number>         # Trigger triage bot
-gh please ai investigate <issue-number>    # Trigger investigation
-gh please ai fix <issue-number>            # Trigger fix workflow
-gh please ai review <pr-number>            # Trigger PR review
-gh please ai apply <pr-number>             # Apply bot suggestions
+# Plugin Management
+gh please plugin list                      # List installed plugins
+gh please plugin install <name>            # Install a plugin
+gh please plugin uninstall <name>          # Uninstall a plugin
 
-# Issue Group (Direct API calls)
+# Core Issue Management (Built-in)
 gh please issue sub-issue create <parent> --title "..."   # Create linked sub-issue
 gh please issue sub-issue add <parent> <child>            # Link existing issue
 gh please issue sub-issue remove <parent> <child>         # Unlink sub-issue
@@ -114,12 +127,17 @@ gh please issue dependency add <issue> --blocked-by <blocker>     # Add blocker
 gh please issue dependency remove <issue> <blocker>               # Remove blocker
 gh please issue dependency list <issue>                           # List blockers
 
-# PR Group (Direct API calls)
+# Core PR Management (Built-in)
 gh please pr review-reply <comment-id> -b "text"  # Reply to review comment
 gh please pr resolve <pr-number> [--thread <id> | --all]   # Resolve threads
 
-# Configuration
-gh please init                               # Initialize .please/config.yml
+# AI Commands (Requires @pleaseai/gh-please-ai plugin)
+gh please ai triage <issue-number>         # Trigger triage bot
+gh please ai investigate <issue-number>    # Trigger investigation
+gh please ai fix <issue-number>            # Trigger fix workflow
+gh please ai review <pr-number>            # Trigger PR review
+gh please ai apply <pr-number>             # Apply bot suggestions
+gh please init                             # Initialize .please/config.yml
 
 # Deprecated (still works with warning)
 gh please review-reply <comment-id> -b "text"   # → Use 'gh please pr review-reply'
@@ -127,12 +145,17 @@ gh please review-reply <comment-id> -b "text"   # → Use 'gh please pr review-r
 
 **Directory structure:**
 
-- **Entry point**: `src/index.ts` - Registers all command groups and deprecation handler
+- **Entry point**: `src/index.ts` - Registers command groups, loads plugins
 - **Commands**: `src/commands/` - Organized by group:
-  - `ai/` - PleaseAI trigger commands (triage, investigate, fix, review, apply)
   - `issue/` - Issue management (sub-issue, dependency)
   - `pr/` - Pull request management (review-reply, resolve)
-  - `init.ts` - Initialize `.please/config.yml` configuration file
+  - `plugin.ts` - Plugin management commands
+- **Plugin System**: `src/plugins/` - Plugin discovery and loading:
+  - `plugin-interface.ts` - GhPleasePlugin interface definition
+  - `plugin-registry.ts` - Plugin discovery and lifecycle
+  - `plugin-installer.ts` - Installation utilities
+- **Plugins**: `plugins/` - Plugin implementations (git submodules):
+  - `ai/` - AI plugin (private, git submodule)
 
 ### Internationalization (i18n)
 
@@ -140,21 +163,21 @@ The CLI supports bilingual output (Korean/English) with automatic system languag
 
 - **`src/lib/i18n.ts`**: Internationalization module
   - `detectSystemLanguage()`: Auto-detects language from `LANG`, `LANGUAGE`, or `LC_ALL` environment variables
-  - `getMessages(lang)`: Returns init command messages
-  - `getAiMessages(lang)`: Returns AI command messages
   - `getIssueMessages(lang)`: Returns Issue command messages
   - `getPrMessages(lang)`: Returns PR command messages
   - Supports: Korean (ko) and English (en)
+  - **Note**: AI-related messages (init, AI commands) moved to AI plugin
 
 **Usage in commands:**
 ```typescript
-import { detectSystemLanguage, getAiMessages } from '../../lib/i18n'
+import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
+import type { Language } from '../../types'
 
 const lang = detectSystemLanguage()
-const msg = getAiMessages(lang)
-console.log(msg.triggeringTriage(123))
-// Korean: 🤖 이슈 #123에 대한 PleaseAI 분류 트리거 중...
-// English: 🤖 Triggering PleaseAI triage for issue #123...
+const msg = getIssueMessages(lang)
+console.log(msg.gettingParentIssue(123))
+// Korean: 🔍 상위 이슈 #123 가져오는 중...
+// English: 🔍 Getting parent issue #123...
 ```
 
 All command output messages (success, errors, progress) are internationalized. GitHub API URLs remain in English.
@@ -176,25 +199,37 @@ All command output messages (success, errors, progress) are internationalized. G
   - Common utilities: `getRepoInfo()`, `createIssueComment()`, `createPrComment()`
   - Key functions: `getCurrentPrInfo()`, `getReviewComment()`, `createReviewReply()`
 
-- **`src/lib/please-trigger.ts`**: PleaseAI workflow automation
-  - Triggers automation workflows via GitHub comments
-  - Supports: triage, investigate, fix, review, apply triggers
-  - Key functions: `buildTriggerComment()`, `triggerPleaseAIIssue()`, `triggerPleaseAIPr()`
-
 - **`src/lib/validation.ts`**: Input validation
   - Validates comment IDs and reply body text
   - Uses Zod schemas for type-safe validation
 
-### Configuration System
+### Plugin System
 
-**Schema**: `src/config/schema.ts` defines the configuration structure using Zod schemas:
+**Plugin Interface** (`src/plugins/plugin-interface.ts`):
 
-- `code_review`: Code review automation settings
-- `issue_workflow`: Issue triage → investigate → fix workflow
-- `code_workspace`: Workspace features
-- Language support (ko/en)
+```typescript
+export interface GhPleasePlugin {
+  name: string
+  version: string
+  type: PluginType
+  registerCommands: () => Command[]
+  init?: () => Promise<void>
+  metadata?: PluginMetadata
+}
 
-**Generated file**: `.please/config.yml` (created by `gh please init`)
+export type PluginType = 'command-group' | 'utility' | 'integration'
+```
+
+**Plugin Discovery** (`src/plugins/plugin-registry.ts`):
+- Scans `node_modules` for packages with `ghPleasePlugin` metadata in package.json
+- Scans `~/.gh-please/plugins/` for local plugins
+- Loads plugins dynamically and registers their commands
+
+**AI Plugin** (Private):
+- Location: `plugins/ai/` (git submodule)
+- Repository: `git@github.com:pleaseai/gh-please-ai.git`
+- Contains: AI commands, init command, config schemas, please-trigger utility
+- All AI functionality moved from core in v0.3.0
 
 ### Type Definitions
 
@@ -207,7 +242,8 @@ All command output messages (success, errors, progress) are internationalized. G
 - `SubIssue`: Sub-issue information (number, title, state, nodeId)
 - `BlockedByIssue`: Blocking issue information
 - `ReviewThread`: Review thread metadata (id, isResolved, path, line)
-- `PleaseTriggerType`: Union type for automation triggers (triage | investigate | fix | review | apply)
+- `PleaseTriggerType`: Union type for automation triggers (triage | investigate | fix | review | apply) - **Note**: Moved to AI plugin
+- `Language`: Internationalization language type ('ko' | 'en')
 
 ## GitHub API Integration
 
