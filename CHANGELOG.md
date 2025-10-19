@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.0](https://github.com/pleaseai/gh-please/compare/github-v0.5.0...github-v0.6.0) (2025-10-19)
+
+
+### Features
+
+* load version from package.json dynamically in CLI ([226ad84](https://github.com/pleaseai/gh-please/commit/226ad841c15003ab4e70d2be3c4432bcc3c3fae0))
+
+
+### Bug Fixes
+
+* improve branch selection UX and prevent duplicate worktree creation ([1a24ad9](https://github.com/pleaseai/gh-please/commit/1a24ad90ac8cbd35a899e892b110a6ae1283ed9b))
+
 ## [0.5.0](https://github.com/pleaseai/gh-please/compare/github-v0.4.2...github-v0.5.0) (2025-10-19)
 
 
