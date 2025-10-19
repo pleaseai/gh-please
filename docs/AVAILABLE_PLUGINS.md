@@ -25,21 +25,36 @@ AI-powered code review and issue automation.
 
 **Installation:**
 
-**Option 1: Premium Cloud Service (Recommended)**
+**Option 1: Premium Plugin (Recommended)**
 ```bash
+# Prerequisites: GitHub CLI and authentication
+gh auth login
+
+# Install premium plugin
 gh please plugin install ai --premium
 ```
 
-**Option 2: Self-Hosted**
+For detailed setup instructions, see [Premium Plugin Installation Guide](./PREMIUM_PLUGIN_INSTALLATION.md).
+
+**Requirements:**
+- GitHub CLI (v2.0+) - Install from https://cli.github.com
+- GitHub Authentication - Run: `gh auth login`
+- Private Repository Access - Verify with: `gh repo view pleaseai/gh-please-ai`
+
+**Option 2: Self-Hosted (npm)**
 ```bash
 npm install -g @pleaseai/gh-please-ai
 ```
+
+Note: Requires Node.js and npm. Not compatible with gh-please single binary distribution.
 
 **Option 3: Git Submodule (Development)**
 ```bash
 git submodule add git@github.com:pleaseai/gh-please-ai.git plugins/ai
 git submodule update --init --recursive
 ```
+
+For development or custom builds only.
 
 **Repository:** Private (Premium)
 **License:** UNLICENSED

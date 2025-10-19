@@ -1,0 +1,126 @@
+import { mkdir, rm } from 'node:fs/promises'
+
+/**
+ * Check if tar command is available on the system
+ * @throws Error if tar is not available
+ */
+async function checkTarAvailable(): Promise<void> {
+  try {
+    const proc = Bun.spawn(['tar', '--version'], {
+      stdout: 'pipe',
+      stderr: 'pipe',
+    })
+    const exitCode = await proc.exited
+
+    if (exitCode !== 0) {
+      throw new Error('tar command is not available on this system')
+    }
+  }
+  catch {
+    console.error('[archive] tar command is not available. Please install tar for your operating system.')
+    throw new Error(
+      'tar command is required for plugin installation but is not available on this system. '
+      + 'Please install tar: https://www.gnu.org/software/tar/',
+    )
+  }
+}
+
+/**
+ * Extract a tarball archive to a target directory
+ * Uses tar command which is available on Windows 10+, macOS, and Linux
+ * @param filePath - Path to the .tar.gz file
+ * @param targetDir - Directory to extract contents into
+ * @throws Error if extraction fails
+ */
+export async function extractTarball(
+  filePath: string,
+  targetDir: string,
+): Promise<void> {
+  // Check tar availability
+  await checkTarAvailable()
+  // Validate tarball exists
+  if (!(await Bun.file(filePath).exists())) {
+    throw new Error(`Tarball not found: ${filePath}`)
+  }
+
+  // Create target directory if it doesn't exist
+  try {
+    await mkdir(targetDir, { recursive: true })
+  }
+  catch (error) {
+    throw new Error(
+      `Failed to create target directory: ${targetDir}. ${error instanceof Error ? error.message : String(error)}`,
+    )
+  }
+
+  // Extract tarball using tar command (cross-platform: Windows 10+, macOS, Linux)
+  const proc = Bun.spawn(['tar', '-xzf', filePath, '-C', targetDir], {
+    stdout: 'pipe',
+    stderr: 'pipe',
+  })
+
+  const [stderr, exitCode] = await Promise.all([
+    new Response(proc.stderr).text(),
+    proc.exited,
+  ])
+
+  if (exitCode !== 0) {
+    const errorMsg = `Failed to extract tarball: ${stderr.trim() || `tar command exited with code ${exitCode}`}`
+    console.error(`[archive] ${errorMsg}`)
+    console.error(`[archive] Command: tar -xzf "${filePath}" -C "${targetDir}"`)
+    throw new Error(errorMsg)
+  }
+}
+
+/**
+ * Remove a tarball archive file
+ * @param filePath - Path to the tarball file to remove
+ */
+export async function cleanupArchive(filePath: string): Promise<void> {
+  try {
+    await rm(filePath, { force: true })
+    console.log(`[archive] Successfully removed tarball: ${filePath}`)
+  }
+  catch (error) {
+    // Log error but don't throw - cleanup is a best-effort operation
+    console.error(
+      `[archive] Warning: Failed to cleanup tarball at ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
+    )
+  }
+}
+
+/**
+ * Validate that a file is a valid tarball archive
+ * @param filePath - Path to the tarball file
+ * @returns true if valid, false otherwise
+ */
+export async function validateTarball(filePath: string): Promise<boolean> {
+  // Check tar availability
+  await checkTarAvailable()
+
+  // Check if file exists
+  if (!(await Bun.file(filePath).exists())) {
+    console.error(`[archive] Tarball validation failed: File not found at ${filePath}`)
+    return false
+  }
+
+  // Test tarball integrity using tar -tzf (list contents)
+  const proc = Bun.spawn(['tar', '-tzf', filePath], {
+    stdout: 'pipe',
+    stderr: 'pipe',
+  })
+
+  const [stderr, exitCode] = await Promise.all([
+    new Response(proc.stderr).text(),
+    proc.exited,
+  ])
+
+  if (exitCode !== 0) {
+    console.error(
+      `[archive] Tarball validation failed for ${filePath}: ${stderr.trim() || `tar command exited with code ${exitCode}`}`,
+    )
+    return false
+  }
+
+  return true
+}

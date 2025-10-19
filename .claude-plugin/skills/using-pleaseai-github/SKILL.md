@@ -233,10 +233,8 @@ LANG=en_US.UTF-8 gh please ai triage 123  # Force English
 
 For detailed information, see the reference documentation:
 
-- **[AI-WORKFLOWS.md](./reference/AI-WORKFLOWS.md)** - Workflow combinations, `/please` triggers, real-world examples
 - **[ISSUE-MANAGEMENT.md](./reference/ISSUE-MANAGEMENT.md)** - Epic → Feature → Task patterns, GraphQL API details
 - **[PR-REVIEWS.md](./reference/PR-REVIEWS.md)** - Comment ID discovery, review best practices
-- **[CONFIGURATION.md](./reference/CONFIGURATION.MD)** - Complete schema, team-specific settings, optimization tips
 
 ## Troubleshooting
 

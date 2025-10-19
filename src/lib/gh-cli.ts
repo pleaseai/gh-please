@@ -31,6 +31,11 @@ async function runGhCommand(args: string[]): Promise<GhCommandResult> {
     proc.exited,
   ])
 
+  // Log warnings from gh CLI even on success
+  if (stderr && exitCode === 0) {
+    console.warn(`[gh-cli] Warning from command 'gh ${args.join(' ')}': ${stderr.trim()}`)
+  }
+
   return { stdout, stderr, exitCode }
 }
 
@@ -73,13 +78,16 @@ export async function checkGhAuth(): Promise<boolean> {
   const { stderr, exitCode } = await runGhCommand(['auth', 'status'])
 
   if (exitCode === 0) {
+    console.log('[gh-cli] GitHub CLI authentication verified')
     return true
   }
 
   if (exitCode === 1) {
+    console.warn('[gh-cli] GitHub CLI is not authenticated. Run: gh auth login')
     return false
   }
 
+  console.error(`[gh-cli] Unexpected error checking authentication: ${stderr.trim() || `exit code ${exitCode}`}`)
   handleGhCommandError('check GitHub CLI authentication', stderr, exitCode)
 }
 
@@ -108,12 +116,19 @@ export async function getGitHubToken(): Promise<string | null> {
 
   if (exitCode === 0) {
     const token = stdout.trim()
-    return token || null
+    if (!token) {
+      console.warn('[gh-cli] GitHub token command succeeded but returned empty token')
+      return null
+    }
+    console.log('[gh-cli] GitHub token retrieved successfully')
+    return token
   }
 
   if (exitCode === 1) {
+    console.warn('[gh-cli] GitHub token not available. Run: gh auth login')
     return null
   }
 
+  console.error(`[gh-cli] Failed to retrieve GitHub token: ${stderr.trim() || `exit code ${exitCode}`}`)
   handleGhCommandError('retrieve GitHub token', stderr, exitCode)
 }
