@@ -1,7 +1,7 @@
 import type { DevelopOptions } from '../../types'
-import { confirm } from '@clack/prompts'
+import { confirm, select } from '@clack/prompts'
 import { Command } from 'commander'
-import { createWorktree, startDevelopWorkflow } from '../../lib/git-workflow'
+import { createWorktree, fetchBranch, getAllLinkedBranches, startDevelopWorkflow } from '../../lib/git-workflow'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
 import { cloneBareRepo, findBareRepo, resolveRepository } from '../../lib/repo-manager'
 
@@ -54,8 +54,36 @@ export function createDevelopCommand(): Command {
             bareRepoPath = await cloneBareRepo(repoInfo.owner, repoInfo.repo)
           }
 
-          // Create branch via gh issue develop
-          const branch = await startDevelopWorkflow(issueNumber, options)
+          // Check for existing linked branches
+          const existingBranches = await getAllLinkedBranches(issueNumber, options.repo)
+
+          let branch: string
+          if (existingBranches.length === 0) {
+            // No existing branches, create a new one
+            branch = await startDevelopWorkflow(issueNumber, options)
+          }
+          else if (existingBranches.length === 1) {
+            // Single existing branch, ask user
+            const useExisting = await confirm({
+              message: `Use existing branch "${existingBranches[0]}"?`,
+            })
+            branch = useExisting ? existingBranches[0]! : await startDevelopWorkflow(issueNumber, options)
+          }
+          else {
+            // Multiple existing branches, let user choose
+            const selectedOption = await select({
+              message: 'Select a branch:',
+              options: [
+                ...existingBranches.map(b => ({ label: b, value: b })),
+                { label: '✨ Create new branch', value: '__new__' },
+              ],
+            })
+            branch = selectedOption === '__new__' ? await startDevelopWorkflow(issueNumber, options) : (selectedOption as string)
+          }
+
+          // Fetch branch into bare repo before creating worktree
+          console.log(`📥 Fetching branch ${branch}...`)
+          await fetchBranch(bareRepoPath, branch)
 
           // Create worktree
           const worktreePath = `~/worktrees/${repoInfo.repo}/${branch}`

@@ -10,12 +10,12 @@ function getGhCommand(): string {
 }
 
 /**
- * Get linked branch for issue using gh issue develop --list
+ * Get all linked branches for an issue using gh issue develop --list
  */
-export async function getLinkedBranch(
+export async function getAllLinkedBranches(
   issueNumber: number,
   repo?: string,
-): Promise<string | null> {
+): Promise<string[]> {
   const args = [getGhCommand(), 'issue', 'develop', String(issueNumber), '--list', '--json', 'headRefName']
 
   if (repo) {
@@ -31,21 +31,32 @@ export async function getLinkedBranch(
   const exitCode = await proc.exited
 
   if (exitCode !== 0) {
-    // No linked branch yet
-    return null
+    // No linked branches yet
+    return []
   }
 
   try {
     const data = JSON.parse(output)
-    if (data && data.length > 0) {
-      return data[0].headRefName
+    if (data && Array.isArray(data)) {
+      return data.map((item: { headRefName: string }) => item.headRefName)
     }
   }
   catch {
-    // Parse error, return null
+    // Parse error, return empty array
   }
 
-  return null
+  return []
+}
+
+/**
+ * Get first linked branch for issue (legacy function, use getAllLinkedBranches instead)
+ */
+export async function getLinkedBranch(
+  issueNumber: number,
+  repo?: string,
+): Promise<string | null> {
+  const branches = await getAllLinkedBranches(issueNumber, repo)
+  return branches.length > 0 ? branches[0] : null
 }
 
 /**
@@ -200,6 +211,29 @@ export async function listWorktrees(bareRepoPath: string): Promise<WorktreeInfo[
   }
 
   return worktrees
+}
+
+/**
+ * Fetch branch from remote into a bare repository
+ */
+export async function fetchBranch(
+  bareRepoPath: string,
+  branch: string,
+): Promise<void> {
+  const proc = Bun.spawn(
+    ['git', '-C', bareRepoPath, 'fetch', 'origin', `${branch}:${branch}`],
+    {
+      stdout: 'pipe',
+      stderr: 'pipe',
+    },
+  )
+
+  const exitCode = await proc.exited
+
+  if (exitCode !== 0) {
+    const error = await new Response(proc.stderr).text()
+    throw new Error(`Failed to fetch branch: ${error.trim()}`)
+  }
 }
 
 /**
