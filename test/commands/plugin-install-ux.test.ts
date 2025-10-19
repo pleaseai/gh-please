@@ -7,14 +7,12 @@
 
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { afterEach, beforeEach, describe, expect, test, mock } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import { installPlugin } from '../../src/plugins/plugin-installer'
 
 describe('Plugin Install Command UX', () => {
   let originalGhPath: string | undefined
   let originalHome: string | undefined
-  let consoleLogSpy: any
-  let consoleErrorSpy: any
   const testDir = join(import.meta.dir, '../fixtures/plugin-install-ux-test')
 
   beforeEach(() => {
@@ -29,10 +27,6 @@ describe('Plugin Install Command UX', () => {
 
     // Override HOME to test directory
     process.env.HOME = testDir
-
-    // Spy on console methods
-    consoleLogSpy = []
-    consoleErrorSpy = []
   })
 
   afterEach(() => {
@@ -245,8 +239,8 @@ exit 1
       // In the actual command, the flag has the description:
       // 'Install as premium plugin from pleaseai/gh-please-ai (requires GitHub authentication)'
 
-      const helpText =
-        'Install as premium plugin from pleaseai/gh-please-ai (requires GitHub authentication)'
+      const helpText
+        = 'Install as premium plugin from pleaseai/gh-please-ai (requires GitHub authentication)'
 
       // Assert that this matches what's in plugin.ts
       expect(helpText).toContain('requires GitHub authentication')

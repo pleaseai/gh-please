@@ -9,11 +9,11 @@
  * Progress indicator for long-running operations
  */
 export interface ProgressIndicator {
-  start(message: string): void
-  update(message: string): void
-  success(message: string): void
-  error(message: string): void
-  info(message: string): void
+  start: (message: string) => void
+  update: (message: string) => void
+  success: (message: string) => void
+  error: (message: string) => void
+  info: (message: string) => void
 }
 
 /**
@@ -34,7 +34,7 @@ export function createProgressIndicator(): ProgressIndicator {
       console.error(`❌ ${message}`)
     },
     info(message: string): void {
-      console.log(`ℹ️  ${message}`)
+      console.log(`ℹ️ ${message}`)
     },
   }
 }
@@ -95,12 +95,15 @@ export function displayInstallationComplete(pluginName: string): void {
 /**
  * Display generic installation error with recovery steps
  */
-export function displayGenericInstallError(error: string): void {
+export function displayGenericInstallError(error: string, premium = false): void {
   console.error(`❌ Installation failed: ${error}`)
   console.log('')
   console.log('💡 Troubleshooting:')
   console.log('  1. Check your internet connection')
   console.log('  2. Verify GitHub CLI is installed: gh --version')
   console.log('  3. Check GitHub authentication: gh auth status')
-  console.log('  4. Try installing again: gh please plugin install <name>')
+  const installCommand = premium
+    ? 'gh please plugin install ai --premium'
+    : 'gh please plugin install <name>'
+  console.log(`  4. Try installing again: ${installCommand}`)
 }
