@@ -1,8 +1,8 @@
 import { multiselect } from '@clack/prompts'
 import { Command } from 'commander'
-import { resolveRepository } from '../../lib/repo-manager'
 import { listWorktrees, removeWorktree } from '../../lib/git-workflow'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
+import { resolveRepository } from '../../lib/repo-manager'
 
 /**
  * Creates a command to clean up unused worktrees
