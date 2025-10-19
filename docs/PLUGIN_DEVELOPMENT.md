@@ -126,28 +126,34 @@ export default plugin
 Commands should follow the `gh please <plugin-name> <command>` pattern:
 
 ```typescript
-registerCommands() {
-  const mainCmd = new Command('myplugin')
-    .description('My plugin commands')
+const plugin: GhPleasePlugin = {
+  name: 'myplugin',
+  version: '1.0.0',
+  type: 'command-group',
 
-  // gh please myplugin hello
-  mainCmd
-    .command('hello <name>')
-    .option('-l, --loud', 'Print in uppercase')
-    .action((name: string, options: { loud?: boolean }) => {
-      const message = `Hello, ${name}!`
-      console.log(options.loud ? message.toUpperCase() : message)
-    })
+  registerCommands() {
+    const mainCmd = new Command('myplugin')
+      .description('My plugin commands')
 
-  // gh please myplugin status
-  mainCmd
-    .command('status')
-    .description('Show plugin status')
-    .action(() => {
-      console.log('Plugin is active!')
-    })
+    // gh please myplugin hello
+    mainCmd
+      .command('hello <name>')
+      .option('-l, --loud', 'Print in uppercase')
+      .action((name: string, options: { loud?: boolean }) => {
+        const message = `Hello, ${name}!`
+        console.log(options.loud ? message.toUpperCase() : message)
+      })
 
-  return [mainCmd]
+    // gh please myplugin status
+    mainCmd
+      .command('status')
+      .description('Show plugin status')
+      .action(() => {
+        console.log('Plugin is active!')
+      })
+
+    return [mainCmd]
+  },
 }
 ```
 
@@ -213,14 +219,17 @@ ln -s /path/to/your/plugin ~/.gh-please/plugins/myplugin
 Always handle errors gracefully:
 
 ```typescript
-.action(async (options) => {
-  try {
-    await performAction(options)
-  } catch (error) {
-    console.error('Error:', error instanceof Error ? error.message : 'Unknown error')
-    process.exit(1)
-  }
-})
+cmd
+  .command('mycommand')
+  .action(async (options) => {
+    try {
+      await performAction(options)
+    }
+    catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : 'Unknown error')
+      process.exit(1)
+    }
+  })
 ```
 
 ### Internationalization
@@ -268,7 +277,7 @@ async function callGitHubAPI(endpoint: string) {
 Write tests for your plugin:
 
 ```typescript
-import { describe, test, expect } from 'bun:test'
+import { describe, expect, test } from 'bun:test'
 import plugin from './index'
 
 describe('MyPlugin', () => {
