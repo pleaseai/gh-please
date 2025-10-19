@@ -126,7 +126,10 @@ export function createPluginCommand(): Command {
     .command('install')
     .description('Install a plugin')
     .argument('<name>', 'Plugin name to install')
-    .option('--premium', 'Install as premium plugin (requires authentication)')
+    .option(
+      '--premium',
+      'Install as premium plugin from pleaseai/gh-please-ai (requires GitHub authentication)',
+    )
     .option('--local', 'Install locally instead of globally')
     .action(async (name: string, options: { premium?: boolean, local?: boolean }) => {
       const { premium = false, local = false } = options
@@ -144,27 +147,25 @@ export function createPluginCommand(): Command {
       if (premium && name !== 'ai') {
         console.error(`❌ Plugin '${name}' is not a premium plugin`)
         console.log('   Premium plugins: ai')
+        console.log('')
+        console.log('Use --premium flag only with: gh please plugin install ai')
         process.exit(1)
       }
 
       if (premium) {
-        console.log('🔒 Premium plugin installation')
+        console.log('🔒 Installing premium plugin: ai')
         console.log('')
-        console.log('Premium plugins require a PleaseAI subscription.')
-        console.log('Visit: https://please.ai/pricing')
-        console.log('')
-        console.log('For self-hosted installation:')
-        console.log(`   npm install -g ${packageName}`)
-        return
       }
 
       const result = await installPlugin(packageName, { global: !local, premium })
 
       if (result.success) {
-        console.log(`✅ ${result.message}`)
-        console.log('')
-        console.log('Plugin installed successfully!')
-        console.log('Restart your terminal or run: hash -r')
+        if (!premium) {
+          console.log(`✅ ${result.message}`)
+          console.log('')
+          console.log('Plugin installed successfully!')
+          console.log('Restart your terminal or run: hash -r')
+        }
       }
       else {
         console.error(`❌ ${result.message}`)
