@@ -1,8 +1,6 @@
 #!/usr/bin/env bun
 
 import { Command } from 'commander'
-import { createAiCommand } from './commands/ai'
-import { createInitCommand } from './commands/init'
 import { createIssueCommand } from './commands/issue'
 import { createPluginCommand } from './commands/plugin'
 import { createPrCommand } from './commands/pr'
@@ -13,13 +11,11 @@ const program = new Command()
 program
   .name('gh-please')
   .description('GitHub CLI extension for managing pull requests and issues')
-  .version('0.2.0')
+  .version('0.3.0')
 
 // Add core command groups
-program.addCommand(createAiCommand())
 program.addCommand(createIssueCommand())
 program.addCommand(createPrCommand())
-program.addCommand(createInitCommand())
 program.addCommand(createPluginCommand())
 
 // Load and register plugins

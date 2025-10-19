@@ -10,7 +10,11 @@
       "Bash(gh:issue:view:*)",
       "Bash(gh:issue:develop:*)",
       "Bash(gh --version)",
-      "WebFetch(domain:docs.github.com)"
+      "WebFetch(domain:docs.github.com)",
+      "Bash(gh issue view *)",
+      "Bash(gh pr list)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr diff *)"
     ],
     "deny": [],
     "ask": []
