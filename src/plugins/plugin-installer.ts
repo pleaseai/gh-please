@@ -5,8 +5,8 @@
  */
 
 import { mkdir } from 'node:fs/promises'
+import { cleanupArchive, extractTarball } from '../lib/archive'
 import { checkGhAuth } from '../lib/gh-cli'
-import { extractTarball, cleanupArchive } from '../lib/archive'
 import { expandHome } from '../lib/path-utils'
 
 /**
@@ -314,7 +314,7 @@ async function installFromNpm(packageName: string, global: boolean): Promise<Ins
       stdio: ['inherit', 'pipe', 'pipe'],
     })
 
-    const [stdout, stderr, exitCode] = await Promise.all([
+    const [_stdout, stderr, exitCode] = await Promise.all([
       new Response(proc.stdout).text(),
       new Response(proc.stderr).text(),
       proc.exited,
