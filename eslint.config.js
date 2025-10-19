@@ -5,6 +5,8 @@ export default antfu({
   ignores: [
     // Ignore Claude Code plugin documentation
     '.claude-plugin/**',
+    // Ignore Claude Code skills documentation
+    '.claude/skills/**',
   ],
 }, {
   rules: {
