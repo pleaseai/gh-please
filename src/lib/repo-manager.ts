@@ -57,7 +57,7 @@ export async function findBareRepo(owner: string, repo: string): Promise<string 
  * Check if current directory is inside a git repository
  */
 export async function isInGitRepo(): Promise<boolean> {
-  const proc = Bun.spawn([getGhCommand(), 'rev-parse', '--git-dir'], {
+  const proc = Bun.spawn(['git', 'rev-parse', '--git-dir'], {
     stdout: 'pipe',
     stderr: 'pipe',
   })
