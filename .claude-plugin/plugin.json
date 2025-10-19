@@ -1,0 +1,10 @@
+{
+  "name": "pleaseai-github",
+  "version": "0.2.0",
+  "description": "PleaseAI GitHub CLI extension을 위한 Claude Code 전문성 제공",
+  "author": "Minsu Lee (@amondnet)",
+  "repository": "pleaseai/gh-please",
+  "skills": [
+    "skills/using-pleaseai-github"
+  ]
+}

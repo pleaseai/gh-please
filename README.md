@@ -44,6 +44,46 @@
    - AI 기반 이슈 분류 및 조사
    - 리뷰 코멘트에 답변: `gh please review-reply <comment-id> -b "답변 내용"`
 
+## Claude Code 통합
+
+Claude Code 플러그인을 사용하면 AI가 자동으로 적절한 `gh please` 명령어를 제안합니다.
+
+### 설치
+
+**회사 내부 마켓플레이스:**
+```bash
+claude plugin install pleaseai-github
+```
+
+**로컬 개발:**
+```bash
+# 저장소 클론 후
+ln -s $(pwd)/.claude-plugin ~/.claude/plugins/pleaseai-github
+```
+
+### 사용 예시
+
+Claude에게 자연어로 요청하면 적절한 명령어를 제안합니다:
+
+```
+사용자: "이슈 #123에 대한 sub-issue 생성해줘"
+Claude: gh please issue sub-issue create 123 --title "..."
+
+사용자: "dependency 추가: #200이 #199에 의해 차단됨"
+Claude: gh please issue dependency add 200 --blocked-by 199
+
+사용자: "PR 리뷰 코멘트에 답변"
+Claude: gh please pr review-reply <comment-id> --body "..."
+```
+
+**포함 기능:**
+- AI 워크플로우 가이드 (triage, investigate, fix, review, apply)
+- 이슈 관리 패턴 (sub-issue, dependency)
+- PR 리뷰 워크플로우 (review-reply, resolve)
+- 설정 최적화 가이드 (.please/config.yml)
+
+자세한 내용은 [.claude-plugin/README.md](./.claude-plugin/README.md)를 참조하세요.
+
 ## 공통 옵션
 
 모든 명령어는 다른 저장소에서 실행할 수 있도록 `--repo` 옵션을 지원합니다:
