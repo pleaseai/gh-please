@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, rmSync } from 'node:fs'
+import { mkdir, rm } from 'node:fs/promises'
 
 /**
  * Check if tar command is available on the system
@@ -39,13 +39,13 @@ export async function extractTarball(
   // Check tar availability
   await checkTarAvailable()
   // Validate tarball exists
-  if (!existsSync(filePath)) {
+  if (!(await Bun.file(filePath).exists())) {
     throw new Error(`Tarball not found: ${filePath}`)
   }
 
   // Create target directory if it doesn't exist
   try {
-    mkdirSync(targetDir, { recursive: true })
+    await mkdir(targetDir, { recursive: true })
   }
   catch (error) {
     throw new Error(
@@ -77,12 +77,8 @@ export async function extractTarball(
  * @param filePath - Path to the tarball file to remove
  */
 export async function cleanupArchive(filePath: string): Promise<void> {
-  if (!existsSync(filePath)) {
-    return // File doesn't exist, nothing to clean up
-  }
-
   try {
-    rmSync(filePath, { force: true })
+    await rm(filePath, { force: true })
     console.log(`[archive] Successfully removed tarball: ${filePath}`)
   }
   catch (error) {
@@ -103,7 +99,7 @@ export async function validateTarball(filePath: string): Promise<boolean> {
   await checkTarAvailable()
 
   // Check if file exists
-  if (!existsSync(filePath)) {
+  if (!(await Bun.file(filePath).exists())) {
     console.error(`[archive] Tarball validation failed: File not found at ${filePath}`)
     return false
   }
