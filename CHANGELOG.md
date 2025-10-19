@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.4.0](https://github.com/pleaseai/gh-please/compare/github-v0.3.0...github-v0.4.0) (2025-10-19)
+
+
+### Features
+
+* add AI plugin as git submodule ([#21](https://github.com/pleaseai/gh-please/issues/21)) ([55ffe08](https://github.com/pleaseai/gh-please/commit/55ffe085ff1948e24af13f3b13a8edc828426f83)), closes [#16](https://github.com/pleaseai/gh-please/issues/16)
+* Add Claude Code plugin for gh-please extension ([a2d365e](https://github.com/pleaseai/gh-please/commit/a2d365e8b20cf1e1ee5d4f467141955e5ebcd420)), closes [#12](https://github.com/pleaseai/gh-please/issues/12)
+* Build Plugin System Infrastructure ([#20](https://github.com/pleaseai/gh-please/issues/20)) ([2098893](https://github.com/pleaseai/gh-please/commit/2098893a74143454ca2b1e97c85b12d05179e8b4))
+* implement gh CLI authentication utilities ([bbcb1dd](https://github.com/pleaseai/gh-please/commit/bbcb1ddcc287d880a8cbb99e9233fe0e80b0d4a2)), closes [#25](https://github.com/pleaseai/gh-please/issues/25)
+* implement gh CLI authentication utilities (Issue [#25](https://github.com/pleaseai/gh-please/issues/25)) ([d4202c0](https://github.com/pleaseai/gh-please/commit/d4202c03a7f6b452e0bbbbcf66e37354bacbfd74))
+* implement issue develop workflow with worktree support ([#37](https://github.com/pleaseai/gh-please/issues/37)) ([a670873](https://github.com/pleaseai/gh-please/commit/a6708733e14f05f1a67f15701e11b8df6a890683))
+* implement premium plugin installer ([7f0fcc0](https://github.com/pleaseai/gh-please/commit/7f0fcc02fd17184af2cba06731d684eb7ed19ffc))
+* implement tarball extraction utilities ([#32](https://github.com/pleaseai/gh-please/issues/32)) ([c3680ba](https://github.com/pleaseai/gh-please/commit/c3680ba2c4292ee849e410077374cf73d156be33))
+* improve plugin install command UX ([#28](https://github.com/pleaseai/gh-please/issues/28)) ([#34](https://github.com/pleaseai/gh-please/issues/34)) ([3b32486](https://github.com/pleaseai/gh-please/commit/3b324868f918609f7126ed96dd1d8bc44ad3b0d7))
+
+
+### Bug Fixes
+
+* correct GitHub CLI fields for PR info parsing ([8d9df5f](https://github.com/pleaseai/gh-please/commit/8d9df5f032c1ae98f5bed2f486072d4b8ab6e522))
+* resolve lint errors from eslint auto-fix ([151a663](https://github.com/pleaseai/gh-please/commit/151a663cbcc52bc4fd397eeb33084b19c37863a0))
+* simplify gh-cli tests to avoid timeout issues ([d29fa39](https://github.com/pleaseai/gh-please/commit/d29fa39030da38d32db674216e440ddbf69f3ef3))
+
+
+### Documentation
+
+* Update Documentation for Plugin System ([#23](https://github.com/pleaseai/gh-please/issues/23)) ([cb996a9](https://github.com/pleaseai/gh-please/commit/cb996a9d28416440c8ad08d47510fd7ed7c2cdf8))
+
 ## [0.3.0](https://github.com/pleaseai/gh-please/compare/github-v0.2.0...github-v0.3.0) (2025-10-18)
 
 
