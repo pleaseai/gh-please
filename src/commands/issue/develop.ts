@@ -1,9 +1,9 @@
+import type { DevelopOptions } from '../../types'
 import { confirm } from '@clack/prompts'
 import { Command } from 'commander'
-import type { DevelopOptions } from '../../types'
-import { cloneBareRepo, findBareRepo, resolveRepository } from '../../lib/repo-manager'
 import { createWorktree, startDevelopWorkflow } from '../../lib/git-workflow'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
+import { cloneBareRepo, findBareRepo, resolveRepository } from '../../lib/repo-manager'
 
 /**
  * Creates a command to start developing on an issue

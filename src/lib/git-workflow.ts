@@ -1,6 +1,6 @@
+import type { DevelopOptions, WorktreeInfo } from '../types'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import type { DevelopOptions, WorktreeInfo } from '../types'
 
 /**
  * Get the gh command path from environment variable or use default
@@ -153,7 +153,8 @@ export async function listWorktrees(bareRepoPath: string): Promise<WorktreeInfo[
   const worktrees: WorktreeInfo[] = []
 
   for (const line of output.trim().split('\n')) {
-    if (!line) continue
+    if (!line)
+      continue
 
     // Parse worktree list porcelain format
     // Format: "worktree /path/to/worktree"
