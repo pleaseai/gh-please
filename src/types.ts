@@ -57,3 +57,5 @@ export interface ReviewThread {
 }
 
 export type PleaseTriggerType = 'triage' | 'investigate' | 'fix' | 'review' | 'apply'
+
+export type Language = 'ko' | 'en'

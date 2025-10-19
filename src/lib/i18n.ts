@@ -1,4 +1,4 @@
-export type Language = 'ko' | 'en'
+import type { Language } from '../types'
 
 export interface IssueMessages {
   gettingParentIssue: (parentNumber: number) => string
