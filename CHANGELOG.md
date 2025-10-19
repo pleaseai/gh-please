@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.5.0](https://github.com/pleaseai/gh-please/compare/github-v0.4.2...github-v0.5.0) (2025-10-19)
+
+
+### Features
+
+* add branch selection prompt for issue develop command ([0822132](https://github.com/pleaseai/gh-please/commit/08221321a8a5c69d745581ff8e87ab70e40fef8c))
+
+
+### Bug Fixes
+
+* resolve TypeScript type errors in develop command ([653136a](https://github.com/pleaseai/gh-please/commit/653136ad34265ece950bf53d8cd333a7565d4a6e))
+* simplify regex pattern to pass eslint lint rule ([5fdff06](https://github.com/pleaseai/gh-please/commit/5fdff06cf8c78750026fc89729c24dd2c2e55533))
+
 ## [0.4.2](https://github.com/pleaseai/gh-please/compare/github-v0.4.1...github-v0.4.2) (2025-10-19)
 
 
