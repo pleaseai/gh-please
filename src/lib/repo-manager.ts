@@ -25,7 +25,7 @@ export function parseRepoString(repoStr: string): { owner: string, repo: string 
   }
 
   // Handle GitHub URL format
-  const urlMatch = repoStr.match(/github\.com[/:]([\w-]+)\/([\w-]+?)(\.git)?$/)
+  const urlMatch = repoStr.match(/github\.com[/:]([\w.-]+)\/([\w.-]+?)(\.git)?$/)
   if (urlMatch) {
     return { owner: urlMatch[1]!, repo: urlMatch[2]! }
   }

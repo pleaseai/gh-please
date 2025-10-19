@@ -179,6 +179,9 @@ export async function listWorktrees(bareRepoPath: string): Promise<WorktreeInfo[
     else if (parts[0] === 'detached' && worktrees.length > 0) {
       worktrees[worktrees.length - 1]!.branch = 'detached'
     }
+    else if (parts[0] === 'HEAD' && worktrees.length > 0) {
+      worktrees[worktrees.length - 1]!.commit = parts[1] || ''
+    }
     else if (parts[0] === 'prunable' && worktrees.length > 0) {
       worktrees[worktrees.length - 1]!.prunable = true
     }

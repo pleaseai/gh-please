@@ -63,9 +63,8 @@ export function createCleanupCommand(): Command {
         console.log(msg.cleanupRemoved(toRemove.length))
       }
       catch (error) {
-        const msg2 = getIssueMessages(lang)
         console.error(
-          `${msg2.errorPrefix}: ${error instanceof Error ? error.message : msg2.unknownError}`,
+          `${msg.errorPrefix}: ${error instanceof Error ? error.message : msg.unknownError}`,
         )
         process.exit(1)
       }

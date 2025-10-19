@@ -54,16 +54,16 @@ export function createDevelopCommand(): Command {
           }
 
           // Create branch via gh issue develop
-          console.log(msg.developStarting(issueNumber))
           const branch = await startDevelopWorkflow(issueNumber, options)
 
           // Create worktree
           const worktreePath = `~/worktrees/${repoInfo.repo}/${branch}`
+          const expandedPath = worktreePath.replace(/^~/, process.env.HOME || '')
           console.log(msg.developCreateWorktree(worktreePath))
           await createWorktree(bareRepoPath, branch, worktreePath)
 
-          console.log(msg.developWorktreeReady(worktreePath))
-          console.log(`cd ${worktreePath}`)
+          console.log(msg.developWorktreeReady(expandedPath))
+          console.log(`cd ${expandedPath}`)
         }
         else {
           // Default mode: checkout
