@@ -8,6 +8,13 @@ import { mkdir } from 'node:fs/promises'
 import { cleanupArchive, extractTarball } from '../lib/archive'
 import { checkGhAuth } from '../lib/gh-cli'
 import { expandHome } from '../lib/path-utils'
+import {
+  createProgressIndicator,
+  displayAuthError,
+  displayGenericInstallError,
+  displayInstallationComplete,
+  displayRepoAccessError,
+} from '../lib/progress'
 
 /**
  * Plugin installation result
@@ -150,24 +157,36 @@ function validatePluginName(pluginName: string): void {
  * ```
  */
 async function installPremiumPlugin(pluginName: string): Promise<InstallResult> {
+  const progress = createProgressIndicator()
+
   try {
     // 0. Validate plugin name for security
     validatePluginName(pluginName)
 
+    console.log(`🔒 Installing premium plugin: ${pluginName}`)
+    console.log('')
+
     // 1. Check if user is authenticated with GitHub CLI
+    progress.start('Checking GitHub authentication...')
     const isAuthenticated = await checkGhAuth()
     if (!isAuthenticated) {
+      console.log('')
+      displayAuthError()
       return {
         success: false,
         pluginName,
-        message: 'Authentication required for premium plugins',
+        message: 'Not authenticated with GitHub',
         error: 'Run: gh auth login',
       }
     }
+    progress.success('Authenticated with GitHub')
 
     // 2. Verify plugin exists in registry
     const repo = PREMIUM_PLUGIN_REPOS[pluginName]
     if (!repo) {
+      console.log('')
+      progress.error(`Plugin '${pluginName}' not found in premium registry`)
+      console.log('Available premium plugins: ai')
       return {
         success: false,
         pluginName,
@@ -178,11 +197,17 @@ async function installPremiumPlugin(pluginName: string): Promise<InstallResult> 
 
     // 3. Create installation directory
     const pluginDir = expandHome(`~/.gh-please/plugins/${pluginName}`)
+    progress.update(`Creating installation directory...`)
     await mkdir(pluginDir, { recursive: true })
 
     // 4. Download latest release using gh CLI
+    progress.start(`Downloading from ${repo}...`)
     const downloadResult = await downloadRelease(repo, pluginDir)
     if (!downloadResult.success) {
+      console.log('')
+      displayRepoAccessError(repo)
+      console.log('')
+      console.log(`Details: ${downloadResult.error}`)
       return {
         success: false,
         pluginName,
@@ -190,10 +215,15 @@ async function installPremiumPlugin(pluginName: string): Promise<InstallResult> 
         error: downloadResult.error,
       }
     }
+    progress.success(`Downloaded successfully`)
 
     // 5. Extract tarball
+    progress.update(`Extracting to ${pluginDir}...`)
     const extractResult = await extractPluginTarball(pluginDir)
     if (!extractResult.success) {
+      console.log('')
+      progress.error(`Failed to extract ${pluginName}`)
+      console.log(`Details: ${extractResult.error}`)
       return {
         success: false,
         pluginName,
@@ -201,10 +231,15 @@ async function installPremiumPlugin(pluginName: string): Promise<InstallResult> 
         error: extractResult.error,
       }
     }
+    progress.success(`Extracted successfully`)
 
     // 6. Verify installation
+    progress.update(`Verifying installation...`)
     const verifyResult = await verifyPluginInstallation(pluginDir)
     if (!verifyResult.success) {
+      console.log('')
+      progress.error(`Plugin installation verification failed`)
+      console.log(`Details: ${verifyResult.error}`)
       return {
         success: false,
         pluginName,
@@ -213,6 +248,9 @@ async function installPremiumPlugin(pluginName: string): Promise<InstallResult> 
       }
     }
 
+    console.log('')
+    displayInstallationComplete(pluginName)
+
     return {
       success: true,
       pluginName,
@@ -220,6 +258,11 @@ async function installPremiumPlugin(pluginName: string): Promise<InstallResult> 
     }
   }
   catch (error) {
+    console.log('')
+    displayGenericInstallError(
+      error instanceof Error ? error.message : 'Unknown error',
+      true,
+    )
     return {
       success: false,
       pluginName,
