@@ -7,6 +7,50 @@ function getGhCommand(): string {
 }
 
 /**
+ * Internal result type for gh command execution
+ */
+interface GhCommandResult {
+  stdout: string
+  stderr: string
+  exitCode: number
+}
+
+/**
+ * Execute a gh CLI command and capture output
+ * Reads stdout, stderr, and exit code in parallel for efficiency
+ */
+async function runGhCommand(args: string[]): Promise<GhCommandResult> {
+  const proc = Bun.spawn([getGhCommand(), ...args], {
+    stdout: 'pipe',
+    stderr: 'pipe',
+  })
+
+  const [stdout, stderr, exitCode] = await Promise.all([
+    new Response(proc.stdout).text(),
+    new Response(proc.stderr).text(),
+    proc.exited,
+  ])
+
+  return { stdout, stderr, exitCode }
+}
+
+/**
+ * Handle common gh command errors with helpful messages
+ */
+function handleGhCommandError(commandName: string, stderr: string, exitCode: number): never {
+  if (exitCode === 127) {
+    throw new Error(
+      'GitHub CLI (gh) is not installed. '
+      + 'Please install it from https://cli.github.com/',
+    )
+  }
+
+  throw new Error(
+    `Failed to ${commandName}: ${stderr.trim() || `exit code ${exitCode}`}`,
+  )
+}
+
+/**
  * Check if GitHub CLI is authenticated
  *
  * Runs `gh auth status` to verify authentication status with GitHub.
@@ -26,38 +70,17 @@ function getGhCommand(): string {
  * ```
  */
 export async function checkGhAuth(): Promise<boolean> {
-  const proc = Bun.spawn([getGhCommand(), 'auth', 'status'], {
-    stdout: 'pipe',
-    stderr: 'pipe',
-  })
+  const { stderr, exitCode } = await runGhCommand(['auth', 'status'])
 
-  // Consume stdout even though we don't use it
-  await new Response(proc.stdout).text()
-  const errorOutput = await new Response(proc.stderr).text()
-  const exitCode = await proc.exited
-
-  // Exit code 0 means authenticated
   if (exitCode === 0) {
     return true
   }
 
-  // Exit code 1 typically means not authenticated
   if (exitCode === 1) {
     return false
   }
 
-  // Exit code 127 usually means command not found
-  if (exitCode === 127) {
-    throw new Error(
-      'GitHub CLI (gh) is not installed. '
-      + 'Please install it from https://cli.github.com/',
-    )
-  }
-
-  // Any other exit code is an unexpected error
-  throw new Error(
-    `Failed to check GitHub CLI authentication: ${errorOutput.trim() || `exit code ${exitCode}`}`,
-  )
+  handleGhCommandError('check GitHub CLI authentication', stderr, exitCode)
 }
 
 /**
@@ -81,36 +104,16 @@ export async function checkGhAuth(): Promise<boolean> {
  * ```
  */
 export async function getGitHubToken(): Promise<string | null> {
-  const proc = Bun.spawn([getGhCommand(), 'auth', 'token'], {
-    stdout: 'pipe',
-    stderr: 'pipe',
-  })
+  const { stdout, stderr, exitCode } = await runGhCommand(['auth', 'token'])
 
-  const output = await new Response(proc.stdout).text()
-  const errorOutput = await new Response(proc.stderr).text()
-  const exitCode = await proc.exited
-
-  // Exit code 0 means token was retrieved successfully
   if (exitCode === 0) {
-    const token = output.trim()
+    const token = stdout.trim()
     return token || null
   }
 
-  // Exit code 1 typically means not authenticated (no token available)
   if (exitCode === 1) {
     return null
   }
 
-  // Exit code 127 usually means command not found
-  if (exitCode === 127) {
-    throw new Error(
-      'GitHub CLI (gh) is not installed. '
-      + 'Please install it from https://cli.github.com/',
-    )
-  }
-
-  // Any other exit code is an unexpected error
-  throw new Error(
-    `Failed to retrieve GitHub token: ${errorOutput.trim() || `exit code ${exitCode}`}`,
-  )
+  handleGhCommandError('retrieve GitHub token', stderr, exitCode)
 }

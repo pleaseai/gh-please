@@ -20,29 +20,6 @@ gh please --version  # Should show v0.2.0
 
 ## Quick Reference
 
-### AI Workflows
-
-Trigger PleaseAI automation on issues and PRs via `/please` comments:
-
-| Command | Description | Example |
-|---------|-------------|---------|
-| `ai triage <issue>` | Auto-categorize issue, add labels | `gh please ai triage 123` |
-| `ai investigate <issue>` | Deep bug analysis, log inspection | `gh please ai investigate 123` |
-| `ai fix <issue>` | Automated fix attempt, create PR | `gh please ai fix 123` |
-| `ai review <pr>` | Code review with security checks | `gh please ai review 456` |
-| `ai apply <pr>` | Apply bot suggestions to PR | `gh please ai apply 456` |
-
-**All commands support `--repo owner/repo` for cross-repository operations.**
-
-```bash
-# Current repo
-gh please ai triage 123
-
-# Different repo
-gh please ai triage 123 --repo pleaseai/another-repo
-gh please ai triage 123 -R owner/repo  # Short form
-```
-
 ### Issue Management
 
 Create hierarchical issue structures and dependencies:
@@ -129,45 +106,7 @@ gh please pr resolve 456 --thread MDEyOlB1bGxSZXF1ZXN0UmV2aWV3VGhyZWFk...
 gh please pr resolve 456 --all --repo owner/repo
 ```
 
-### Configuration
-
-Initialize and manage `.please/config.yml`:
-
-```bash
-# Interactive setup (recommended for first time)
-gh please init
-
-# Non-interactive with defaults
-gh please init --yes
-
-# Overwrite existing config
-gh please init --force
-```
-
-**Configuration sections:**
-- `code_review`: Auto-review settings, severity thresholds
-- `issue_workflow`: Triage, investigate, fix automation
-- `code_workspace`: Workspace features
-- `language`: Output language (ko/en - auto-detected)
-
 ## Common Patterns
-
-### Bug Fix Workflow
-
-```bash
-# 1. Triage new bug report
-gh please ai triage 123
-
-# 2. Investigate root cause
-gh please ai investigate 123
-
-# 3. Automated fix attempt
-gh please ai fix 123
-# Creates PR with fix + tests
-
-# 4. Review the PR
-gh please ai review 456
-```
 
 ### Epic Organization
 
@@ -205,38 +144,12 @@ gh please pr resolve 456 --all
 gh pr ready 456
 ```
 
-## Language Support
-
-Commands detect system language automatically:
-
-```bash
-# Korean system (LANG=ko_KR.UTF-8)
-gh please ai triage 123
-# Output: 🤖 이슈 #123에 대한 PleaseAI 분류 트리거 중...
-
-# English system (LANG=en_US.UTF-8)
-gh please ai triage 123
-# Output: 🤖 Triggering PleaseAI triage for issue #123...
-```
-
-**Language detection sources (in order):**
-1. `LANG` environment variable
-2. `LANGUAGE` environment variable
-3. `LC_ALL` environment variable
-
-Override temporarily:
-```bash
-LANG=en_US.UTF-8 gh please ai triage 123  # Force English
-```
-
 ## Advanced Topics
 
 For detailed information, see the reference documentation:
 
-- **[AI-WORKFLOWS.md](./reference/AI-WORKFLOWS.md)** - Workflow combinations, `/please` triggers, real-world examples
 - **[ISSUE-MANAGEMENT.md](./reference/ISSUE-MANAGEMENT.md)** - Epic → Feature → Task patterns, GraphQL API details
 - **[PR-REVIEWS.md](./reference/PR-REVIEWS.md)** - Comment ID discovery, review best practices
-- **[CONFIGURATION.md](./reference/CONFIGURATION.MD)** - Complete schema, team-specific settings, optimization tips
 
 ## Troubleshooting
 
@@ -252,7 +165,7 @@ gh extension install pleaseai/gh-please
 cd /path/to/your/repo
 
 # Or use --repo flag
-gh please ai triage 123 --repo owner/repo
+gh please issue sub-issue list 100 --repo owner/repo
 ```
 
 **"GraphQL error: sub_issues feature required"**
@@ -274,8 +187,8 @@ gh api /repos/OWNER/REPO/pulls/PR/comments | jq '.[] | {id, body}'
 ## Tips
 
 - Use `--repo` flag to manage issues across multiple repositories
-- Combine AI workflows sequentially (triage → investigate → fix)
 - Create sub-issues before starting work to track progress
+- Use dependencies to track blockers and task sequencing
 - Reply to review comments as you address them (better UX for reviewers)
 - Use `--all` flag on `resolve` after comprehensive updates
 
