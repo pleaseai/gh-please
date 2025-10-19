@@ -21,11 +21,11 @@ describe('develop command', () => {
     expect(cmd.aliases()).toContain('dev')
   })
 
-  test('should support --worktree flag', () => {
+  test('should support --checkout flag', () => {
     const cmd = createDevelopCommand()
     const options = cmd.options
-    const worktreeOption = options.find(opt => opt.long === '--worktree')
-    expect(worktreeOption).toBeDefined()
+    const checkoutOption = options.find(opt => opt.long === '--checkout')
+    expect(checkoutOption).toBeDefined()
   })
 
   test('should support --repo flag', () => {

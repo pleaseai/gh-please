@@ -62,7 +62,7 @@ export type Language = 'ko' | 'en'
 
 export interface DevelopOptions {
   repo?: string // owner/repo format
-  worktree?: boolean // Use worktree mode
+  checkout?: boolean // Use checkout mode instead of worktree (default)
   base?: string // Base branch for gh issue develop
   name?: string // Custom branch name
 }

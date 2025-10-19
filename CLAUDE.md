@@ -616,12 +616,12 @@ gh pr checks <pr-number>
 
 ## Issue Development Workflow
 
-The `gh please issue develop` command streamlines the process of starting work on an issue with automatic branch setup and optional worktree creation.
+The `gh please issue develop` command streamlines the process of starting work on an issue with automatic worktree creation for isolated development.
 
-### Default Mode (Checkout)
+### Default Mode (Worktree)
 
 ```bash
-# Basic usage - creates/checks out branch locally
+# Basic usage - creates isolated workspace in ~/worktrees/{repo}/{branch}
 gh please issue develop 123
 
 # With base branch
@@ -632,30 +632,30 @@ gh please issue develop 123 --name my-custom-branch
 
 # From outside git repo
 gh please issue develop 123 --repo owner/repo
-```
-
-### Worktree Mode
-
-```bash
-# Create isolated workspace in ~/worktrees/{repo}/{branch}
-gh please issue develop 123 --worktree
-
-# If bare repo doesn't exist, interactive prompt will ask to clone
-# Clone happens automatically to ~/repos/{owner}/{repo}.git
-
-# With repo flag
-gh please issue develop 123 --repo owner/repo --worktree
 
 # Output shows command to navigate to worktree
 # cd ~/worktrees/gh-please/feat-123-awesome-feature
+
+# If bare repo doesn't exist, interactive prompt will ask to clone
+# Clone happens automatically to ~/repos/{owner}/{repo}.git
+```
+
+### Checkout Mode
+
+```bash
+# Checkout branch in current repo instead of creating worktree
+gh please issue develop 123 --checkout
+
+# This mode requires being in a git repository
+# Useful when you want to work in your existing repo instead of a separate worktree
 ```
 
 ### Using Aliases
 
 ```bash
 # 'dev' is an alias for 'develop'
-gh please issue dev 123
-gh please issue dev 123 --worktree
+gh please issue dev 123          # Creates worktree (default)
+gh please issue dev 123 --checkout  # Checkout branch instead
 ```
 
 ### Cleanup Worktrees

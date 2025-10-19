@@ -7,15 +7,16 @@ import { cloneBareRepo, findBareRepo, resolveRepository } from '../../lib/repo-m
 
 /**
  * Creates a command to start developing on an issue
- * Supports both checkout mode (default) and worktree mode
+ * Default mode creates a worktree for isolated development
+ * Use --checkout to checkout branch in current repo instead
  */
 export function createDevelopCommand(): Command {
   const command = new Command('develop')
     .alias('dev')
-    .description('Start working on an issue with automatic branch setup')
+    .description('Start working on an issue with automatic worktree setup')
     .argument('<issue-number>', 'Issue number')
     .option('-R, --repo <owner/repo>', 'Repository (required if outside git repo)')
-    .option('--worktree', 'Create worktree instead of checkout')
+    .option('--checkout', 'Checkout branch in current repo instead of creating worktree')
     .option('-b, --base <branch>', 'Base branch for developing')
     .option('-n, --name <name>', 'Custom branch name')
     .action(async (issueNumberStr: string, options: DevelopOptions) => {
@@ -34,8 +35,8 @@ export function createDevelopCommand(): Command {
         console.log(msg.developCheckingRepo)
         const repoInfo = await resolveRepository(options.repo)
 
-        // For worktree mode, ensure bare repo exists
-        if (options.worktree) {
+        // Default: worktree mode. Only use checkout if explicitly requested
+        if (!options.checkout) {
           let bareRepoPath = await findBareRepo(repoInfo.owner, repoInfo.repo)
 
           if (!bareRepoPath) {

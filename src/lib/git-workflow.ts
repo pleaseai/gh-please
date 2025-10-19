@@ -61,8 +61,8 @@ export async function startDevelopWorkflow(
     args.splice(3, 0, '-R', options.repo)
   }
 
-  // Only use --checkout if we're in a git repository and not using worktree mode
-  if (!options.worktree && !options.repo) {
+  // Only use --checkout if explicitly requested (in checkout mode)
+  if (options.checkout) {
     args.push('--checkout')
   }
 
