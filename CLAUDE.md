@@ -217,7 +217,7 @@ export interface GhPleasePlugin {
   metadata?: PluginMetadata
 }
 
-export type PluginType = 'command-group' | 'utility' | 'integration'
+export type PluginType = 'command-group' | 'provider' | 'utility'
 ```
 
 **Plugin Discovery** (`src/plugins/plugin-registry.ts`):

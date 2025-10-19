@@ -145,9 +145,6 @@ v0.3.0부터 `gh-please`는 모듈형 플러그인 아키텍처를 사용합니�
 # 설치된 플러그인 보기
 gh please plugin list
 
-# 플러그인 검색
-gh please plugin search [name]
-
 # 플러그인 설치
 gh please plugin install <name>
 

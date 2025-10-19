@@ -22,7 +22,7 @@ export interface GhPleasePlugin {
   metadata?: PluginMetadata
 }
 
-export type PluginType = 'command-group' | 'utility' | 'integration'
+export type PluginType = 'command-group' | 'provider' | 'utility'
 
 export interface PluginMetadata {
   author: string
@@ -37,8 +37,8 @@ export interface PluginMetadata {
 ### Plugin Types
 
 1. **command-group**: Adds a group of related commands (e.g., AI commands)
-2. **utility**: Provides utility functions or enhancements
-3. **integration**: Integrates with external services
+2. **provider**: Provides backend implementations or services (e.g., AI providers)
+3. **utility**: Provides utility functions or enhancements
 
 ## Creating a Plugin
 
@@ -246,10 +246,8 @@ function detectLanguage(): Language {
 Use the `gh` CLI for GitHub API calls:
 
 ```typescript
-import { spawn } from 'bun'
-
 async function callGitHubAPI(endpoint: string) {
-  const proc = spawn(['gh', 'api', endpoint], {
+  const proc = Bun.spawn(['gh', 'api', endpoint], {
     stdout: 'pipe',
     stderr: 'pipe',
   })

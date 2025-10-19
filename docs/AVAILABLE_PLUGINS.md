@@ -186,11 +186,11 @@ Brief description of what your plugin does.
 - `gh please pluginname command` - Description
 
 **Installation:**
-\```bash
+````bash
 npm install -g @yourorg/gh-please-pluginname
-\```
+````
 
 **Repository:** https://github.com/yourorg/gh-please-pluginname
 **License:** MIT
 **Author:** Your Name
-```
+````

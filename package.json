@@ -22,6 +22,16 @@
     "triage"
   ],
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./plugins": {
+      "types": "./dist/plugins/plugin-interface.d.ts"
+    }
+  },
   "bin": {
     "gh-please": "./dist/index.js"
   },
