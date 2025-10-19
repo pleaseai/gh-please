@@ -31,6 +31,11 @@ async function runGhCommand(args: string[]): Promise<GhCommandResult> {
     proc.exited,
   ])
 
+  // Log warnings from gh CLI even on success
+  if (stderr && exitCode === 0) {
+    console.warn(`[gh-cli] Warning from command 'gh ${args.join(' ')}': ${stderr.trim()}`)
+  }
+
   return { stdout, stderr, exitCode }
 }
 

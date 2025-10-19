@@ -1,6 +1,31 @@
 import { existsSync, mkdirSync, rmSync } from 'node:fs'
 
 /**
+ * Check if tar command is available on the system
+ * @throws Error if tar is not available
+ */
+async function checkTarAvailable(): Promise<void> {
+  try {
+    const proc = Bun.spawn(['tar', '--version'], {
+      stdout: 'pipe',
+      stderr: 'pipe',
+    })
+    const exitCode = await proc.exited
+
+    if (exitCode !== 0) {
+      throw new Error('tar command is not available on this system')
+    }
+  }
+  catch {
+    console.error('[archive] tar command is not available. Please install tar for your operating system.')
+    throw new Error(
+      'tar command is required for plugin installation but is not available on this system. '
+      + 'Please install tar: https://www.gnu.org/software/tar/',
+    )
+  }
+}
+
+/**
  * Extract a tarball archive to a target directory
  * Uses tar command which is available on Windows 10+, macOS, and Linux
  * @param filePath - Path to the .tar.gz file
@@ -11,6 +36,8 @@ export async function extractTarball(
   filePath: string,
   targetDir: string,
 ): Promise<void> {
+  // Check tar availability
+  await checkTarAvailable()
   // Validate tarball exists
   if (!existsSync(filePath)) {
     throw new Error(`Tarball not found: ${filePath}`)
@@ -72,6 +99,9 @@ export async function cleanupArchive(filePath: string): Promise<void> {
  * @returns true if valid, false otherwise
  */
 export async function validateTarball(filePath: string): Promise<boolean> {
+  // Check tar availability
+  await checkTarAvailable()
+
   // Check if file exists
   if (!existsSync(filePath)) {
     console.error(`[archive] Tarball validation failed: File not found at ${filePath}`)
