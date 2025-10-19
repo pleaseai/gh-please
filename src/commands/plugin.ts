@@ -5,8 +5,8 @@
  */
 
 import { Command } from 'commander'
-import { PluginRegistry } from '../plugins/plugin-registry'
 import { installPlugin, uninstallPlugin } from '../plugins/plugin-installer'
+import { PluginRegistry } from '../plugins/plugin-registry'
 
 /**
  * Create the plugin command group
@@ -101,9 +101,9 @@ export function createPluginCommand(): Command {
 
       const filtered = query
         ? availablePlugins.filter(p =>
-          p.name.includes(query)
+            p.name.includes(query)
             || p.description.toLowerCase().includes(query.toLowerCase()),
-        )
+          )
         : availablePlugins
 
       if (filtered.length === 0) {
@@ -133,10 +133,10 @@ export function createPluginCommand(): Command {
 
       // Map plugin names to package names
       const packageMap: Record<string, string> = {
-        'ai': '@pleaseai/gh-please-ai',
-        'speckit': 'gh-please-plugin-speckit',
-        'linear': 'gh-please-plugin-linear',
-        'jira': 'gh-please-plugin-jira',
+        ai: '@pleaseai/gh-please-ai',
+        speckit: 'gh-please-plugin-speckit',
+        linear: 'gh-please-plugin-linear',
+        jira: 'gh-please-plugin-jira',
       }
 
       const packageName = packageMap[name] || name
@@ -185,10 +185,10 @@ export function createPluginCommand(): Command {
       const { local = false } = options
 
       const packageMap: Record<string, string> = {
-        'ai': '@pleaseai/gh-please-ai',
-        'speckit': 'gh-please-plugin-speckit',
-        'linear': 'gh-please-plugin-linear',
-        'jira': 'gh-please-plugin-jira',
+        ai: '@pleaseai/gh-please-ai',
+        speckit: 'gh-please-plugin-speckit',
+        linear: 'gh-please-plugin-linear',
+        jira: 'gh-please-plugin-jira',
       }
 
       const packageName = packageMap[name] || name

@@ -52,7 +52,7 @@ export interface GhPleasePlugin {
    *
    * @returns Array of Commander.js Command objects to add to the CLI
    */
-  registerCommands(): Command[]
+  registerCommands: () => Command[]
 
   /**
    * Optional initialization hook
@@ -60,7 +60,7 @@ export interface GhPleasePlugin {
    *
    * @returns Promise that resolves when initialization is complete
    */
-  init?(): Promise<void>
+  init?: () => Promise<void>
 
   /**
    * Optional metadata about the plugin

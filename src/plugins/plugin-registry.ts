@@ -4,9 +4,9 @@
  * Responsible for discovering, loading, and managing plugins
  */
 
+import type { GhPleasePlugin, PluginInfo, PluginPackageJson } from './plugin-interface'
 import { readdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import type { GhPleasePlugin, PluginInfo, PluginPackageJson } from './plugin-interface'
 
 /**
  * Central registry for managing plugins
@@ -150,11 +150,8 @@ export class PluginRegistry {
         }
       }
     }
-    catch (error) {
+    catch {
       // Local plugins directory might not exist, that's ok
-      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-        console.warn('Failed to load local plugins:', error)
-      }
     }
   }
 
@@ -196,7 +193,7 @@ export class PluginRegistry {
         }
       }
     }
-    catch (error) {
+    catch {
       // Ignore errors, directory might not exist
     }
 
@@ -223,7 +220,7 @@ export class PluginRegistry {
         }
       }
     }
-    catch (error) {
+    catch {
       // Package might not have package.json or it's malformed
     }
 

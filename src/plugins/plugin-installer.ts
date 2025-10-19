@@ -21,6 +21,8 @@ export interface InstallResult {
  *
  * @param pluginName - Name of the plugin package to install
  * @param options - Installation options
+ * @param options.global - Install globally (default: true)
+ * @param options.premium - Install as premium plugin (default: false)
  * @returns Installation result
  */
 export async function installPlugin(
@@ -46,6 +48,7 @@ export async function installPlugin(
  *
  * @param pluginName - Name of the plugin to uninstall
  * @param options - Uninstallation options
+ * @param options.global - Uninstall globally (default: true)
  * @returns Uninstallation result
  */
 export async function uninstallPlugin(
