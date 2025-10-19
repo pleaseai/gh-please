@@ -1,7 +1,7 @@
+import type { RepositoryInfo } from '../types'
 import * as fs from 'node:fs'
 import * as os from 'node:os'
 import * as path from 'node:path'
-import type { RepositoryInfo } from '../types'
 
 /**
  * Get the gh command path from environment variable or use default
@@ -46,7 +46,7 @@ export async function findBareRepo(owner: string, repo: string): Promise<string 
       return bareRepoPath
     }
   }
-  catch (error) {
+  catch {
     // File not found or other error
   }
 
