@@ -261,6 +261,7 @@ async function installPremiumPlugin(pluginName: string): Promise<InstallResult> 
     console.log('')
     displayGenericInstallError(
       error instanceof Error ? error.message : 'Unknown error',
+      true,
     )
     return {
       success: false,

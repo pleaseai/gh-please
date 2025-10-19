@@ -152,11 +152,6 @@ export function createPluginCommand(): Command {
         process.exit(1)
       }
 
-      if (premium) {
-        console.log('🔒 Installing premium plugin: ai')
-        console.log('')
-      }
-
       const result = await installPlugin(packageName, { global: !local, premium })
 
       if (result.success) {

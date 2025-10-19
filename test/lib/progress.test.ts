@@ -82,7 +82,7 @@ describe('Progress Module', () => {
       const progress = createProgressIndicator()
       progress.info('Testing info')
 
-      expect(mockLog).toHaveBeenCalledWith('ℹ️  Testing info')
+      expect(mockLog).toHaveBeenCalledWith('ℹ️ Testing info')
 
       // Restore console.log
       console.log = globalThis.console.log
