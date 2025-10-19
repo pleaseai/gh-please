@@ -4,7 +4,9 @@ import { Command } from 'commander'
 import { createAiCommand } from './commands/ai'
 import { createInitCommand } from './commands/init'
 import { createIssueCommand } from './commands/issue'
+import { createPluginCommand } from './commands/plugin'
 import { createPrCommand } from './commands/pr'
+import { PluginRegistry } from './plugins/plugin-registry'
 
 const program = new Command()
 
@@ -13,11 +15,38 @@ program
   .description('GitHub CLI extension for managing pull requests and issues')
   .version('0.2.0')
 
-// Add command groups
+// Add core command groups
 program.addCommand(createAiCommand())
 program.addCommand(createIssueCommand())
 program.addCommand(createPrCommand())
 program.addCommand(createInitCommand())
+program.addCommand(createPluginCommand())
+
+// Load and register plugins
+async function loadPlugins() {
+  try {
+    const registry = new PluginRegistry()
+    await registry.loadPlugins()
+
+    // Register commands from loaded plugins
+    for (const plugin of registry.getAll()) {
+      try {
+        await plugin.init?.()
+        const commands = plugin.registerCommands()
+        for (const cmd of commands) {
+          program.addCommand(cmd)
+        }
+      }
+      catch (error) {
+        console.warn(`Failed to load plugin '${plugin.name}':`, error)
+      }
+    }
+  }
+  catch (error) {
+    // Failed to load plugins, continue with core commands only
+    console.warn('Failed to load plugins:', error)
+  }
+}
 
 // Deprecated: backward compatibility for review-reply
 const deprecatedReviewReply = new Command('review-reply')
@@ -41,9 +70,21 @@ const deprecatedReviewReply = new Command('review-reply')
 
 program.addCommand(deprecatedReviewReply)
 
-// If no command provided, show help
-if (process.argv.length <= 2) {
-  program.help()
+// Main execution
+async function main() {
+  // Load plugins before parsing arguments
+  await loadPlugins()
+
+  // If no command provided, show help
+  if (process.argv.length <= 2) {
+    program.help()
+  }
+
+  program.parse()
 }
 
-program.parse()
+// Run main
+main().catch((error) => {
+  console.error('Fatal error:', error)
+  process.exit(1)
+})

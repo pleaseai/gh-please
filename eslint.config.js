@@ -2,6 +2,10 @@ import antfu from '@antfu/eslint-config'
 
 export default antfu({
   formatters: true,
+  ignores: [
+    // Ignore Claude Code plugin documentation
+    '.claude-plugin/**',
+  ],
 }, {
   rules: {
     // CLI 도구 특성상 console 사용 필요
