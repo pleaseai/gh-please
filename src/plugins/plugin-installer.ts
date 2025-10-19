@@ -240,30 +240,14 @@ async function downloadRelease(
  */
 async function extractPluginTarball(pluginDir: string): Promise<{ success: boolean, error?: string }> {
   try {
-    // Find the first .tar.gz file in the directory
-    let tarballPath: string | null = null
+    // Find the first .tar.gz file in the directory using find command
+    const proc = Bun.spawn(['find', pluginDir, '-name', '*.tar.gz', '-type', 'f'], {
+      stdout: 'pipe',
+      stderr: 'pipe',
+    })
 
-    for await (const entry of Bun.file(pluginDir).type === 'directory' ? [] : []) {
-      if (entry.name.endsWith('.tar.gz')) {
-        tarballPath = `${pluginDir}/${entry.name}`
-        break
-      }
-    }
-
-    // Fallback: use find command if directory listing fails
-    if (!tarballPath) {
-      const proc = Bun.spawn(['find', pluginDir, '-name', '*.tar.gz', '-type', 'f'], {
-        stdout: 'pipe',
-        stderr: 'pipe',
-      })
-
-      const stdout = await new Response(proc.stdout).text()
-      const firstLine = stdout.split('\n')[0]?.trim()
-
-      if (firstLine) {
-        tarballPath = firstLine
-      }
-    }
+    const stdout = await new Response(proc.stdout).text()
+    const tarballPath = stdout.split('\n')[0]?.trim()
 
     if (!tarballPath) {
       return {
