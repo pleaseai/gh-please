@@ -16,17 +16,13 @@ export async function getAllLinkedBranches(
   issueNumber: number,
   repo?: string,
 ): Promise<string[]> {
-  // Parse repo string to owner/repo
-  let owner: string
-  let repoName: string
-
   if (!repo) {
     // Try to get from current git repo
     const proc = Bun.spawn(['git', 'rev-parse', '--show-toplevel'], {
       stdout: 'pipe',
       stderr: 'pipe',
     })
-    const output = await new Response(proc.stdout).text()
+    await new Response(proc.stdout).text()
     const exitCode = await proc.exited
 
     if (exitCode !== 0) {
@@ -43,8 +39,8 @@ export async function getAllLinkedBranches(
   if (parts.length !== 2) {
     return []
   }
-  owner = parts[0]!
-  repoName = parts[1]!
+  const owner = parts[0]!
+  const repoName = parts[1]!
 
   const query = `
     query GetLinkedBranches($owner: String!, $repo: String!, $issueNumber: Int!) {
@@ -66,10 +62,14 @@ export async function getAllLinkedBranches(
     getGhCommand(),
     'api',
     'graphql',
-    '-f', `query=${query}`,
-    '-F', `owner=${owner}`,
-    '-F', `repo=${repoName}`,
-    '-F', `issueNumber=${issueNumber}`,
+    '-f',
+    `query=${query}`,
+    '-F',
+    `owner=${owner}`,
+    '-F',
+    `repo=${repoName}`,
+    '-F',
+    `issueNumber=${issueNumber}`,
   ]
 
   const proc = Bun.spawn(args, {
@@ -99,7 +99,7 @@ export async function getAllLinkedBranches(
       })
       .filter((name: string | undefined) => name !== undefined)
   }
-  catch (error) {
+  catch {
     // Parse error, return empty array
     return []
   }
