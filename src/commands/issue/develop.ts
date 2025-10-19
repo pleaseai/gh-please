@@ -1,5 +1,6 @@
 import type { DevelopOptions } from '../../types'
 import { confirm, select } from '@clack/prompts'
+import * as fs from 'node:fs'
 import { Command } from 'commander'
 import { createWorktree, fetchBranch, getAllLinkedBranches, startDevelopWorkflow } from '../../lib/git-workflow'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
@@ -63,39 +64,62 @@ export function createDevelopCommand(): Command {
             branch = await startDevelopWorkflow(issueNumber, options)
           }
           else if (existingBranches.length === 1) {
-            // Single existing branch, ask user
-            const useExisting = await confirm({
-              message: `Use existing branch "${existingBranches[0]}"?`,
+            // Single existing branch, offer clear options
+            const selectedOption = await select({
+              message: `Branch "${existingBranches[0]}" exists.`,
+              options: [
+                { label: `✅ Use existing: ${existingBranches[0]}`, value: 'use' },
+                { label: '✨ Create new branch', value: 'new' },
+                { label: '❌ Cancel', value: 'cancel' },
+              ],
             })
-            branch = useExisting ? existingBranches[0]! : await startDevelopWorkflow(issueNumber, options)
+            if (selectedOption === 'cancel') {
+              console.log('Cancelled.')
+              process.exit(0)
+            }
+            branch = selectedOption === 'use' ? existingBranches[0]! : await startDevelopWorkflow(issueNumber, options)
           }
           else {
             // Multiple existing branches, let user choose
             const selectedOption = await select({
               message: 'Select a branch:',
               options: [
-                ...existingBranches.map(b => ({ label: b, value: b })),
+                ...existingBranches.map(b => ({ label: `✅ ${b}`, value: b })),
                 { label: '✨ Create new branch', value: '__new__' },
+                { label: '❌ Cancel', value: '__cancel__' },
               ],
             })
+            if (selectedOption === '__cancel__') {
+              console.log('Cancelled.')
+              process.exit(0)
+            }
             if (!selectedOption || typeof selectedOption !== 'string') {
               throw new Error('Branch selection cancelled')
             }
             branch = selectedOption === '__new__' ? await startDevelopWorkflow(issueNumber, options) : selectedOption
           }
 
-          // Fetch branch into bare repo before creating worktree
-          console.log(`📥 Fetching branch ${branch}...`)
-          await fetchBranch(bareRepoPath, branch)
-
-          // Create worktree
+          // Prepare worktree path
           const worktreePath = `~/worktrees/${repoInfo.repo}/${branch}`
           const expandedPath = worktreePath.replace(/^~/, process.env.HOME || '')
-          console.log(msg.developCreateWorktree(worktreePath))
-          await createWorktree(bareRepoPath, branch, worktreePath)
 
-          console.log(msg.developWorktreeReady(expandedPath))
-          console.log(`cd ${expandedPath}`)
+          // Check if worktree already exists
+          if (fs.existsSync(expandedPath)) {
+            console.log(`✅ Worktree already exists!`)
+            console.log(`cd ${expandedPath}`)
+          }
+          else {
+            // Fetch branch into bare repo before creating worktree
+            console.log(`📥 Fetching branch ${branch}...`)
+            await fetchBranch(bareRepoPath, branch)
+
+            // Create worktree
+            console.log(msg.developCreateWorktree(worktreePath))
+            await createWorktree(bareRepoPath, branch, worktreePath)
+
+            console.log(msg.developWorktreeReady(expandedPath))
+            console.log(`cd ${expandedPath}`)
+          }
         }
         else {
           // Default mode: checkout
