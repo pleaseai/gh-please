@@ -246,13 +246,26 @@ async function extractPluginTarball(pluginDir: string): Promise<{ success: boole
       stderr: 'pipe',
     })
 
-    const stdout = await new Response(proc.stdout).text()
+    const [stdout, stderr, exitCode] = await Promise.all([
+      new Response(proc.stdout).text(),
+      new Response(proc.stderr).text(),
+      proc.exited,
+    ])
+
+    // Check if find command itself failed
+    if (exitCode !== 0) {
+      return {
+        success: false,
+        error: `Failed to find tarball in ${pluginDir}: ${stderr.trim() || `find exited with code ${exitCode}`}`,
+      }
+    }
+
     const tarballPath = stdout.split('\n')[0]?.trim()
 
     if (!tarballPath) {
       return {
         success: false,
-        error: 'No tarball found in plugin directory',
+        error: `No .tar.gz files found in directory: ${pluginDir}`,
       }
     }
 
