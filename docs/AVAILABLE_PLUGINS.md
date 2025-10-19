@@ -48,41 +48,26 @@ git submodule update --init --recursive
 
 **Configuration:**
 
-The AI plugin uses `.please/config.yml`:
+The AI plugin uses `.please/config.yml` for comprehensive automation settings.
 
-```yaml
-code_review:
-  disable: false
-  comment_severity_threshold: MEDIUM  # LOW | MEDIUM | HIGH
-  max_review_comments: -1  # -1 = unlimited
-  pull_request_opened:
-    help: false
-    summary: true
-    code_review: true
-    include_drafts: true
-
-issue_workflow:
-  disable: false
-  triage:
-    auto: true
-    manual: true
-    update_issue_type: true
-  investigate:
-    enabled: true
-    org_members_only: true
-    auto_on_bug_label: false
-  fix:
-    enabled: true
-    org_members_only: true
-    require_investigation: false
-    auto_create_pr: true
-    auto_run_tests: true
-
-code_workspace:
-  enabled: true
-
-language: ko  # ko | en
+Quick setup:
+```bash
+gh please init  # Interactive configuration
+gh please init --yes  # Use defaults
+gh please init --force  # Reset configuration
 ```
+
+**Key Settings:**
+- Code review severity: `LOW | MEDIUM | HIGH`
+- Max review comments: `number` (unlimited: `-1`)
+- Issue workflow automation: triage, investigate, fix
+- Organization-member-only restrictions
+- Language preference: `ko | en`
+- Ignore patterns: for files/directories to skip
+
+📖 **Full Configuration Guide:** See [AI Plugin Configuration](../plugins/ai/docs/CONFIGURATION.md)
+
+For detailed options, installation instructions, and examples, see the plugin repository.
 
 ---
 
