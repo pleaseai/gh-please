@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, rmSync } from 'node:fs'
 
 /**
  * Extract a tarball archive to a target directory
+ * Uses tar command which is available on Windows 10+, macOS, and Linux
  * @param filePath - Path to the .tar.gz file
  * @param targetDir - Directory to extract contents into
  * @throws Error if extraction fails
@@ -25,7 +26,7 @@ export async function extractTarball(
     )
   }
 
-  // Extract tarball using tar command
+  // Extract tarball using tar command (cross-platform: Windows 10+, macOS, Linux)
   const proc = Bun.spawn(['tar', '-xzf', filePath, '-C', targetDir], {
     stdout: 'pipe',
     stderr: 'pipe',
