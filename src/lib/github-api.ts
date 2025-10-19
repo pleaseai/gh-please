@@ -14,8 +14,8 @@ function getGhCommand(): string {
 export function parsePrInfo(data: any): PrInfo {
   return {
     number: data.number,
-    owner: data.owner?.login || data.owner,
-    repo: data.repository?.name || data.repository,
+    owner: data.headRepositoryOwner?.login,
+    repo: data.headRepository?.name,
   }
 }
 
@@ -46,7 +46,7 @@ export function isTopLevelComment(comment: ReviewComment): boolean {
  * Get current PR information using gh CLI
  */
 export async function getCurrentPrInfo(): Promise<PrInfo> {
-  const proc = Bun.spawn([getGhCommand(), 'pr', 'view', '--json', 'number,owner,repository'], {
+  const proc = Bun.spawn([getGhCommand(), 'pr', 'view', '--json', 'number,headRepositoryOwner,headRepository'], {
     stdout: 'pipe',
     stderr: 'pipe',
   })

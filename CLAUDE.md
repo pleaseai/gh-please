@@ -365,12 +365,19 @@ Tests follow the **Arrange-Act-Assert** pattern and use Bun's built-in test runn
 ## Development Workflow
 
 1. Make changes to `src/` files
-2. Run type checking: `bun run type-check`
-3. Run tests: `bun test`
-4. Test manually: `bun run src/index.ts <command> [options]`
-5. Build: `bun build src/index.ts --outdir dist --target bun --format esm`
-6. Install locally: `gh extension install .`
-7. Test as extension: `gh please <command> [options]`
+2. Run linting: `bun run lint:fix` (auto-fixes style issues)
+3. Run type checking: `bun run type-check`
+4. Run tests: `bun test`
+5. Test manually: `bun run src/index.ts <command> [options]`
+6. Build: `bun build src/index.ts --outdir dist --target bun --format esm`
+7. Install locally: `gh extension install .`
+8. Test as extension: `gh please <command> [options]`
+
+**Pre-commit checklist:**
+```bash
+# Run all quality checks before committing
+bun run lint:fix && bun run type-check && bun test
+```
 
 ## Issue Workflow
 

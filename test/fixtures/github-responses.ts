@@ -361,14 +361,11 @@ export function createReviewReplyResponse(replyId: number, body: string, inReply
 export function createCurrentPrResponse(prNumber: number, owner: string, repo: string) {
   return {
     number: prNumber,
-    owner: {
+    headRepositoryOwner: {
       login: owner,
     },
-    repository: {
+    headRepository: {
       name: repo,
-      owner: {
-        login: owner,
-      },
     },
   }
 }

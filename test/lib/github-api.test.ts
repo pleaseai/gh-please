@@ -13,11 +13,11 @@ import {
 
 describe('github-api', () => {
   describe('parsePrInfo', () => {
-    test('should parse PR info with nested objects', () => {
+    test('should parse PR info from gh CLI output', () => {
       const mockOutput = {
         number: 123,
-        owner: { login: 'testowner' },
-        repository: { name: 'testrepo' },
+        headRepositoryOwner: { login: 'testowner' },
+        headRepository: { name: 'testrepo' },
       }
 
       const result = parsePrInfo(mockOutput)
@@ -29,35 +29,35 @@ describe('github-api', () => {
       })
     })
 
-    test('should handle owner as string', () => {
+    test('should handle missing repository owner', () => {
       const mockOutput = {
         number: 456,
-        owner: 'directowner',
-        repository: 'directrepo',
+        headRepositoryOwner: undefined,
+        headRepository: { name: 'testrepo' },
       }
 
       const result = parsePrInfo(mockOutput)
 
       expect(result).toEqual({
         number: 456,
-        owner: 'directowner',
-        repo: 'directrepo',
+        owner: undefined,
+        repo: 'testrepo',
       })
     })
 
-    test('should handle mixed format', () => {
+    test('should handle missing repository name', () => {
       const mockOutput = {
         number: 789,
-        owner: { login: 'nestedowner' },
-        repository: 'flatrepo',
+        headRepositoryOwner: { login: 'testowner' },
+        headRepository: undefined,
       }
 
       const result = parsePrInfo(mockOutput)
 
       expect(result).toEqual({
         number: 789,
-        owner: 'nestedowner',
-        repo: 'flatrepo',
+        owner: 'testowner',
+        repo: undefined,
       })
     })
   })

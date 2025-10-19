@@ -44,7 +44,7 @@ describe('PR Commands - CLI Integration', () => {
       },
       // Mock pr view (for deprecated review-reply command)
       {
-        args: /pr view --json number,owner,repository/,
+        args: /pr view --json number,headRepositoryOwner,headRepository/,
         response: {
           stdout: ghCliResponses.currentPr,
           exitCode: 0,
