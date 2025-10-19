@@ -59,3 +59,24 @@ export interface ReviewThread {
 export type PleaseTriggerType = 'triage' | 'investigate' | 'fix' | 'review' | 'apply'
 
 export type Language = 'ko' | 'en'
+
+export interface DevelopOptions {
+  repo?: string // owner/repo format
+  worktree?: boolean // Use worktree mode
+  base?: string // Base branch for gh issue develop
+  name?: string // Custom branch name
+}
+
+export interface RepositoryInfo {
+  owner: string
+  repo: string
+  localPath: string // ~/repos/owner/repo.git
+  isBare: boolean
+}
+
+export interface WorktreeInfo {
+  path: string // ~/worktrees/repo/branch
+  branch: string
+  commit: string
+  prunable: boolean
+}

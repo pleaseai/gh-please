@@ -126,6 +126,8 @@ gh please issue sub-issue list <parent>                   # List all sub-issues
 gh please issue dependency add <issue> --blocked-by <blocker>     # Add blocker
 gh please issue dependency remove <issue> <blocker>               # Remove blocker
 gh please issue dependency list <issue>                           # List blockers
+gh please issue develop <issue-number> [--repo owner/repo] [--worktree] [--base <branch>] [--name <branch>]  # Start developing on issue (alias: dev)
+gh please issue cleanup [--repo owner/repo] [--all]       # Clean up unused worktrees
 
 # Core PR Management (Built-in)
 gh please pr review-reply <comment-id> -b "text"  # Reply to review comment
@@ -147,7 +149,7 @@ gh please review-reply <comment-id> -b "text"   # → Use 'gh please pr review-r
 
 - **Entry point**: `src/index.ts` - Registers command groups, loads plugins
 - **Commands**: `src/commands/` - Organized by group:
-  - `issue/` - Issue management (sub-issue, dependency)
+  - `issue/` - Issue management (sub-issue, dependency, develop, cleanup)
   - `pr/` - Pull request management (review-reply, resolve)
   - `plugin.ts` - Plugin management commands
 - **Plugin System**: `src/plugins/` - Plugin discovery and loading:
@@ -203,6 +205,22 @@ All command output messages (success, errors, progress) are internationalized. G
   - Validates comment IDs and reply body text
   - Uses Zod schemas for type-safe validation
 
+- **`src/lib/repo-manager.ts`**: Repository management utilities
+  - `parseRepoString()` - Parse "owner/repo" or GitHub URL format
+  - `findBareRepo()` - Check if bare repo exists at ~/repos/{owner}/{repo}.git
+  - `isInGitRepo()` - Verify current directory is in git repository
+  - `cloneBareRepo()` - Clone repository as bare to ~/repos/{owner}/{repo}.git
+  - `resolveRepository()` - Resolve repository from --repo flag or current directory
+  - Used by: develop, cleanup commands
+
+- **`src/lib/git-workflow.ts`**: Git and worktree management utilities
+  - `getLinkedBranch()` - Get linked branch for issue via `gh issue develop --list`
+  - `startDevelopWorkflow()` - Create/checkout branch via `gh issue develop --checkout`
+  - `createWorktree()` - Create git worktree at specified path
+  - `listWorktrees()` - Parse `git worktree list --porcelain` output
+  - `removeWorktree()` - Remove worktree via `git worktree remove`
+  - Enables efficient multi-branch development with isolated workspaces
+
 ### Plugin System
 
 **Plugin Interface** (`src/plugins/plugin-interface.ts`):
@@ -244,6 +262,9 @@ export type PluginType = 'command-group' | 'provider' | 'utility'
 - `ReviewThread`: Review thread metadata (id, isResolved, path, line)
 - `PleaseTriggerType`: Union type for automation triggers (triage | investigate | fix | review | apply) - **Note**: Moved to AI plugin
 - `Language`: Internationalization language type ('ko' | 'en')
+- `DevelopOptions`: Options for develop command (repo, worktree, base, name)
+- `RepositoryInfo`: Repository metadata (owner, repo, localPath, isBare)
+- `WorktreeInfo`: Worktree metadata (path, branch, commit, prunable)
 
 ## GitHub API Integration
 
@@ -585,6 +606,79 @@ gh pr view <pr-number> --json reviews,comments
 # Check PR review status
 gh pr checks <pr-number>
 ```
+
+## Issue Development Workflow
+
+The `gh please issue develop` command streamlines the process of starting work on an issue with automatic branch setup and optional worktree creation.
+
+### Default Mode (Checkout)
+
+```bash
+# Basic usage - creates/checks out branch locally
+gh please issue develop 123
+
+# With base branch
+gh please issue develop 123 --base main
+
+# With custom branch name
+gh please issue develop 123 --name my-custom-branch
+
+# From outside git repo
+gh please issue develop 123 --repo owner/repo
+```
+
+### Worktree Mode
+
+```bash
+# Create isolated workspace in ~/worktrees/{repo}/{branch}
+gh please issue develop 123 --worktree
+
+# If bare repo doesn't exist, interactive prompt will ask to clone
+# Clone happens automatically to ~/repos/{owner}/{repo}.git
+
+# With repo flag
+gh please issue develop 123 --repo owner/repo --worktree
+
+# Output shows command to navigate to worktree
+# cd ~/worktrees/gh-please/feat-123-awesome-feature
+```
+
+### Using Aliases
+
+```bash
+# 'dev' is an alias for 'develop'
+gh please issue dev 123
+gh please issue dev 123 --worktree
+```
+
+### Cleanup Worktrees
+
+```bash
+# Interactive selection of prunable worktrees to remove
+gh please issue cleanup
+
+# Remove all prunable worktrees without prompt
+gh please issue cleanup --all
+
+# Cleanup from outside repo
+gh please issue cleanup --repo owner/repo
+```
+
+### Architecture & Implementation
+
+The develop workflow uses:
+- **`gh issue develop`**: GitHub CLI command for branch management
+- **Bare repository**: Clone at `~/repos/{owner}/{repo}.git` for efficient multi-worktree setup
+- **Git worktrees**: Isolated workspaces at `~/worktrees/{repo}/{branch}`
+- **Automatic fallback**: If bare repo exists locally, uses it; otherwise, prompts to clone
+
+### Key Features
+
+1. **Works Everywhere**: Can be used inside or outside a git repo via `--repo` flag
+2. **Automatic Bare Clone**: First worktree creation automatically clones repo as bare (once only)
+3. **Efficient Disk Usage**: Multiple worktrees share objects, saving disk space
+4. **Interactive Cleanup**: Manage prunable worktrees interactively or in batch mode
+5. **Bilingual Support**: Full Korean/English support for all messages
 
 ## Launcher Script
 
