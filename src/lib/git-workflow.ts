@@ -10,17 +10,67 @@ function getGhCommand(): string {
 }
 
 /**
- * Get all linked branches for an issue using gh issue develop --list
+ * Get all linked branches for an issue using GitHub GraphQL API
  */
 export async function getAllLinkedBranches(
   issueNumber: number,
   repo?: string,
 ): Promise<string[]> {
-  const args = [getGhCommand(), 'issue', 'develop', String(issueNumber), '--list', '--json', 'headRefName']
+  // Parse repo string to owner/repo
+  let owner: string
+  let repoName: string
 
-  if (repo) {
-    args.splice(3, 0, '-R', repo)
+  if (!repo) {
+    // Try to get from current git repo
+    const proc = Bun.spawn(['git', 'rev-parse', '--show-toplevel'], {
+      stdout: 'pipe',
+      stderr: 'pipe',
+    })
+    const output = await new Response(proc.stdout).text()
+    const exitCode = await proc.exited
+
+    if (exitCode !== 0) {
+      // Cannot determine repo, return empty array
+      return []
+    }
+
+    // For now, if no repo specified and can't auto-detect owner/repo, return empty
+    // This is a limitation of the current implementation
+    return []
   }
+
+  const parts = repo.split('/')
+  if (parts.length !== 2) {
+    return []
+  }
+  owner = parts[0]!
+  repoName = parts[1]!
+
+  const query = `
+    query GetLinkedBranches($owner: String!, $repo: String!, $issueNumber: Int!) {
+      repository(owner: $owner, name: $repo) {
+        issue(number: $issueNumber) {
+          linkedBranches(first: 100) {
+            nodes {
+              ref {
+                name
+              }
+            }
+          }
+        }
+      }
+    }
+  `
+
+  const args = [
+    getGhCommand(),
+    'api',
+    'graphql',
+    '-f', `query=${query}`,
+    '-F', `owner=${owner}`,
+    '-F', `repo=${repoName}`,
+    '-F', `issueNumber=${issueNumber}`,
+  ]
 
   const proc = Bun.spawn(args, {
     stdout: 'pipe',
@@ -28,24 +78,31 @@ export async function getAllLinkedBranches(
   })
 
   const output = await new Response(proc.stdout).text()
+  const stderr = await new Response(proc.stderr).text()
   const exitCode = await proc.exited
 
   if (exitCode !== 0) {
-    // No linked branches yet
+    // GraphQL query failed
+    if (stderr.trim()) {
+      console.warn(`⚠️  Failed to get linked branches: ${stderr.trim()}`)
+    }
     return []
   }
 
   try {
     const data = JSON.parse(output)
-    if (data && Array.isArray(data)) {
-      return data.map((item: { headRefName: string }) => item.headRefName)
-    }
+    const branches = data?.data?.repository?.issue?.linkedBranches?.nodes || []
+    return branches
+      .map((node: unknown) => {
+        const typedNode = node as { ref?: { name?: string } }
+        return typedNode?.ref?.name
+      })
+      .filter((name: string | undefined) => name !== undefined)
   }
-  catch {
+  catch (error) {
     // Parse error, return empty array
+    return []
   }
-
-  return []
 }
 
 /**
