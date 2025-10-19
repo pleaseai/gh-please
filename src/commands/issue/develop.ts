@@ -78,7 +78,10 @@ export function createDevelopCommand(): Command {
                 { label: '✨ Create new branch', value: '__new__' },
               ],
             })
-            branch = selectedOption === '__new__' ? await startDevelopWorkflow(issueNumber, options) : (selectedOption as string)
+            if (!selectedOption || typeof selectedOption !== 'string') {
+              throw new Error('Branch selection cancelled')
+            }
+            branch = selectedOption === '__new__' ? await startDevelopWorkflow(issueNumber, options) : selectedOption
           }
 
           // Fetch branch into bare repo before creating worktree

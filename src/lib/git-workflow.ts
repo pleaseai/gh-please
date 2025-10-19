@@ -56,7 +56,7 @@ export async function getLinkedBranch(
   repo?: string,
 ): Promise<string | null> {
   const branches = await getAllLinkedBranches(issueNumber, repo)
-  return branches.length > 0 ? branches[0] : null
+  return branches.length > 0 ? branches[0]! : null
 }
 
 /**
