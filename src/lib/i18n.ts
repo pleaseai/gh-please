@@ -30,6 +30,18 @@ export interface IssueMessages {
   blocker: string
   createFailed: (error: string) => string
   parseIssueFailed: string
+  developStarting: (issue: number) => string
+  developCheckingRepo: string
+  developPromptClone: (owner: string, repo: string) => string
+  developCloning: (owner: string, repo: string) => string
+  developBranchReady: (branch: string) => string
+  developWorktreeReady: (path: string) => string
+  developCreateWorktree: (path: string) => string
+  cleanupListing: string
+  cleanupNothingToClean: string
+  cleanupFoundPrunable: (count: number) => string
+  cleanupRemoving: (path: string) => string
+  cleanupRemoved: (count: number) => string
 }
 
 export interface PrMessages {
@@ -82,6 +94,18 @@ export const issueMessages: Record<Language, IssueMessages> = {
     blocker: '차단 이슈',
     createFailed: (error: string) => `이슈 생성 실패: ${error}`,
     parseIssueFailed: '생성된 이슈 번호를 파싱하지 못했습니다',
+    developStarting: (issue: number) => `🚀 이슈 #${issue}에서 개발 시작...`,
+    developCheckingRepo: '🔍 저장소 확인 중...',
+    developPromptClone: (owner: string, repo: string) => `저장소 ${owner}/${repo}를 ~/repos에 clone 하시겠습니까?`,
+    developCloning: (owner: string, repo: string) => `📥 ${owner}/${repo}를 clone 중...`,
+    developBranchReady: (branch: string) => `✅ 브랜치 ${branch}를 준비했습니다!`,
+    developWorktreeReady: (path: string) => `✅ Worktree 준비 완료! 다음 명령어로 이동하세요:`,
+    developCreateWorktree: (path: string) => `📝 Worktree를 ${path}에 생성 중...`,
+    cleanupListing: '📋 Worktree 목록 가져오는 중...',
+    cleanupNothingToClean: '✅ 정리할 worktree가 없습니다.',
+    cleanupFoundPrunable: (count: number) => `🧹 ${count}개의 prunable worktree를 발견했습니다.`,
+    cleanupRemoving: (path: string) => `🗑️ ${path}를 제거 중...`,
+    cleanupRemoved: (count: number) => `✅ ${count}개의 worktree를 제거했습니다!`,
   },
   en: {
     gettingParentIssue: (parentNumber: number) => `🔍 Getting parent issue #${parentNumber}...`,
@@ -113,6 +137,18 @@ export const issueMessages: Record<Language, IssueMessages> = {
     blocker: 'Blocker',
     createFailed: (error: string) => `Failed to create issue: ${error}`,
     parseIssueFailed: 'Failed to parse created issue number',
+    developStarting: (issue: number) => `🚀 Starting development on issue #${issue}...`,
+    developCheckingRepo: '🔍 Checking repository...',
+    developPromptClone: (owner: string, repo: string) => `Clone ${owner}/${repo} to ~/repos?`,
+    developCloning: (owner: string, repo: string) => `📥 Cloning ${owner}/${repo}...`,
+    developBranchReady: (branch: string) => `✅ Branch ${branch} is ready!`,
+    developWorktreeReady: (path: string) => `✅ Worktree ready! Use this command to navigate:`,
+    developCreateWorktree: (path: string) => `📝 Creating worktree at ${path}...`,
+    cleanupListing: '📋 Listing worktrees...',
+    cleanupNothingToClean: '✅ No worktrees to clean up.',
+    cleanupFoundPrunable: (count: number) => `🧹 Found ${count} prunable worktree(s).`,
+    cleanupRemoving: (path: string) => `🗑️ Removing ${path}...`,
+    cleanupRemoved: (count: number) => `✅ Removed ${count} worktree(s)!`,
   },
 }
 
