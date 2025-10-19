@@ -95,7 +95,7 @@ export async function startDevelopWorkflow(
   }
 
   // Without --checkout: "github.com/owner/repo/tree/branch-name"
-  const urlMatch = output.match(/\/tree\/([^\s\n]+)/)
+  const urlMatch = output.match(/\/tree\/(\S+)/)
   if (urlMatch) {
     return urlMatch[1]!.trim()
   }
