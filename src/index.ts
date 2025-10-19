@@ -5,13 +5,14 @@ import { createIssueCommand } from './commands/issue'
 import { createPluginCommand } from './commands/plugin'
 import { createPrCommand } from './commands/pr'
 import { PluginRegistry } from './plugins/plugin-registry'
+import packageJson from '../package.json' with { type: 'json' }
 
 const program = new Command()
 
 program
   .name('gh-please')
   .description('GitHub CLI extension for managing pull requests and issues')
-  .version('0.3.0')
+  .version(packageJson.version)
 
 // Add core command groups
 program.addCommand(createIssueCommand())
