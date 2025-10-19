@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/pleaseai/gh-please/compare/github-v0.4.0...github-v0.4.1) (2025-10-19)
+
+
+### Bug Fixes
+
+* use git command instead of gh in isInGitRepo function ([ea3f4ec](https://github.com/pleaseai/gh-please/commit/ea3f4eca978fbac671898468a2f8c242e82e06ca))
+
 ## [0.4.0](https://github.com/pleaseai/gh-please/compare/github-v0.3.0...github-v0.4.0) (2025-10-19)
 
 
