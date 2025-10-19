@@ -1,16 +1,51 @@
 # Changelog
 
-## [0.3.0](https://github.com/pleaseai/gh-please/compare/github-v0.2.0...github-v0.3.0) (2025-10-18)
+## [0.3.0](https://github.com/pleaseai/gh-please/compare/v0.2.0...v0.3.0) (2025-10-19)
 
+### BREAKING CHANGES
+
+* **plugin-system**: AI commands moved to separate plugin (`@pleaseai/gh-please-ai`)
+  - Removed: `gh please ai triage`, `gh please ai investigate`, `gh please ai fix`, `gh please ai review`, `gh please ai apply`
+  - Removed: `gh please init` command (moved to AI plugin)
+  - Reason: Support open-source distribution while keeping proprietary AI logic in private plugin
+  - Migration: See [docs/MIGRATION_v0.3.md](docs/MIGRATION_v0.3.md)
 
 ### Features
 
+* **plugin-system**: Introduce modular plugin architecture
+  - Plugin interface: `GhPleasePlugin` with command-group, provider, and utility types
+  - Plugin discovery: Automatic scanning of `node_modules` and `~/.gh-please/plugins/`
+  - Plugin management: `gh please plugin list|install|uninstall`
+  - Exports map for stable plugin API: `@pleaseai/gh-please/plugins`
+  - Comprehensive plugin development guide: [docs/PLUGIN_DEVELOPMENT.md](docs/PLUGIN_DEVELOPMENT.md)
+* **ai-plugin**: Separate `@pleaseai/gh-please-ai` plugin available via premium service or self-hosted
+  - Premium cloud: `gh please plugin install ai --premium`
+  - Self-hosted: `npm install -g @pleaseai/gh-please-ai`
+  - Configuration: `.please/config.yml` for comprehensive automation settings
 * add --repo option to all commands for cross-repository operations ([37a1d35](https://github.com/pleaseai/gh-please/commit/37a1d35a84b12d57121a6088b6684085fe156d44))
 * add system language-based i18n support for all commands ([d68847c](https://github.com/pleaseai/gh-please/commit/d68847c9d99c4a6a14b503ef76ef4e6c9409e4e3))
 
+### Changed
+
+* Refactored codebase to support plugin architecture
+* Package name: `@pleaseai/github` → `@pleaseai/gh-please`
+* Core commands (issue management, PR management) remain open-source and built-in
+
+### Added
+
+* Plugin system infrastructure (`src/plugins/`)
+* Plugin development guide and examples
+* Plugin available plugins documentation
+* Migration guide for v0.2.x users
+* PR review workflow documentation in CLAUDE.md
 
 ### Documentation
 
+* add plugin system documentation and examples ([cf778a2](https://github.com/pleaseai/gh-please/commit/cf778a2))
+* add PR review workflow documentation in CLAUDE.md ([cf778a2](https://github.com/pleaseai/gh-please/commit/cf778a2))
+* create comprehensive migration guide ([docs/MIGRATION_v0.3.md](docs/MIGRATION_v0.3.md))
+* create plugin development guide ([docs/PLUGIN_DEVELOPMENT.md](docs/PLUGIN_DEVELOPMENT.md))
+* create available plugins directory ([docs/AVAILABLE_PLUGINS.md](docs/AVAILABLE_PLUGINS.md))
 * add --repo option documentation to README files ([795581c](https://github.com/pleaseai/gh-please/commit/795581c03881da17d7b94b5cf8657401458e1002))
 * add bilingual documentation (Korean/English) ([22c0edd](https://github.com/pleaseai/gh-please/commit/22c0edd293b0fb86198cbb6448f91a79e677aa93))
 * change default README to Korean ([dd6a7e1](https://github.com/pleaseai/gh-please/commit/dd6a7e13f42ccd2e0ba8c606c1144b1ba736e330))
