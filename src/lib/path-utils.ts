@@ -1,3 +1,5 @@
+import { homedir } from 'node:os'
+
 /**
  * Expand home directory path
  * Converts ~/path to full home directory path
@@ -18,7 +20,6 @@ export function expandHome(filePath: string): string {
   }
 
   // Use HOME environment variable if available (for testing), otherwise use homedir
-  const { homedir } = require('node:os')
   const home = process.env.HOME || homedir()
 
   if (filePath === '~') {
