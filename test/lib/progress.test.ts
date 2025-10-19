@@ -2,7 +2,7 @@
  * Unit tests for progress module
  */
 
-import { describe, test, expect, mock } from 'bun:test'
+import { describe, expect, mock, test } from 'bun:test'
 import {
   createProgressIndicator,
   displayAuthError,
@@ -158,7 +158,7 @@ describe('Progress Module', () => {
       displayInstallationComplete('ai')
 
       const calls = mockLog.mock.calls.map(call => call[0])
-      expect(calls.some(call => call.includes("Plugin 'ai' installed successfully"))).toBe(true)
+      expect(calls.some(call => call.includes('Plugin \'ai\' installed successfully'))).toBe(true)
 
       // Restore console.log
       console.log = globalThis.console.log

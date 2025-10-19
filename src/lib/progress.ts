@@ -9,11 +9,11 @@
  * Progress indicator for long-running operations
  */
 export interface ProgressIndicator {
-  start(message: string): void
-  update(message: string): void
-  success(message: string): void
-  error(message: string): void
-  info(message: string): void
+  start: (message: string) => void
+  update: (message: string) => void
+  success: (message: string) => void
+  error: (message: string) => void
+  info: (message: string) => void
 }
 
 /**
