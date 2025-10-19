@@ -55,10 +55,15 @@ export async function startDevelopWorkflow(
   issueNumber: number,
   options: DevelopOptions,
 ): Promise<string> {
-  const args = [getGhCommand(), 'issue', 'develop', String(issueNumber), '--checkout']
+  const args = [getGhCommand(), 'issue', 'develop', String(issueNumber)]
 
   if (options.repo) {
     args.splice(3, 0, '-R', options.repo)
+  }
+
+  // Only use --checkout if we're in a git repository and not using worktree mode
+  if (!options.worktree && !options.repo) {
+    args.push('--checkout')
   }
 
   if (options.base) {
@@ -83,10 +88,16 @@ export async function startDevelopWorkflow(
   }
 
   // Parse branch name from gh issue develop output
-  // Output format: "Switched to a new branch 'feat-123-title'"
+  // With --checkout: "Switched to a new branch 'feat-123-title'"
   const branchMatch = output.match(/'([^']+)'/)
   if (branchMatch) {
     return branchMatch[1]!
+  }
+
+  // Without --checkout: "github.com/owner/repo/tree/branch-name"
+  const urlMatch = output.match(/\/tree\/([^\s\n]+)/)
+  if (urlMatch) {
+    return urlMatch[1]!.trim()
   }
 
   // Fallback: get linked branch
