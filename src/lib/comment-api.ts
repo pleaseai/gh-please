@@ -175,3 +175,87 @@ export async function updateReviewComment(
     throw new Error(`Failed to update review comment ${commentId}: ${error.trim()}`)
   }
 }
+
+/**
+ * List all comments for an issue
+ * @param owner - Repository owner
+ * @param repo - Repository name
+ * @param issueNumber - Issue number
+ * @returns Array of comment information
+ */
+export async function listIssueComments(
+  owner: string,
+  repo: string,
+  issueNumber: number,
+): Promise<CommentInfo[]> {
+  const endpoint = `/repos/${owner}/${repo}/issues/${issueNumber}/comments`
+
+  const proc = Bun.spawn(
+    [
+      getGhCommand(),
+      'api',
+      '-H',
+      'Accept: application/vnd.github+json',
+      '-H',
+      'X-GitHub-Api-Version: 2022-11-28',
+      endpoint,
+      '--paginate',
+    ],
+    {
+      stdout: 'pipe',
+      stderr: 'pipe',
+    },
+  )
+
+  const output = await new Response(proc.stdout).text()
+  const exitCode = await proc.exited
+
+  if (exitCode !== 0) {
+    const error = await new Response(proc.stderr).text()
+    throw new Error(`Failed to list comments for issue #${issueNumber}: ${error.trim()}`)
+  }
+
+  return JSON.parse(output)
+}
+
+/**
+ * List all review comments for a pull request
+ * @param owner - Repository owner
+ * @param repo - Repository name
+ * @param prNumber - Pull request number
+ * @returns Array of review comment information
+ */
+export async function listReviewComments(
+  owner: string,
+  repo: string,
+  prNumber: number,
+): Promise<CommentInfo[]> {
+  const endpoint = `/repos/${owner}/${repo}/pulls/${prNumber}/comments`
+
+  const proc = Bun.spawn(
+    [
+      getGhCommand(),
+      'api',
+      '-H',
+      'Accept: application/vnd.github+json',
+      '-H',
+      'X-GitHub-Api-Version: 2022-11-28',
+      endpoint,
+      '--paginate',
+    ],
+    {
+      stdout: 'pipe',
+      stderr: 'pipe',
+    },
+  )
+
+  const output = await new Response(proc.stdout).text()
+  const exitCode = await proc.exited
+
+  if (exitCode !== 0) {
+    const error = await new Response(proc.stderr).text()
+    throw new Error(`Failed to list review comments for PR #${prNumber}: ${error.trim()}`)
+  }
+
+  return JSON.parse(output)
+}
