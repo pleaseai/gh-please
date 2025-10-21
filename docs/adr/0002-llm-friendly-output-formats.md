@@ -172,14 +172,14 @@ src/lib/formatters/
 export type OutputFormat = 'human' | 'markdown' | 'xml'
 
 export interface Formatter {
-  format(data: OutputData): string
+  format: (data: OutputData) => string
 }
 
 export interface OutputData {
   command: string
   repository?: string
   timestamp: string
-  data: any  // Command-specific data
+  data: any // Command-specific data
 }
 
 // Command-specific output types
@@ -410,7 +410,7 @@ test('sub-issue list outputs valid markdown', async () => {
 ```typescript
 // test/integration/llm/parsing.test.ts
 test('LLM can extract sub-issue numbers from markdown output', () => {
-  const output = /* markdown output */
+  const output = '...' // markdown output
   const parsed = parseLLMFriendlyOutput(output)
   expect(parsed.subIssues).toHaveLength(3)
   expect(parsed.subIssues[0].number).toBe(124)
