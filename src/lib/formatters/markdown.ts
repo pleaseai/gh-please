@@ -7,6 +7,13 @@ import type {
   SubIssueListOutput,
 } from './types'
 import { BaseFormatter } from './base'
+import {
+  isActionResultOutput,
+  isDependencyListOutput,
+  isPluginListOutput,
+  isReviewThreadOutput,
+  isSubIssueListOutput,
+} from './guards'
 
 /**
  * Markdown formatter for LLM-friendly output
@@ -20,88 +27,24 @@ export class MarkdownFormatter extends BaseFormatter {
     const outputData = data.data
 
     // Try to detect output type by structure
-    if (this.isSubIssueListOutput(outputData)) {
+    if (isSubIssueListOutput(outputData)) {
       return this.formatSubIssueList(data as OutputData & { data: SubIssueListOutput })
     }
-    else if (this.isDependencyListOutput(outputData)) {
+    else if (isDependencyListOutput(outputData)) {
       return this.formatDependencyList(data as OutputData & { data: DependencyListOutput })
     }
-    else if (this.isReviewThreadOutput(outputData)) {
+    else if (isReviewThreadOutput(outputData)) {
       return this.formatReviewThread(data as OutputData & { data: ReviewThreadOutput })
     }
-    else if (this.isPluginListOutput(outputData)) {
+    else if (isPluginListOutput(outputData)) {
       return this.formatPluginList(data as OutputData & { data: PluginListOutput })
     }
-    else if (this.isActionResultOutput(outputData)) {
+    else if (isActionResultOutput(outputData)) {
       return this.formatActionResult(data as OutputData & { data: ActionResultOutput })
     }
 
     // Fallback for unknown output types
     return this.formatGeneric(data)
-  }
-
-  /**
-   * Type guard for SubIssueListOutput
-   */
-  private isSubIssueListOutput(data: unknown): data is SubIssueListOutput {
-    return (
-      typeof data === 'object'
-      && data !== null
-      && 'parent' in data
-      && 'subIssues' in data
-      && Array.isArray((data as any).subIssues)
-    )
-  }
-
-  /**
-   * Type guard for DependencyListOutput
-   */
-  private isDependencyListOutput(data: unknown): data is DependencyListOutput {
-    return (
-      typeof data === 'object'
-      && data !== null
-      && 'issue' in data
-      && 'blockers' in data
-      && Array.isArray((data as any).blockers)
-    )
-  }
-
-  /**
-   * Type guard for ReviewThreadOutput
-   */
-  private isReviewThreadOutput(data: unknown): data is ReviewThreadOutput {
-    return (
-      typeof data === 'object'
-      && data !== null
-      && 'pr' in data
-      && 'threads' in data
-      && Array.isArray((data as any).threads)
-    )
-  }
-
-  /**
-   * Type guard for PluginListOutput
-   */
-  private isPluginListOutput(data: unknown): data is PluginListOutput {
-    return (
-      typeof data === 'object'
-      && data !== null
-      && 'plugins' in data
-      && Array.isArray((data as any).plugins)
-    )
-  }
-
-  /**
-   * Type guard for ActionResultOutput
-   */
-  private isActionResultOutput(data: unknown): data is ActionResultOutput {
-    return (
-      typeof data === 'object'
-      && data !== null
-      && 'action' in data
-      && 'success' in data
-      && 'result' in data
-    )
   }
 
   /**
@@ -268,7 +211,8 @@ export class MarkdownFormatter extends BaseFormatter {
       lines.push('')
       lines.push('**Additional Details**:')
       for (const [key, value] of Object.entries(result.metadata)) {
-        lines.push(`- ${key}: ${value}`)
+        const valueStr = (typeof value === 'object' && value !== null) ? JSON.stringify(value) : String(value)
+        lines.push(`- ${key}: ${this.escape(valueStr)}`)
       }
     }
 

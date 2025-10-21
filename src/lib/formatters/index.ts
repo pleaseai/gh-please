@@ -4,6 +4,11 @@ import { MarkdownFormatter } from './markdown'
 import { XMLFormatter } from './xml'
 
 /**
+ * Supported output formats
+ */
+const SUPPORTED_FORMATS: readonly OutputFormat[] = ['human', 'markdown', 'xml'] as const
+
+/**
  * Factory function to create a formatter instance based on the specified format
  *
  * @param format - The output format type ('human', 'markdown', or 'xml')
@@ -29,6 +34,13 @@ export function createFormatter(format: OutputFormat): Formatter {
 }
 
 /**
+ * Check if a string is a valid output format
+ */
+function isValidFormat(format: string): format is OutputFormat {
+  return SUPPORTED_FORMATS.includes(format as OutputFormat)
+}
+
+/**
  * Get the output format from command options or environment variable
  * Command-line flag takes precedence over environment variable
  *
@@ -45,15 +57,15 @@ export function getOutputFormat(optionFormat?: string): OutputFormat {
   // Command-line flag takes precedence
   if (optionFormat) {
     const normalized = optionFormat.toLowerCase()
-    if (normalized === 'markdown' || normalized === 'xml' || normalized === 'human') {
-      return normalized as OutputFormat
+    if (isValidFormat(normalized)) {
+      return normalized
     }
   }
 
   // Check environment variable
   const envFormat = process.env.GH_PLEASE_FORMAT?.toLowerCase()
-  if (envFormat === 'markdown' || envFormat === 'xml' || envFormat === 'human') {
-    return envFormat as OutputFormat
+  if (envFormat && isValidFormat(envFormat)) {
+    return envFormat
   }
 
   // Default to human-readable
