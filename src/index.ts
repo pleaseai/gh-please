@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
 
 import { Command } from 'commander'
+import packageJson from '../package.json' with { type: 'json' }
 import { createIssueCommand } from './commands/issue'
 import { createPluginCommand } from './commands/plugin'
 import { createPrCommand } from './commands/pr'
 import { PluginRegistry } from './plugins/plugin-registry'
-import packageJson from '../package.json' with { type: 'json' }
 
 const program = new Command()
 

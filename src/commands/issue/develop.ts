@@ -1,6 +1,6 @@
 import type { DevelopOptions } from '../../types'
-import { confirm, select } from '@clack/prompts'
 import * as fs from 'node:fs'
+import { confirm, select } from '@clack/prompts'
 import { Command } from 'commander'
 import { createWorktree, fetchBranch, getAllLinkedBranches, startDevelopWorkflow } from '../../lib/git-workflow'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
