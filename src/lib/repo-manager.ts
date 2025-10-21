@@ -34,11 +34,11 @@ export function parseRepoString(repoStr: string): { owner: string, repo: string 
 }
 
 /**
- * Find bare repository at ~/repos/{owner}/{repo}.git
+ * Find bare repository at ~/.please/repositories/{owner}/{repo}.git
  * Returns path if exists, null otherwise
  */
 export async function findBareRepo(owner: string, repo: string): Promise<string | null> {
-  const bareRepoPath = path.join(os.homedir(), 'repos', owner, `${repo}.git`)
+  const bareRepoPath = path.join(os.homedir(), '.please', 'repositories', owner, `${repo}.git`)
 
   try {
     const stats = await fs.promises.stat(bareRepoPath)
@@ -67,10 +67,10 @@ export async function isInGitRepo(): Promise<boolean> {
 }
 
 /**
- * Clone repository as bare to ~/repos/{owner}/{repo}.git
+ * Clone repository as bare to ~/.please/repositories/{owner}/{repo}.git
  */
 export async function cloneBareRepo(owner: string, repo: string): Promise<string> {
-  const bareRepoPath = path.join(os.homedir(), 'repos', owner, `${repo}.git`)
+  const bareRepoPath = path.join(os.homedir(), '.please', 'repositories', owner, `${repo}.git`)
   const parentDir = path.dirname(bareRepoPath)
 
   // Create parent directories if they don't exist
@@ -149,7 +149,7 @@ export async function resolveRepository(repoFlag?: string): Promise<RepositoryIn
     repo = currentRepo.repo
   }
 
-  const bareRepoPath = path.join(os.homedir(), 'repos', owner, `${repo}.git`)
+  const bareRepoPath = path.join(os.homedir(), '.please', 'repositories', owner, `${repo}.git`)
 
   return {
     owner,

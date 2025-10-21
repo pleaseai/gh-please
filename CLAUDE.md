@@ -219,9 +219,9 @@ All command output messages (success, errors, progress) are internationalized. G
 
 - **`src/lib/repo-manager.ts`**: Repository management utilities
   - `parseRepoString()` - Parse "owner/repo" or GitHub URL format
-  - `findBareRepo()` - Check if bare repo exists at ~/repos/{owner}/{repo}.git
+  - `findBareRepo()` - Check if bare repo exists at ~/.please/repositories/{owner}/{repo}.git
   - `isInGitRepo()` - Verify current directory is in git repository
-  - `cloneBareRepo()` - Clone repository as bare to ~/repos/{owner}/{repo}.git
+  - `cloneBareRepo()` - Clone repository as bare to ~/.please/repositories/{owner}/{repo}.git
   - `resolveRepository()` - Resolve repository from --repo flag or current directory
   - Used by: develop, cleanup commands
 
@@ -643,7 +643,7 @@ The `gh please issue develop` command streamlines the process of starting work o
 ### Default Mode (Worktree)
 
 ```bash
-# Basic usage - creates isolated workspace in ~/worktrees/{repo}/{branch}
+# Basic usage - creates isolated workspace in ~/.please/worktrees/{repo}/{branch}
 gh please issue develop 123
 
 # With base branch
@@ -656,10 +656,10 @@ gh please issue develop 123 --name my-custom-branch
 gh please issue develop 123 --repo owner/repo
 
 # Output shows command to navigate to worktree
-# cd ~/worktrees/gh-please/feat-123-awesome-feature
+# cd ~/.please/worktrees/gh-please/feat-123-awesome-feature
 
 # If bare repo doesn't exist, interactive prompt will ask to clone
-# Clone happens automatically to ~/repos/{owner}/{repo}.git
+# Clone happens automatically to ~/.please/repositories/{owner}/{repo}.git
 ```
 
 ### Checkout Mode
@@ -697,8 +697,8 @@ gh please issue cleanup --repo owner/repo
 
 The develop workflow uses:
 - **`gh issue develop`**: GitHub CLI command for branch management
-- **Bare repository**: Clone at `~/repos/{owner}/{repo}.git` for efficient multi-worktree setup
-- **Git worktrees**: Isolated workspaces at `~/worktrees/{repo}/{branch}`
+- **Bare repository**: Clone at `~/.please/repositories/{owner}/{repo}.git` for efficient multi-worktree setup
+- **Git worktrees**: Isolated workspaces at `~/.please/worktrees/{repo}/{branch}`
 - **Automatic fallback**: If bare repo exists locally, uses it; otherwise, prompts to clone
 
 ### Key Features
