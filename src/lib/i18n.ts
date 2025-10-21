@@ -63,6 +63,19 @@ export interface PrMessages {
   unknownError: string
 }
 
+export interface CommentMessages {
+  fetchingComment: (commentId: number) => string
+  updatingComment: (commentId: number) => string
+  commentUpdated: string
+  bodyRequired: string
+  bodyEmpty: string
+  usageIssue: string
+  usagePr: string
+  commentNotFound: (commentId: number) => string
+  errorPrefix: string
+  unknownError: string
+}
+
 export const issueMessages: Record<Language, IssueMessages> = {
   ko: {
     gettingParentIssue: (parentNumber: number) => `🔍 상위 이슈 #${parentNumber} 가져오는 중...`,
@@ -197,6 +210,37 @@ export function getIssueMessages(language: Language): IssueMessages {
 
 export function getPrMessages(language: Language): PrMessages {
   return prMessages[language]
+}
+
+export const commentMessages: Record<Language, CommentMessages> = {
+  ko: {
+    fetchingComment: (commentId: number) => `🔍 댓글 ${commentId} 가져오는 중...`,
+    updatingComment: (commentId: number) => `📝 댓글 ${commentId} 업데이트 중...`,
+    commentUpdated: '✅ 댓글이 성공적으로 업데이트되었습니다!',
+    bodyRequired: '❌ 오류: --body 또는 --body-file이 필요합니다',
+    bodyEmpty: '❌ 오류: 댓글 내용이 비어 있습니다',
+    usageIssue: '   사용법: gh please issue comment edit <comment-id> --body \'내용\'',
+    usagePr: '   사용법: gh please pr review-comment edit <comment-id> --body \'내용\'',
+    commentNotFound: (commentId: number) => `댓글 ${commentId}를 찾을 수 없습니다`,
+    errorPrefix: '❌ 오류',
+    unknownError: '예상치 못한 오류가 발생했습니다',
+  },
+  en: {
+    fetchingComment: (commentId: number) => `🔍 Fetching comment ${commentId}...`,
+    updatingComment: (commentId: number) => `📝 Updating comment ${commentId}...`,
+    commentUpdated: '✅ Comment updated successfully!',
+    bodyRequired: '❌ Error: --body or --body-file is required',
+    bodyEmpty: '❌ Error: Comment body cannot be empty',
+    usageIssue: '   Usage: gh please issue comment edit <comment-id> --body \'text\'',
+    usagePr: '   Usage: gh please pr review-comment edit <comment-id> --body \'text\'',
+    commentNotFound: (commentId: number) => `Comment ${commentId} not found`,
+    errorPrefix: '❌ Error',
+    unknownError: '❌ An unexpected error occurred',
+  },
+}
+
+export function getCommentMessages(language: Language): CommentMessages {
+  return commentMessages[language]
 }
 
 /**
