@@ -224,4 +224,158 @@ describe('comment-api', () => {
       ).rejects.toThrow()
     })
   })
+
+  describe('listIssueComments', () => {
+    test('should list all comments for an issue', async () => {
+      const { listIssueComments } = await import('../../src/lib/comment-api')
+
+      const mockComments: CommentInfo[] = [
+        {
+          id: 123456,
+          body: 'First comment',
+          user: { login: 'user1' },
+          html_url: 'https://github.com/owner/repo/issues/1#issuecomment-123456',
+          created_at: '2025-01-01T00:00:00Z',
+          updated_at: '2025-01-01T00:00:00Z',
+        },
+        {
+          id: 123457,
+          body: 'Second comment',
+          user: { login: 'user2' },
+          html_url: 'https://github.com/owner/repo/issues/1#issuecomment-123457',
+          created_at: '2025-01-02T00:00:00Z',
+          updated_at: '2025-01-02T00:00:00Z',
+        },
+      ]
+
+      const mockSpawn = mock((args: string[]) => {
+        expect(args[0]).toBe(mockGhPath)
+        expect(args[1]).toBe('api')
+        expect(args).toContain('/repos/owner/repo/issues/1/comments')
+        expect(args).toContain('--paginate')
+
+        return {
+          stdout: new Response(JSON.stringify(mockComments)).body,
+          stderr: new Response('').body,
+          exited: Promise.resolve(0),
+        }
+      })
+
+      Bun.spawn = mockSpawn as any
+
+      const result = await listIssueComments('owner', 'repo', 1)
+
+      expect(result).toEqual(mockComments)
+      expect(result).toHaveLength(2)
+      expect(mockSpawn).toHaveBeenCalledTimes(1)
+    })
+
+    test('should return empty array when no comments exist', async () => {
+      const { listIssueComments } = await import('../../src/lib/comment-api')
+
+      const mockSpawn = mock(() => ({
+        stdout: new Response(JSON.stringify([])).body,
+        stderr: new Response('').body,
+        exited: Promise.resolve(0),
+      }))
+
+      Bun.spawn = mockSpawn as any
+
+      const result = await listIssueComments('owner', 'repo', 1)
+
+      expect(result).toEqual([])
+      expect(result).toHaveLength(0)
+    })
+
+    test('should throw error when listing fails', async () => {
+      const { listIssueComments } = await import('../../src/lib/comment-api')
+
+      const mockSpawn = mock(() => ({
+        stdout: new Response('').body,
+        stderr: new Response('Not Found').body,
+        exited: Promise.resolve(1),
+      }))
+
+      Bun.spawn = mockSpawn as any
+
+      await expect(listIssueComments('owner', 'repo', 999)).rejects.toThrow()
+    })
+  })
+
+  describe('listReviewComments', () => {
+    test('should list all review comments for a pull request', async () => {
+      const { listReviewComments } = await import('../../src/lib/comment-api')
+
+      const mockComments: CommentInfo[] = [
+        {
+          id: 789012,
+          body: 'First review comment',
+          user: { login: 'reviewer1' },
+          html_url: 'https://github.com/owner/repo/pull/10#discussion_r789012',
+          created_at: '2025-01-01T00:00:00Z',
+          updated_at: '2025-01-01T00:00:00Z',
+        },
+        {
+          id: 789013,
+          body: 'Second review comment',
+          user: { login: 'reviewer2' },
+          html_url: 'https://github.com/owner/repo/pull/10#discussion_r789013',
+          created_at: '2025-01-02T00:00:00Z',
+          updated_at: '2025-01-02T00:00:00Z',
+        },
+      ]
+
+      const mockSpawn = mock((args: string[]) => {
+        expect(args[0]).toBe(mockGhPath)
+        expect(args[1]).toBe('api')
+        expect(args).toContain('/repos/owner/repo/pulls/10/comments')
+        expect(args).toContain('--paginate')
+
+        return {
+          stdout: new Response(JSON.stringify(mockComments)).body,
+          stderr: new Response('').body,
+          exited: Promise.resolve(0),
+        }
+      })
+
+      Bun.spawn = mockSpawn as any
+
+      const result = await listReviewComments('owner', 'repo', 10)
+
+      expect(result).toEqual(mockComments)
+      expect(result).toHaveLength(2)
+      expect(mockSpawn).toHaveBeenCalledTimes(1)
+    })
+
+    test('should return empty array when no review comments exist', async () => {
+      const { listReviewComments } = await import('../../src/lib/comment-api')
+
+      const mockSpawn = mock(() => ({
+        stdout: new Response(JSON.stringify([])).body,
+        stderr: new Response('').body,
+        exited: Promise.resolve(0),
+      }))
+
+      Bun.spawn = mockSpawn as any
+
+      const result = await listReviewComments('owner', 'repo', 10)
+
+      expect(result).toEqual([])
+      expect(result).toHaveLength(0)
+    })
+
+    test('should throw error when listing review comments fails', async () => {
+      const { listReviewComments } = await import('../../src/lib/comment-api')
+
+      const mockSpawn = mock(() => ({
+        stdout: new Response('').body,
+        stderr: new Response('Not Found').body,
+        exited: Promise.resolve(1),
+      }))
+
+      Bun.spawn = mockSpawn as any
+
+      await expect(listReviewComments('owner', 'repo', 999)).rejects.toThrow()
+    })
+  })
 })

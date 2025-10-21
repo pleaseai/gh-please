@@ -1,5 +1,6 @@
 import { Command } from 'commander'
 import { createReviewCommentEditCommand } from './comment-edit'
+import { createReviewCommentListCommand } from './comment-list'
 import { createReviewReplyCommand } from './reply'
 import { createThreadResolveCommand } from './thread-resolve'
 
@@ -19,6 +20,7 @@ export function createReviewCommand(): Command {
   const commentCommand = new Command('comment')
   commentCommand.description('Manage PR review comments')
   commentCommand.addCommand(createReviewCommentEditCommand())
+  commentCommand.addCommand(createReviewCommentListCommand())
   command.addCommand(commentCommand)
 
   // Add thread subcommand group

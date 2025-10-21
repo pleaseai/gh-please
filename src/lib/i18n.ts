@@ -72,6 +72,12 @@ export interface CommentMessages {
   usageIssue: string
   usagePr: string
   commentNotFound: (commentId: number) => string
+  listingIssueComments: (issueNumber: number) => string
+  listingReviewComments: (prNumber: number) => string
+  noComments: string
+  foundComments: (count: number) => string
+  invalidIssueNumber: string
+  invalidPrNumber: string
   errorPrefix: string
   unknownError: string
 }
@@ -222,6 +228,12 @@ export const commentMessages: Record<Language, CommentMessages> = {
     usageIssue: '   사용법: gh please issue comment edit <comment-id> --body \'내용\'',
     usagePr: '   사용법: gh please pr review-comment edit <comment-id> --body \'내용\'',
     commentNotFound: (commentId: number) => `댓글 ${commentId}를 찾을 수 없습니다`,
+    listingIssueComments: (issueNumber: number) => `📋 이슈 #${issueNumber}의 댓글 가져오는 중...`,
+    listingReviewComments: (prNumber: number) => `📋 PR #${prNumber}의 리뷰 댓글 가져오는 중...`,
+    noComments: '✅ 댓글이 없습니다',
+    foundComments: (count: number) => `\n✅ ${count}개의 댓글을 찾았습니다:\n`,
+    invalidIssueNumber: '이슈 번호는 유효한 양수여야 합니다',
+    invalidPrNumber: 'PR 번호는 유효한 양수여야 합니다',
     errorPrefix: '❌ 오류',
     unknownError: '예상치 못한 오류가 발생했습니다',
   },
@@ -234,6 +246,12 @@ export const commentMessages: Record<Language, CommentMessages> = {
     usageIssue: '   Usage: gh please issue comment edit <comment-id> --body \'text\'',
     usagePr: '   Usage: gh please pr review-comment edit <comment-id> --body \'text\'',
     commentNotFound: (commentId: number) => `Comment ${commentId} not found`,
+    listingIssueComments: (issueNumber: number) => `📋 Listing comments for issue #${issueNumber}...`,
+    listingReviewComments: (prNumber: number) => `📋 Listing review comments for PR #${prNumber}...`,
+    noComments: '✅ No comments found',
+    foundComments: (count: number) => `\n✅ Found ${count} comment(s):\n`,
+    invalidIssueNumber: 'Issue number must be a valid positive number',
+    invalidPrNumber: 'PR number must be a valid positive number',
     errorPrefix: '❌ Error',
     unknownError: '❌ An unexpected error occurred',
   },

@@ -92,6 +92,11 @@ export interface CommentInfo {
   updated_at: string
 }
 
+export interface ReviewCommentInfo extends CommentInfo {
+  path: string
+  line: number | null
+}
+
 export interface EditCommentOptions {
   commentId: number
   body: string
