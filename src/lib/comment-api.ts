@@ -1,4 +1,4 @@
-import type { CommentInfo } from '../types'
+import type { CommentInfo, ReviewCommentInfo } from '../types'
 
 /**
  * Get the gh command path from environment variable or use default
@@ -177,19 +177,15 @@ export async function updateReviewComment(
 }
 
 /**
- * List all comments for an issue
- * @param owner - Repository owner
- * @param repo - Repository name
- * @param issueNumber - Issue number
- * @returns Array of comment information
+ * Internal helper to fetch paginated comments from GitHub API
+ * @param endpoint - API endpoint to fetch from
+ * @param errorMessage - Error message to throw on failure
+ * @returns Array of comments
  */
-export async function listIssueComments(
-  owner: string,
-  repo: string,
-  issueNumber: number,
-): Promise<CommentInfo[]> {
-  const endpoint = `/repos/${owner}/${repo}/issues/${issueNumber}/comments`
-
+async function fetchPaginatedComments<T>(
+  endpoint: string,
+  errorMessage: string,
+): Promise<T[]> {
   const proc = Bun.spawn(
     [
       getGhCommand(),
@@ -212,10 +208,29 @@ export async function listIssueComments(
 
   if (exitCode !== 0) {
     const error = await new Response(proc.stderr).text()
-    throw new Error(`Failed to list comments for issue #${issueNumber}: ${error.trim()}`)
+    throw new Error(`${errorMessage}: ${error.trim()}`)
   }
 
   return JSON.parse(output)
+}
+
+/**
+ * List all comments for an issue
+ * @param owner - Repository owner
+ * @param repo - Repository name
+ * @param issueNumber - Issue number
+ * @returns Array of comment information
+ */
+export async function listIssueComments(
+  owner: string,
+  repo: string,
+  issueNumber: number,
+): Promise<CommentInfo[]> {
+  const endpoint = `/repos/${owner}/${repo}/issues/${issueNumber}/comments`
+  return fetchPaginatedComments<CommentInfo>(
+    endpoint,
+    `Failed to list comments for issue #${issueNumber}`,
+  )
 }
 
 /**
@@ -229,33 +244,10 @@ export async function listReviewComments(
   owner: string,
   repo: string,
   prNumber: number,
-): Promise<CommentInfo[]> {
+): Promise<ReviewCommentInfo[]> {
   const endpoint = `/repos/${owner}/${repo}/pulls/${prNumber}/comments`
-
-  const proc = Bun.spawn(
-    [
-      getGhCommand(),
-      'api',
-      '-H',
-      'Accept: application/vnd.github+json',
-      '-H',
-      'X-GitHub-Api-Version: 2022-11-28',
-      endpoint,
-      '--paginate',
-    ],
-    {
-      stdout: 'pipe',
-      stderr: 'pipe',
-    },
+  return fetchPaginatedComments<ReviewCommentInfo>(
+    endpoint,
+    `Failed to list review comments for PR #${prNumber}`,
   )
-
-  const output = await new Response(proc.stdout).text()
-  const exitCode = await proc.exited
-
-  if (exitCode !== 0) {
-    const error = await new Response(proc.stderr).text()
-    throw new Error(`Failed to list review comments for PR #${prNumber}: ${error.trim()}`)
-  }
-
-  return JSON.parse(output)
 }

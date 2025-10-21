@@ -1,12 +1,15 @@
+import type { ReviewCommentInfo } from '../../../types'
 import { Command } from 'commander'
 import { listReviewComments } from '../../../lib/comment-api'
 import { getRepoInfo } from '../../../lib/github-api'
 import { detectSystemLanguage, getCommentMessages } from '../../../lib/i18n'
 
+const BODY_PREVIEW_LENGTH = 80
+
 /**
  * Format a review comment for display
  */
-function formatReviewComment(comment: any): string {
+function formatReviewComment(comment: ReviewCommentInfo): string {
   const lines = []
   lines.push(`  ID: ${comment.id}`)
   lines.push(`  Author: ${comment.user.login}`)
@@ -18,7 +21,15 @@ function formatReviewComment(comment: any): string {
     lines.push(`  File: ${comment.path}${comment.line ? `:${comment.line}` : ''}`)
   }
   lines.push(`  URL: ${comment.html_url}`)
-  lines.push(`  Body: ${comment.body.split('\n')[0]}${comment.body.length > 80 ? '...' : ''}`)
+
+  // Truncate body preview to max length
+  const firstLine = comment.body.split('\n')[0] || ''
+  const preview = firstLine.length > BODY_PREVIEW_LENGTH
+    ? `${firstLine.substring(0, BODY_PREVIEW_LENGTH - 3)}...`
+    : firstLine
+  const hasMoreLines = comment.body.includes('\n')
+  lines.push(`  Body: ${preview}${hasMoreLines && firstLine.length <= BODY_PREVIEW_LENGTH ? '...' : ''}`)
+
   return lines.join('\n')
 }
 
@@ -41,7 +52,7 @@ export function createReviewCommentListCommand(): Command {
         // Parse PR number
         const prNumber = Number.parseInt(prNumberStr, 10)
         if (Number.isNaN(prNumber) || prNumber <= 0) {
-          console.error('❌ Error: PR number must be a valid positive number')
+          console.error(`${msg.errorPrefix}: ${msg.invalidPrNumber}`)
           process.exit(1)
         }
 

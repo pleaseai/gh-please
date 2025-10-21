@@ -76,6 +76,8 @@ export interface CommentMessages {
   listingReviewComments: (prNumber: number) => string
   noComments: string
   foundComments: (count: number) => string
+  invalidIssueNumber: string
+  invalidPrNumber: string
   errorPrefix: string
   unknownError: string
 }
@@ -230,6 +232,8 @@ export const commentMessages: Record<Language, CommentMessages> = {
     listingReviewComments: (prNumber: number) => `📋 PR #${prNumber}의 리뷰 댓글 가져오는 중...`,
     noComments: '✅ 댓글이 없습니다',
     foundComments: (count: number) => `\n✅ ${count}개의 댓글을 찾았습니다:\n`,
+    invalidIssueNumber: '이슈 번호는 유효한 양수여야 합니다',
+    invalidPrNumber: 'PR 번호는 유효한 양수여야 합니다',
     errorPrefix: '❌ 오류',
     unknownError: '예상치 못한 오류가 발생했습니다',
   },
@@ -246,6 +250,8 @@ export const commentMessages: Record<Language, CommentMessages> = {
     listingReviewComments: (prNumber: number) => `📋 Listing review comments for PR #${prNumber}...`,
     noComments: '✅ No comments found',
     foundComments: (count: number) => `\n✅ Found ${count} comment(s):\n`,
+    invalidIssueNumber: 'Issue number must be a valid positive number',
+    invalidPrNumber: 'PR number must be a valid positive number',
     errorPrefix: '❌ Error',
     unknownError: '❌ An unexpected error occurred',
   },
