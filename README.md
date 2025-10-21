@@ -18,11 +18,7 @@
 - **플러그인 시스템**: 확장 가능한 아키텍처로 커스텀 기능 추가
 
 ### AI 기능 (플러그인 필요)
-- **코드 리뷰**: AI가 생성한 코멘트와 제안으로 자동화된 PR 리뷰
-- **이슈 워크플로우**: 이슈의 분류(triage) → 조사(investigate) → 수정(fix) 워크플로우
-- **코드 워크스페이스**: 향상된 개발 워크스페이스 기능
-
-> **v0.3.0 변경사항**: AI 기능이 별도 플러그인으로 분리되었습니다. [마이그레이션 가이드](./docs/MIGRATION_v0.3.md)를 참조하세요.
+AI 기반 코드 리뷰 및 이슈 관리 기능은 별도 플러그인으로 제공됩니다. 자세한 내용은 [사용 가능한 플러그인](./docs/AVAILABLE_PLUGINS.md)을 참조하세요.
 
 ## 빠른 시작
 
@@ -42,39 +38,13 @@
    gh please issue dependency add 200 --blocked-by 199
 
    # PR 관리
-   gh please pr review-reply 1234567890 -b "수정했습니다!"
-   gh please pr resolve 456 --all
+   gh please pr review reply 1234567890 -b "수정했습니다!"
+   gh please pr review thread resolve 456 --all
    ```
 
 ### AI 기능 사용 (플러그인 필요)
 
-1. **AI 플러그인 설치**
-
-   **프리미엄 클라우드 서비스 (권장):**
-   ```bash
-   gh please plugin install ai --premium
-   ```
-
-   **셀프 호스팅:**
-   ```bash
-   npm install -g @pleaseai/gh-please-ai
-   ```
-
-2. **PleaseAI 설정 초기화**
-
-   ```bash
-   gh please init
-   ```
-
-   이 명령은 코드 리뷰 자동화, 이슈 워크플로우 등에 대한 설정이 포함된 `.please/config.yml` 파일을 생성합니다.
-
-3. **AI 기능 사용 시작**
-   ```bash
-   gh please ai triage 123
-   gh please ai review 456
-   ```
-
-> 📖 자세한 내용은 [사용 가능한 플러그인](./docs/AVAILABLE_PLUGINS.md)을 참조하세요.
+AI 플러그인 설치 및 사용 방법은 [사용 가능한 플러그인](./docs/AVAILABLE_PLUGINS.md) 문서를 참조하세요.
 
 ## Claude Code 통합
 
@@ -105,14 +75,13 @@ Claude: gh please issue sub-issue create 123 --title "..."
 Claude: gh please issue dependency add 200 --blocked-by 199
 
 사용자: "PR 리뷰 코멘트에 답변"
-Claude: gh please pr review-reply <comment-id> --body "..."
+Claude: gh please pr review reply <comment-id> --body "..."
 ```
 
 **포함 기능:**
-- AI 워크플로우 가이드 (triage, investigate, fix, review, apply)
-- 이슈 관리 패턴 (sub-issue, dependency)
-- PR 리뷰 워크플로우 (review-reply, resolve)
-- 설정 최적화 가이드 (.please/config.yml)
+- 이슈 관리 패턴 (sub-issue, dependency, develop, cleanup)
+- PR 리뷰 워크플로우 (review-reply, resolve, comment edit)
+- 플러그인 시스템 가이드
 
 자세한 내용은 [.claude-plugin/README.md](./.claude-plugin/README.md)를 참조하세요.
 
@@ -122,15 +91,15 @@ Claude: gh please pr review-reply <comment-id> --body "..."
 
 ```bash
 # 현재 디렉토리의 저장소 사용 (기본)
-gh please ai triage 123
+gh please issue sub-issue list 123
 
 # 다른 저장소 지정
-gh please ai triage 123 --repo owner/repo
-gh please ai triage 123 -R owner/repo  # 짧은 형식
+gh please issue sub-issue list 123 --repo owner/repo
+gh please issue sub-issue list 123 -R owner/repo  # 짧은 형식
 
 # 모든 명령어에서 사용 가능
-gh please issue sub-issue list 100 --repo pleaseai/another-repo
-gh please pr resolve 456 --all -R owner/repo
+gh please issue dependency add 200 --blocked-by 199 --repo owner/repo
+gh please pr review thread resolve 456 --all -R owner/repo
 ```
 
 **참고**: `--repo` 옵션이 없으면 현재 디렉토리의 저장소가 사용됩니다.
@@ -163,28 +132,6 @@ gh please plugin uninstall <name>
 자체 플러그인을 만들고 싶으신가요? [플러그인 개발 가이드](./docs/PLUGIN_DEVELOPMENT.md)를 확인하세요.
 
 ## 주요 기능
-
-### `gh please init` - PleaseAI 설정 초기화
-
-> **플러그인 필요**: 이 명령은 AI 플러그인이 설치되어 있어야 합니다.
-
-모든 PleaseAI 기능에 대한 대화형 설정으로 `.please/config.yml`을 구성합니다:
-
-- 코드 리뷰 자동화 (심각도 임계값, 자동 리뷰, 드래프트 PR 처리)
-- 이슈 워크플로우 자동화 (자동 분류, 조사, 수정 워크플로우)
-- 코드 워크스페이스 기능
-- 언어 설정 (한국어/영어)
-
-```bash
-# 대화형 설정
-gh please init
-
-# 기본값 사용 (프롬프트 건너뛰기)
-gh please init --yes
-
-# 기존 설정 덮어쓰기
-gh please init --force
-```
 
 ### `gh please review-reply` - PR 리뷰 코멘트에 답변
 
@@ -256,64 +203,6 @@ echo "감사합니다!" | gh please review-reply 1234567890
    gh pr view --json comments --jq '.comments[] | "\(.id): \(.body)"'
    ```
 
-## PleaseAI 설정
-
-`.please/config.yml` 파일은 모든 PleaseAI 자동화 기능을 제어합니다:
-
-### 코드 리뷰 설정
-
-- **comment_severity_threshold**: 리뷰 코멘트의 최소 심각도 수준 (LOW/MEDIUM/HIGH)
-- **max_review_comments**: 최대 리뷰 코멘트 수 (무제한은 -1)
-- **auto review**: PR이 열릴 때 자동으로 리뷰
-- **include_drafts**: 자동 리뷰에 드래프트 PR 포함
-
-### 이슈 워크플로우 설정
-
-- **Triage**: 타입 라벨링을 통한 자동 또는 수동 이슈 분류
-- **Investigate**: AI 지원 버그 조사 (조직 멤버만 옵션)
-- **Fix**: PR 생성 및 테스트 실행을 통한 자동화된 수정 구현
-
-### 코드 워크스페이스
-
-- 향상된 개발 워크스페이스 기능 활성화
-
-### 설정 예시
-
-```yaml
-code_review:
-  disable: false
-  comment_severity_threshold: MEDIUM
-  max_review_comments: -1
-  pull_request_opened:
-    help: false
-    summary: true
-    code_review: true
-    include_drafts: true
-
-issue_workflow:
-  disable: false
-  triage:
-    auto: true
-    manual: true
-    update_issue_type: true
-  investigate:
-    enabled: true
-    org_members_only: true
-    auto_on_bug_label: false
-  fix:
-    enabled: true
-    org_members_only: true
-    require_investigation: false
-    auto_create_pr: true
-    auto_run_tests: true
-
-code_workspace:
-  enabled: true
-
-ignore_patterns: []
-language: ko
-```
-
 ## 다국어 지원
 
 모든 명령어는 시스템 언어를 자동으로 감지하여 한글 또는 영문 메시지를 출력합니다.
@@ -333,42 +222,19 @@ CLI는 다음 환경 변수를 순서대로 확인하여 언어를 자동 감지
 **예시:**
 ```bash
 # 한글 메시지 출력
-LANG=ko_KR.UTF-8 gh please ai triage 123
-# 출력: 🤖 이슈 #123에 대한 PleaseAI 분류 트리거 중...
+LANG=ko_KR.UTF-8 gh please issue sub-issue list 123
+# 출력: 🔍 상위 이슈 #123 가져오는 중...
 
 # 영문 메시지 출력
-LANG=en_US.UTF-8 gh please ai triage 123
-# 출력: 🤖 Triggering PleaseAI triage for issue #123...
+LANG=en_US.UTF-8 gh please issue sub-issue list 123
+# 출력: 🔍 Getting parent issue #123...
 ```
 
 **적용 범위:**
 - ✅ 모든 명령어 출력 메시지 (성공, 오류, 진행 상황)
-- ✅ 대화형 프롬프트 (`gh please init`)
 - ⚠️ GitHub API URL 및 링크는 다국어화되지 않음
 
 ## 명령어 참조
-
-### `gh please init`
-
-대화형 설정으로 `.please/config.yml`을 초기화합니다.
-
-**옵션:**
-
-- `-f, --force` - 기존 설정 파일 덮어쓰기
-- `-y, --yes` - 프롬프트 건너뛰고 기본 설정 사용
-
-**예시:**
-
-```bash
-# 대화형 설정 (첫 설정 시 권장)
-gh please init
-
-# 기본값으로 빠른 설정
-gh please init --yes
-
-# 기존 설정 덮어쓰기
-gh please init --force
-```
 
 ### `gh please review-reply`
 
@@ -410,50 +276,8 @@ EOF
 
 ### AI 명령어
 
-> **플러그인 필요**: 이러한 명령은 AI 플러그인이 설치되어 있어야 합니다.
-> 설치: `gh please plugin install ai`
-
-코드 리뷰 및 이슈 관리를 위한 PleaseAI 자동화 워크플로우를 트리거합니다.
-
-#### `gh please ai triage <issue-number>`
-
-이슈를 자동으로 분류하도록 PleaseAI를 트리거합니다 (분류, 라벨 추가 등).
-
-```bash
-gh please ai triage 123
-```
-
-#### `gh please ai investigate <issue-number>`
-
-버그 또는 이슈를 상세히 조사하도록 PleaseAI를 트리거합니다.
-
-```bash
-gh please ai investigate 123
-```
-
-#### `gh please ai fix <issue-number>`
-
-이슈에 대한 자동화된 수정을 시도하도록 PleaseAI를 트리거합니다.
-
-```bash
-gh please ai fix 123
-```
-
-#### `gh please ai review <pr-number>`
-
-풀 리퀘스트에 대한 코드 리뷰를 수행하도록 PleaseAI를 트리거합니다.
-
-```bash
-gh please ai review 456
-```
-
-#### `gh please ai apply <pr-number>`
-
-풀 리퀘스트에 제안사항을 적용하도록 PleaseAI를 트리거합니다.
-
-```bash
-gh please ai apply 456
-```
+> **플러그인 필요**: AI 명령어는 별도 플러그인 설치가 필요합니다.
+> 자세한 내용은 [사용 가능한 플러그인](./docs/AVAILABLE_PLUGINS.md)을 참조하세요.
 
 ### 이슈 관리 명령어
 
@@ -514,9 +338,9 @@ gh please issue dependency remove 200 199
 
 풀 리퀘스트 리뷰 및 스레드를 관리합니다.
 
-#### `gh please pr review-reply <comment-id> --body "..."`
+#### `gh please pr review reply <comment-id> --body "..."`
 
-PR 리뷰 코멘트에 답변을 작성합니다. 더 이상 사용되지 않는 `gh please review-reply`를 대체합니다.
+PR 리뷰 코멘트에 답변을 작성합니다.
 
 **인자:**
 
@@ -530,13 +354,13 @@ PR 리뷰 코멘트에 답변을 작성합니다. 더 이상 사용되지 않는
 
 ```bash
 # 직접 답변
-gh please pr review-reply 1234567890 --body "최신 커밋에서 수정했습니다!"
+gh please pr review reply 1234567890 --body "최신 커밋에서 수정했습니다!"
 
 # 파일에서 파이프
-cat reply.txt | gh please pr review-reply 1234567890
+cat reply.txt | gh please pr review reply 1234567890
 
 # 여러 줄 답변
-gh please pr review-reply 1234567890 --body "$(cat <<'EOF'
+gh please pr review reply 1234567890 --body "$(cat <<'EOF'
 좋아 보이지만:
 
 1. 에러 처리를 추가해주세요
@@ -547,7 +371,7 @@ EOF
 )"
 ```
 
-#### `gh please pr resolve <pr-number> [--thread <id> | --all]`
+#### `gh please pr review thread resolve <pr-number> [--thread <id> | --all]`
 
 풀 리퀘스트의 리뷰 스레드를 해결합니다.
 
@@ -564,15 +388,18 @@ EOF
 
 ```bash
 # 모든 스레드 해결
-gh please pr resolve 456 --all
+gh please pr review thread resolve 456 --all
 
 # 특정 스레드 해결
-gh please pr resolve 456 --thread MDEyOlB1bGxSZXF1ZXN0UmV2aWV3VGhyZWFk...
+gh please pr review thread resolve 456 --thread MDEyOlB1bGxSZXF1ZXN0UmV2aWV3VGhyZWFk...
 ```
 
 ### 하위 호환성
 
-이전 `gh please review-reply` 명령은 여전히 작동하지만 사용 중단 경고가 표시됩니다. `gh please pr review-reply`로 마이그레이션해주세요.
+이전 명령들은 여전히 작동하지만 사용 중단 경고가 표시됩니다:
+- `gh please review-reply` → `gh please pr review reply`로 마이그레이션
+- `gh please pr review-reply` → `gh please pr review reply`로 마이그레이션
+- `gh please pr resolve` → `gh please pr review thread resolve`로 마이그레이션
 
 ## API 제한사항
 
@@ -615,28 +442,29 @@ gh api rate_limit
 @pleaseai/gh-please/
 ├── src/
 │   ├── commands/         # 명령어 구현
-│   │   ├── init.ts      # PleaseAI 설정 초기화
-│   │   └── review-reply.ts  # PR 코멘트에 답변
-│   ├── config/          # 설정 스키마 및 검증
-│   │   └── schema.ts    # .please/config.yml용 Zod 스키마
+│   │   ├── issue/       # 이슈 관리 명령어
+│   │   ├── pr/          # PR 관리 명령어
+│   │   └── plugin.ts    # 플러그인 관리
 │   ├── lib/             # 재사용 가능한 유틸리티
-│   │   ├── github-api.ts    # GitHub API 헬퍼
-│   │   ├── validation.ts    # 입력 검증
-│   │   └── i18n.ts         # 다국어 지원 (한국어/영어)
+│   │   ├── github-api.ts      # GitHub REST API
+│   │   ├── github-graphql.ts  # GitHub GraphQL API
+│   │   ├── validation.ts      # 입력 검증
+│   │   └── i18n.ts           # 다국어 지원
+│   ├── plugins/         # 플러그인 시스템
+│   │   ├── plugin-interface.ts
+│   │   └── plugin-registry.ts
 │   ├── index.ts         # CLI 진입점
 │   └── types.ts         # TypeScript 타입 정의
 ├── test/
 │   ├── commands/        # 명령어 테스트
 │   ├── lib/             # 라이브러리 테스트
-│   │   ├── github-api.test.ts
-│   │   └── validation.test.ts
+│   ├── integration/     # 통합 테스트
 │   └── fixtures/        # 테스트 데이터
-│       └── mock-data.ts
+├── plugins/             # 플러그인 (git submodules)
+│   └── ai/             # AI 플러그인 (private)
 ├── script/
 │   └── build.sh         # 릴리스용 빌드 스크립트
 ├── gh-extension-please  # 런처 스크립트
-├── package.json
-├── tsconfig.json
 └── README.md
 ```
 
