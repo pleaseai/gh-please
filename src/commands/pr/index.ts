@@ -2,6 +2,35 @@ import { Command } from 'commander'
 import { createReviewCommand } from './review'
 import { createReviewCommentEditCommand } from './review-comment-edit'
 
+/**
+ * Helper function to redirect deprecated commands to their new equivalents
+ * @param cmd - The new command instance to execute
+ * @param positionalArg - The main positional argument value
+ * @param options - Options object from the deprecated command
+ */
+async function redirectToNewCommand(
+  cmd: Command,
+  positionalArg: string,
+  options: Record<string, string | boolean | undefined>,
+): Promise<void> {
+  const args = [positionalArg]
+
+  // Build args array from options
+  for (const [key, value] of Object.entries(options)) {
+    if (value !== undefined && value !== false) {
+      const flag = key.length === 1 ? `-${key}` : `--${key}`
+      if (typeof value === 'boolean') {
+        args.push(flag)
+      }
+      else {
+        args.push(flag, value)
+      }
+    }
+  }
+
+  await cmd.parseAsync(args, { from: 'user' })
+}
+
 export function createPrCommand(): Command {
   const command = new Command('pr')
 
@@ -24,17 +53,7 @@ export function createPrCommand(): Command {
 
       const { createReviewReplyCommand: createNewReplyCommand } = await import('./review/reply')
       const cmd = createNewReplyCommand()
-      const args = [commentIdStr]
-      if (options.body) {
-        args.push('-b', options.body)
-      }
-      if (options.repo) {
-        args.push('-R', options.repo)
-      }
-      if (options.pr) {
-        args.push('--pr', options.pr)
-      }
-      await cmd.parseAsync(args, { from: 'user' })
+      await redirectToNewCommand(cmd, commentIdStr, options)
     })
 
   command.addCommand(deprecatedReviewReply)
@@ -56,17 +75,7 @@ export function createPrCommand(): Command {
 
         const { createThreadResolveCommand } = await import('./review/thread-resolve')
         const cmd = createThreadResolveCommand()
-        const args = [prNumberStr]
-        if (options.thread) {
-          args.push('--thread', options.thread)
-        }
-        if (options.all) {
-          args.push('--all')
-        }
-        if (options.repo) {
-          args.push('-R', options.repo)
-        }
-        await cmd.parseAsync(args, { from: 'user' })
+        await redirectToNewCommand(cmd, prNumberStr, options)
       },
     )
 
