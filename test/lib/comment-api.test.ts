@@ -2,15 +2,16 @@ import type { CommentInfo } from '../../src/types'
 import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
 
 // Mock gh command
-const mockGhPath = '/tmp/mock-gh'
-const originalGhPath = process.env.GH_PATH
+const mockGhPath = '/tmp/mock-gh-comment-api'
+let originalGhPath: string | undefined
 
 beforeEach(() => {
+  originalGhPath = process.env.GH_PATH
   process.env.GH_PATH = mockGhPath
 })
 
 afterEach(() => {
-  if (originalGhPath) {
+  if (originalGhPath !== undefined) {
     process.env.GH_PATH = originalGhPath
   }
   else {

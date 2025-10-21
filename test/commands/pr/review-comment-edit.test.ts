@@ -2,14 +2,15 @@ import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
 
 // Mock gh command
 const mockGhPath = '/tmp/mock-gh-review-comment'
-const originalGhPath = process.env.GH_PATH
+let originalGhPath: string | undefined
 
 beforeEach(() => {
+  originalGhPath = process.env.GH_PATH
   process.env.GH_PATH = mockGhPath
 })
 
 afterEach(() => {
-  if (originalGhPath) {
+  if (originalGhPath !== undefined) {
     process.env.GH_PATH = originalGhPath
   }
   else {
