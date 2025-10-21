@@ -10,14 +10,19 @@ GitHub CLI extension for **PleaseAI** - AI-powered code review and issue managem
 
 ## Overview
 
-`@pleaseai/github` is the command-line interface for PleaseAI, providing intelligent automation for:
+`@pleaseai/gh-please` is a powerful GitHub CLI extension that enhances issue and PR management:
 
-- **Code Review**: Automated PR reviews with AI-generated comments and suggestions
-- **Issue Workflow**: Streamlined triage → investigate → fix workflow for issues
-- **Review Management**: Reply to PR review comments and manage discussions
-- **Code Workspace**: Enhanced development workspace features
+### Core Features (Built-in)
+- **Issue Management**: Sub-issue and dependency relationship management
+- **PR Management**: Review comment replies and thread resolution
+- **Plugin System**: Extensible architecture for custom functionality
+
+### AI Features (Plugin Required)
+AI-powered code review and issue management features are available as a separate plugin. See [Available Plugins](./docs/AVAILABLE_PLUGINS.md) for details.
 
 ## Quick Start
+
+### Using Core Features (No Plugin Required)
 
 1. **Install the extension**
 
@@ -25,24 +30,21 @@ GitHub CLI extension for **PleaseAI** - AI-powered code review and issue managem
    gh extension install pleaseai/gh-please
    ```
 
-2. **Navigate to your repository**
+2. **Start using commands immediately**
 
    ```bash
-   cd your-project
+   # Issue management
+   gh please issue sub-issue create 100 --title "Sub task"
+   gh please issue dependency add 200 --blocked-by 199
+
+   # PR management
+   gh please pr review reply 1234567890 -b "Fixed!"
+   gh please pr review thread resolve 456 --all
    ```
 
-3. **Initialize PleaseAI configuration**
+### Using AI Features (Plugin Required)
 
-   ```bash
-   gh please init
-   ```
-
-   This creates `.please/config.yml` with your preferences for code review automation, issue workflows, and more.
-
-4. **Start using PleaseAI features**
-   - Automatic PR reviews based on your configuration
-   - AI-powered issue triage and investigation
-   - Reply to review comments: `gh please review-reply <comment-id> -b "your reply"`
+For AI plugin installation and usage, see [Available Plugins](./docs/AVAILABLE_PLUGINS.md).
 
 ## Common Options
 
@@ -50,40 +52,20 @@ All commands support the `--repo` option to operate on repositories other than t
 
 ```bash
 # Use current directory's repository (default)
-gh please ai triage 123
+gh please issue sub-issue list 123
 
 # Specify a different repository
-gh please ai triage 123 --repo owner/repo
-gh please ai triage 123 -R owner/repo  # Short form
+gh please issue sub-issue list 123 --repo owner/repo
+gh please issue sub-issue list 123 -R owner/repo  # Short form
 
 # Available on all commands
-gh please issue sub-issue list 100 --repo pleaseai/another-repo
-gh please pr resolve 456 --all -R owner/repo
+gh please issue dependency add 200 --blocked-by 199 --repo owner/repo
+gh please pr review thread resolve 456 --all -R owner/repo
 ```
 
 **Note**: Without the `--repo` option, the command uses the repository in the current directory.
 
 ## Features
-
-### `gh please init` - Initialize PleaseAI Configuration
-
-Set up `.please/config.yml` with interactive configuration for all PleaseAI features:
-
-- Code review automation (severity thresholds, auto-review, draft PR handling)
-- Issue workflow automation (auto-triage, investigation, fix workflows)
-- Code workspace features
-- Language preferences (Korean/English)
-
-```bash
-# Interactive configuration
-gh please init
-
-# Use defaults (skip prompts)
-gh please init --yes
-
-# Overwrite existing config
-gh please init --force
-```
 
 ### `gh please review-reply` - Reply to PR Review Comments
 
@@ -155,64 +137,6 @@ To find the comment ID you want to reply to:
    gh pr view --json comments --jq '.comments[] | "\(.id): \(.body)"'
    ```
 
-## PleaseAI Configuration
-
-The `.please/config.yml` file controls all PleaseAI automation features:
-
-### Code Review Settings
-
-- **comment_severity_threshold**: Minimum severity level for review comments (LOW/MEDIUM/HIGH)
-- **max_review_comments**: Maximum number of review comments (-1 for unlimited)
-- **auto review**: Automatically review PRs when opened
-- **include_drafts**: Include draft PRs in automatic reviews
-
-### Issue Workflow Settings
-
-- **Triage**: Automatic or manual issue triage with type labeling
-- **Investigate**: AI-assisted bug investigation (org members only option)
-- **Fix**: Automated fix implementation with PR creation and test execution
-
-### Code Workspace
-
-- Enable enhanced development workspace features
-
-### Example Configuration
-
-```yaml
-code_review:
-  disable: false
-  comment_severity_threshold: MEDIUM
-  max_review_comments: -1
-  pull_request_opened:
-    help: false
-    summary: true
-    code_review: true
-    include_drafts: true
-
-issue_workflow:
-  disable: false
-  triage:
-    auto: true
-    manual: true
-    update_issue_type: true
-  investigate:
-    enabled: true
-    org_members_only: true
-    auto_on_bug_label: false
-  fix:
-    enabled: true
-    org_members_only: true
-    require_investigation: false
-    auto_create_pr: true
-    auto_run_tests: true
-
-code_workspace:
-  enabled: true
-
-ignore_patterns: []
-language: ko
-```
-
 ## Internationalization (i18n)
 
 All commands automatically detect the system language and display messages in Korean or English.
@@ -232,42 +156,19 @@ If the environment variable starts with `ko`, Korean messages are displayed; oth
 **Examples:**
 ```bash
 # Korean messages
-LANG=ko_KR.UTF-8 gh please ai triage 123
-# Output: 🤖 이슈 #123에 대한 PleaseAI 분류 트리거 중...
+LANG=ko_KR.UTF-8 gh please issue sub-issue list 123
+# Output: 🔍 상위 이슈 #123 가져오는 중...
 
 # English messages
-LANG=en_US.UTF-8 gh please ai triage 123
-# Output: 🤖 Triggering PleaseAI triage for issue #123...
+LANG=en_US.UTF-8 gh please issue sub-issue list 123
+# Output: 🔍 Getting parent issue #123...
 ```
 
 **Coverage:**
 - ✅ All command output messages (success, errors, progress)
-- ✅ Interactive prompts (`gh please init`)
 - ⚠️ GitHub API URLs and links are not internationalized
 
 ## Command Reference
-
-### `gh please init`
-
-Initialize `.please/config.yml` with interactive configuration.
-
-**Options:**
-
-- `-f, --force` - Overwrite existing config file
-- `-y, --yes` - Skip prompts and use default configuration
-
-**Examples:**
-
-```bash
-# Interactive setup (recommended for first-time setup)
-gh please init
-
-# Quick setup with defaults
-gh please init --yes
-
-# Overwrite existing configuration
-gh please init --force
-```
 
 ### `gh please review-reply`
 
@@ -309,47 +210,8 @@ EOF
 
 ### AI Commands
 
-Trigger PleaseAI automation workflows for code review and issue management.
-
-#### `gh please ai triage <issue-number>`
-
-Trigger PleaseAI to automatically triage an issue (categorize, add labels, etc.).
-
-```bash
-gh please ai triage 123
-```
-
-#### `gh please ai investigate <issue-number>`
-
-Trigger PleaseAI to investigate a bug or issue in detail.
-
-```bash
-gh please ai investigate 123
-```
-
-#### `gh please ai fix <issue-number>`
-
-Trigger PleaseAI to attempt an automated fix for an issue.
-
-```bash
-gh please ai fix 123
-```
-
-#### `gh please ai review <pr-number>`
-
-Trigger PleaseAI to perform code review on a pull request.
-
-```bash
-gh please ai review 456
-```
-
-#### `gh please ai apply <pr-number>`
-
-Trigger PleaseAI to apply its suggestions to a pull request.
-
-```bash
-gh please ai apply 456
-```
+> **Plugin Required**: AI commands require a separate plugin installation.
+> See [Available Plugins](./docs/AVAILABLE_PLUGINS.md) for details.
 
 ### Issue Management Commands
 
@@ -410,9 +272,9 @@ gh please issue dependency remove 200 199
 
 Manage pull request reviews and threads.
 
-#### `gh please pr review-reply <comment-id> --body "..."`
+#### `gh please pr review reply <comment-id> --body "..."`
 
-Create a reply to a PR review comment. Replaces deprecated `gh please review-reply`.
+Create a reply to a PR review comment.
 
 **Arguments:**
 
@@ -426,13 +288,13 @@ Create a reply to a PR review comment. Replaces deprecated `gh please review-rep
 
 ```bash
 # Direct reply
-gh please pr review-reply 1234567890 --body "Fixed in latest commit!"
+gh please pr review reply 1234567890 --body "Fixed in latest commit!"
 
 # Pipe from file
-cat reply.txt | gh please pr review-reply 1234567890
+cat reply.txt | gh please pr review reply 1234567890
 
 # Multiline reply
-gh please pr review-reply 1234567890 --body "$(cat <<'EOF'
+gh please pr review reply 1234567890 --body "$(cat <<'EOF'
 Looks good, but:
 
 1. Please add error handling
@@ -443,7 +305,7 @@ EOF
 )"
 ```
 
-#### `gh please pr resolve <pr-number> [--thread <id> | --all]`
+#### `gh please pr review thread resolve <pr-number> [--thread <id> | --all]`
 
 Resolve review threads on a pull request.
 
@@ -460,15 +322,18 @@ Resolve review threads on a pull request.
 
 ```bash
 # Resolve all threads
-gh please pr resolve 456 --all
+gh please pr review thread resolve 456 --all
 
 # Resolve specific thread
-gh please pr resolve 456 --thread MDEyOlB1bGxSZXF1ZXN0UmV2aWV3VGhyZWFk...
+gh please pr review thread resolve 456 --thread MDEyOlB1bGxSZXF1ZXN0UmV2aWV3VGhyZWFk...
 ```
 
 ### Backward Compatibility
 
-The old `gh please review-reply` command still works but shows a deprecation warning. Please migrate to `gh please pr review-reply`.
+The old commands still work but show deprecation warnings:
+- `gh please review-reply` → Migrate to `gh please pr review reply`
+- `gh please pr review-reply` → Migrate to `gh please pr review reply`
+- `gh please pr resolve` → Migrate to `gh please pr review thread resolve`
 
 ## API Limitations
 
@@ -508,31 +373,32 @@ gh api rate_limit
 ### Project Structure
 
 ```
-@pleaseai/github/
+@pleaseai/gh-please/
 ├── src/
 │   ├── commands/         # Command implementations
-│   │   ├── init.ts      # Initialize PleaseAI config
-│   │   └── review-reply.ts  # Reply to PR comments
-│   ├── config/          # Configuration schema and validation
-│   │   └── schema.ts    # Zod schemas for .please/config.yml
+│   │   ├── issue/       # Issue management commands
+│   │   ├── pr/          # PR management commands
+│   │   └── plugin.ts    # Plugin management
 │   ├── lib/             # Reusable utilities
-│   │   ├── github-api.ts    # GitHub API helpers
-│   │   ├── validation.ts    # Input validation
-│   │   └── i18n.ts         # Internationalization (ko/en)
+│   │   ├── github-api.ts      # GitHub REST API
+│   │   ├── github-graphql.ts  # GitHub GraphQL API
+│   │   ├── validation.ts      # Input validation
+│   │   └── i18n.ts           # Internationalization
+│   ├── plugins/         # Plugin system
+│   │   ├── plugin-interface.ts
+│   │   └── plugin-registry.ts
 │   ├── index.ts         # CLI entry point
 │   └── types.ts         # TypeScript type definitions
 ├── test/
 │   ├── commands/        # Command tests
 │   ├── lib/             # Library tests
-│   │   ├── github-api.test.ts
-│   │   └── validation.test.ts
+│   ├── integration/     # Integration tests
 │   └── fixtures/        # Test data
-│       └── mock-data.ts
+├── plugins/             # Plugins (git submodules)
+│   └── ai/             # AI plugin (private)
 ├── script/
 │   └── build.sh         # Build script for releases
 ├── gh-extension-please  # Launcher script
-├── package.json
-├── tsconfig.json
 └── README.md
 ```
 

@@ -94,8 +94,8 @@ gh please plugin install ai
 # Core commands (no plugin required)
 gh please issue sub-issue list 123
 gh please issue dependency add 123 --blocked-by 124
-gh please pr review-reply 987654 -b "Great work!"
-gh please pr resolve 456 --all
+gh please pr review reply 987654 -b "Great work!"
+gh please pr review thread resolve 456 --all
 
 # AI commands (requires AI plugin)
 gh please ai triage 123
@@ -131,9 +131,9 @@ gh please issue cleanup [--repo owner/repo] [--all]       # Clean up unused work
 gh please issue comment edit <comment-id> --body "text"   # Edit issue comment
 
 # Core PR Management (Built-in)
-gh please pr review-reply <comment-id> -b "text"  # Reply to review comment
-gh please pr resolve <pr-number> [--thread <id> | --all]   # Resolve threads
-gh please pr review-comment edit <comment-id> --body "text"  # Edit PR review comment
+gh please pr review reply <comment-id> -b "text"  # Reply to review comment
+gh please pr review thread resolve <pr-number> [--thread <id> | --all]   # Resolve threads
+gh please pr review comment edit <comment-id> --body "text"  # Edit PR review comment
 
 # AI Commands (Requires @pleaseai/gh-please-ai plugin)
 gh please ai triage <issue-number>         # Trigger triage bot
@@ -144,7 +144,10 @@ gh please ai apply <pr-number>             # Apply bot suggestions
 gh please init                             # Initialize .please/config.yml
 
 # Deprecated (still works with warning)
-gh please review-reply <comment-id> -b "text"   # → Use 'gh please pr review-reply'
+gh please review-reply <comment-id> -b "text"      # → Use 'gh please pr review reply'
+gh please pr review-reply <comment-id> -b "text"   # → Use 'gh please pr review reply'
+gh please pr resolve <pr-number> --all             # → Use 'gh please pr review thread resolve'
+gh please pr review-comment edit <comment-id>      # → Use 'gh please pr review comment edit'
 ```
 
 **Directory structure:**
@@ -152,7 +155,9 @@ gh please review-reply <comment-id> -b "text"   # → Use 'gh please pr review-r
 - **Entry point**: `src/index.ts` - Registers command groups, loads plugins
 - **Commands**: `src/commands/` - Organized by group:
   - `issue/` - Issue management (sub-issue, dependency, develop, cleanup, comment-edit)
-  - `pr/` - Pull request management (review-reply, resolve, review-comment-edit)
+  - `pr/` - Pull request management
+    - `review/` - Review subcommand group (reply, comment-edit, thread-resolve)
+    - Deprecated: review-reply, resolve, review-comment-edit (redirect to new structure)
   - `plugin.ts` - Plugin management commands
 - **Plugin System**: `src/plugins/` - Plugin discovery and loading:
   - `plugin-interface.ts` - GhPleasePlugin interface definition
@@ -525,14 +530,14 @@ bun run lint:fix
 
 ### 3. Respond to Review Comments
 
-Use `gh please pr review-reply` to respond to each review comment with acknowledgment and commit reference:
+Use `gh please pr review reply` to respond to each review comment with acknowledgment and commit reference:
 
 ```bash
 # Reply to a single review comment
-gh please pr review-reply <comment-id> -b "Thanks for catching this! Fixed in <commit-hash>"
+gh please pr review reply <comment-id> -b "Thanks for catching this! Fixed in <commit-hash>"
 
 # Example with actual comment ID
-gh please pr review-reply 2442802556 -b "Fixed PluginType definition mismatch in commit 75dcaac"
+gh please pr review reply 2442802556 -b "Fixed PluginType definition mismatch in commit 75dcaac"
 ```
 
 **Response Best Practices:**
@@ -548,10 +553,10 @@ After addressing feedback and responding, resolve review threads:
 
 ```bash
 # Resolve all threads on a PR (recommended after addressing all feedback)
-gh please pr resolve <pr-number> --all
+gh please pr review thread resolve <pr-number> --all
 
 # Resolve a specific thread
-gh please pr resolve <pr-number> --thread <thread-id>
+gh please pr review thread resolve <pr-number> --thread <thread-id>
 ```
 
 **Example Workflow:**
@@ -566,12 +571,12 @@ git commit -m "fix: address code review feedback from PR #23"
 git push
 
 # 3. Respond to comments (assuming comment IDs: 2442802556, 2442802557, ...)
-gh please pr review-reply 2442802556 -b "Fixed in 75dcaac"
-gh please pr review-reply 2442802557 -b "Updated in 75dcaac"
-gh please pr review-reply 2442802560 -b "Implemented in 75dcaac"
+gh please pr review reply 2442802556 -b "Fixed in 75dcaac"
+gh please pr review reply 2442802557 -b "Updated in 75dcaac"
+gh please pr review reply 2442802560 -b "Implemented in 75dcaac"
 
 # 4. Resolve all threads
-gh please pr resolve 23 --all
+gh please pr review thread resolve 23 --all
 ```
 
 ### 5. Push Changes and Update PR
@@ -601,12 +606,13 @@ git status
                ↓
 ┌─────────────────────────────────────┐
 │ 3. Respond to Comments              │
-│    gh please pr review-reply        │
+│    gh please pr review reply        │
 └──────────────┬──────────────────────┘
                ↓
 ┌─────────────────────────────────────┐
 │ 4. Resolve Threads                  │
-│    gh please pr resolve --all       │
+│    gh please pr review thread       │
+│    resolve --all                    │
 └──────────────┬──────────────────────┘
                ↓
 ┌─────────────────────────────────────┐
