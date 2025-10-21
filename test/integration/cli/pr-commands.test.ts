@@ -137,7 +137,7 @@ describe('PR Commands - CLI Integration', () => {
     }
   })
 
-  describe('gh please pr review-reply', () => {
+  describe('gh please pr review-reply (deprecated)', () => {
     test('should reply to review comment', async () => {
       const result = await runCliExpectSuccess([
         'pr',
@@ -161,7 +161,7 @@ describe('PR Commands - CLI Integration', () => {
       })
 
       assertOutputContains(result, 'Usage:')
-      assertOutputContains(result, 'Create a reply to a PR review comment')
+      assertOutputContains(result, 'Deprecated', 'any')
       assertOutputContains(result, '--body')
     })
 
@@ -207,10 +207,12 @@ describe('PR Commands - CLI Integration', () => {
     })
   })
 
-  describe('gh please pr resolve', () => {
+  describe('gh please pr review thread resolve', () => {
     test('should resolve specific thread with --thread option', async () => {
       const result = await runCliExpectSuccess([
         'pr',
+        'review',
+        'thread',
         'resolve',
         String(mockPr.number),
         '--thread',
@@ -227,6 +229,8 @@ describe('PR Commands - CLI Integration', () => {
     test('should resolve all threads with --all option', async () => {
       const result = await runCliExpectSuccess([
         'pr',
+        'review',
+        'thread',
         'resolve',
         String(mockPr.number),
         '--all',
@@ -241,7 +245,7 @@ describe('PR Commands - CLI Integration', () => {
     })
 
     test('should show help with --help flag', async () => {
-      const result = await runCliExpectSuccess(['pr', 'resolve', '--help'], {
+      const result = await runCliExpectSuccess(['pr', 'review', 'thread', 'resolve', '--help'], {
         env: { GH_PATH: mockGhPath! },
       })
 
@@ -254,6 +258,8 @@ describe('PR Commands - CLI Integration', () => {
     test('should fail without --thread or --all option', async () => {
       const result = await runCliExpectFailure([
         'pr',
+        'review',
+        'thread',
         'resolve',
         String(mockPr.number),
       ], {
@@ -267,6 +273,8 @@ describe('PR Commands - CLI Integration', () => {
     test('should fail with invalid PR number', async () => {
       const result = await runCliExpectFailure([
         'pr',
+        'review',
+        'thread',
         'resolve',
         'not-a-number',
         '--all',
@@ -317,6 +325,8 @@ describe('PR Commands - CLI Integration', () => {
 
       const result = await runCliExpectSuccess([
         'pr',
+        'review',
+        'thread',
         'resolve',
         String(mockPr.number),
         '--all',
@@ -344,8 +354,9 @@ describe('PR Commands - CLI Integration', () => {
       })
 
       assertOutputContains(result, 'Usage:')
-      assertOutputContains(result, 'review-reply')
-      assertOutputContains(result, 'resolve')
+      assertOutputContains(result, 'review', 'any') // New review subcommand group
+      assertOutputContains(result, 'review-reply') // Deprecated
+      assertOutputContains(result, 'resolve') // Deprecated
     })
   })
 
