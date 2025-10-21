@@ -100,7 +100,7 @@ export function createDevelopCommand(): Command {
           }
 
           // Prepare worktree path
-          const worktreePath = `~/worktrees/${repoInfo.repo}/${branch}`
+          const worktreePath = `~/.please/worktrees/${repoInfo.repo}/${branch}`
           const expandedPath = worktreePath.replace(/^~/, process.env.HOME || '')
 
           // Check if worktree already exists
