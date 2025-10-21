@@ -3,9 +3,11 @@ import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
 // Mock gh command
 const mockGhPath = '/tmp/mock-gh-issue-comment'
 let originalGhPath: string | undefined
+let originalSpawn: typeof Bun.spawn
 
 beforeEach(() => {
   originalGhPath = process.env.GH_PATH
+  originalSpawn = Bun.spawn
   process.env.GH_PATH = mockGhPath
 })
 
@@ -16,6 +18,7 @@ afterEach(() => {
   else {
     delete process.env.GH_PATH
   }
+  Bun.spawn = originalSpawn
 })
 
 describe('issue comment edit command', () => {
