@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.8.0](https://github.com/pleaseai/gh-please/compare/github-v0.7.0...github-v0.8.0) (2025-10-21)
+
+
+### Features
+
+* add comment list commands for issues and PRs ([#52](https://github.com/pleaseai/gh-please/issues/52)) ([d4832c9](https://github.com/pleaseai/gh-please/commit/d4832c9b5023b2d991f5838e6086fc7414af9145))
+* change clone and worktree locations to ~/.please/ subdirectories ([#54](https://github.com/pleaseai/gh-please/issues/54)) ([e3a686c](https://github.com/pleaseai/gh-please/commit/e3a686c1bd29e0c49b9479f5aa9755ea5f800e8d)), closes [#49](https://github.com/pleaseai/gh-please/issues/49)
+
+
+### Documentation
+
+* add ADR for LLM-friendly output formats ([854ab94](https://github.com/pleaseai/gh-please/commit/854ab94b201e897eab1ea12197bb5c8c905c74c0))
+
 ## [0.7.0](https://github.com/pleaseai/gh-please/compare/github-v0.6.1...github-v0.7.0) (2025-10-21)
 
 
