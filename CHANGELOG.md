@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.0](https://github.com/pleaseai/gh-please/compare/github-v0.6.1...github-v0.7.0) (2025-10-21)
+
+
+### Features
+
+* implement comment edit commands ([#44](https://github.com/pleaseai/gh-please/issues/44)) ([54145b2](https://github.com/pleaseai/gh-please/commit/54145b2cec2dba0509c7373e04617e93fe28d02c))
+
+
+### Documentation
+
+* add ADR for PR review command structure refactoring ([3a637bc](https://github.com/pleaseai/gh-please/commit/3a637bc67f61f1dff69174f501e97043b1587e63)), closes [#46](https://github.com/pleaseai/gh-please/issues/46)
+
 ## [0.6.1](https://github.com/pleaseai/gh-please/compare/github-v0.6.0...github-v0.6.1) (2025-10-19)
 
 
