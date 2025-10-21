@@ -4,9 +4,9 @@ export default antfu({
   formatters: true,
   ignores: [
     // Ignore Claude Code plugin documentation
-    '.claude-plugin/**',
     // Ignore Claude Code skills documentation
     '.claude/skills/**',
+    'skills/**',
   ],
 }, {
   rules: {

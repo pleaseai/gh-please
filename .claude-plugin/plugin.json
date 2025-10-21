@@ -1,10 +1,21 @@
 {
-  "name": "pleaseai-github",
+  "name": "gh-please",
   "version": "0.2.0",
   "description": "PleaseAI GitHub CLI extension을 위한 Claude Code 전문성 제공",
-  "author": "Minsu Lee (@amondnet)",
-  "repository": "pleaseai/gh-please",
-  "skills": [
-    "skills/using-pleaseai-github"
+  "author": {
+    "name": "Minsu Lee",
+    "email": "minsu.lee@passionfactory.ai",
+    "url": "https://github.com/passionfactory"
+  },
+  "homepage": "https://github.com/pleaseai/gh-please",
+  "repository": "https://github.com/pleaseai/gh-please",
+  "license": "MIT",
+  "keywords": [
+    "github",
+    "cli",
+    "extension",
+    "pleaseai",
+    "workflow",
+    "automation"
   ]
 }
