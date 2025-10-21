@@ -80,3 +80,20 @@ export interface WorktreeInfo {
   commit: string
   prunable: boolean
 }
+
+export interface CommentInfo {
+  id: number
+  body: string
+  user: {
+    login: string
+  }
+  html_url: string
+  created_at: string
+  updated_at: string
+}
+
+export interface EditCommentOptions {
+  commentId: number
+  body: string
+  repo?: string
+}

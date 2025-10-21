@@ -128,10 +128,12 @@ gh please issue dependency remove <issue> <blocker>               # Remove block
 gh please issue dependency list <issue>                           # List blockers
 gh please issue develop <issue-number> [--repo owner/repo] [--worktree] [--base <branch>] [--name <branch>]  # Start developing on issue (alias: dev)
 gh please issue cleanup [--repo owner/repo] [--all]       # Clean up unused worktrees
+gh please issue comment edit <comment-id> --body "text"   # Edit issue comment
 
 # Core PR Management (Built-in)
 gh please pr review-reply <comment-id> -b "text"  # Reply to review comment
 gh please pr resolve <pr-number> [--thread <id> | --all]   # Resolve threads
+gh please pr review-comment edit <comment-id> --body "text"  # Edit PR review comment
 
 # AI Commands (Requires @pleaseai/gh-please-ai plugin)
 gh please ai triage <issue-number>         # Trigger triage bot
@@ -149,8 +151,8 @@ gh please review-reply <comment-id> -b "text"   # → Use 'gh please pr review-r
 
 - **Entry point**: `src/index.ts` - Registers command groups, loads plugins
 - **Commands**: `src/commands/` - Organized by group:
-  - `issue/` - Issue management (sub-issue, dependency, develop, cleanup)
-  - `pr/` - Pull request management (review-reply, resolve)
+  - `issue/` - Issue management (sub-issue, dependency, develop, cleanup, comment-edit)
+  - `pr/` - Pull request management (review-reply, resolve, review-comment-edit)
   - `plugin.ts` - Plugin management commands
 - **Plugin System**: `src/plugins/` - Plugin discovery and loading:
   - `plugin-interface.ts` - GhPleasePlugin interface definition
@@ -200,6 +202,11 @@ All command output messages (success, errors, progress) are internationalized. G
   - Handles PR context detection, comment fetching, and reply creation
   - Common utilities: `getRepoInfo()`, `createIssueComment()`, `createPrComment()`
   - Key functions: `getCurrentPrInfo()`, `getReviewComment()`, `createReviewReply()`
+
+- **`src/lib/comment-api.ts`**: Comment editing utilities
+  - Get and update issue comments and PR review comments
+  - Key functions: `getIssueComment()`, `updateIssueComment()`, `getReviewComment()`, `updateReviewComment()`
+  - Used by: issue comment edit, PR review-comment edit commands
 
 - **`src/lib/validation.ts`**: Input validation
   - Validates comment IDs and reply body text
@@ -256,6 +263,8 @@ export type PluginType = 'command-group' | 'provider' | 'utility'
 - `PrInfo`: PR metadata (number, owner, repo)
 - `ReviewComment`: GitHub review comment structure
 - `ReplyOptions`: Parameters for creating replies
+- `CommentInfo`: Comment metadata (id, body, user, html_url, created_at, updated_at)
+- `EditCommentOptions`: Parameters for editing comments (commentId, body, repo)
 - `IssueInfo`: Issue metadata with optional Node ID
 - `SubIssue`: Sub-issue information (number, title, state, nodeId)
 - `BlockedByIssue`: Blocking issue information
