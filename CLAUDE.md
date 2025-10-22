@@ -2,10 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-@docs/STANDARDS.md
-@docs/commit-convention.md
-@docs/TESTING.md
-@docs/TDD.md
+@docs-dev/STANDARDS.md
+@docs-dev/commit-convention.md
+@docs-dev/TESTING.md
+@docs-dev/TDD.md
 
 ## Project Overview
 
@@ -430,12 +430,12 @@ gh issue develop <issue-number>  # automatically checks out
 
 ### 3. Follow TDD Cycle
 
-Implement changes following Test-Driven Development (see `docs/TDD.md`):
+Implement changes following Test-Driven Development (see `docs-dev/TDD.md`):
 
 1. **Red**: Write a failing test that defines the desired behavior
 2. **Green**: Implement the minimum code needed to make the test pass
 3. **Refactor**: Improve code structure while keeping tests passing
-4. **Commit**: Use small, focused commits following conventional commits (see `docs/commit-convention.md`)
+4. **Commit**: Use small, focused commits following conventional commits (see `docs-dev/commit-convention.md`)
 
 Key commands:
 
@@ -718,3 +718,30 @@ The develop workflow uses:
 3. Falls back to source at `src/index.ts` for development
 
 This allows the extension to work in both development and production modes.
+
+## Documentation Structure
+
+This project has two separate documentation systems:
+
+### User Documentation (`docs/`)
+Public-facing documentation built with Docus (Nuxt 4 + Nuxt Content + Nuxt UI):
+- **English**: `/en` - Installation guides, feature docs, workflows, API limitations
+- **Korean**: `/ko` - 한글 문서 (설치 가이드, 기능 문서, 워크플로우)
+- **Run locally**: `cd docs && bun run dev`
+- **Deploy**: Vercel/Netlify ready for static site generation
+
+### Development Documentation (`docs-dev/`)
+Internal development reference for contributors:
+- **[STANDARDS.md](./docs-dev/STANDARDS.md)** - Coding standards and mandatory rules
+- **[TDD.md](./docs-dev/TDD.md)** - Test-Driven Development workflow
+- **[TESTING.md](./docs-dev/TESTING.md)** - Testing guidelines and best practices
+- **[commit-convention.md](./docs-dev/commit-convention.md)** - Conventional Commits
+- **[ADR](./docs-dev/adr/)** - Architecture Decision Records
+- **[PLUGIN_DEVELOPMENT.md](./docs-dev/PLUGIN_DEVELOPMENT.md)** - Plugin development guide
+- **[RELEASE.md](./docs-dev/RELEASE.md)** - Release process and checklist
+- **[AVAILABLE_PLUGINS.md](./docs-dev/AVAILABLE_PLUGINS.md)** - Available plugins catalog
+- **[MIGRATION_v0.3.md](./docs-dev/MIGRATION_v0.3.md)** - v0.3.0 migration guide
+
+**Quick links:**
+- User docs: [docs/README.md](./docs/README.md)
+- Dev docs: [docs-dev/README.md](./docs-dev/README.md)
