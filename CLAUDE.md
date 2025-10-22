@@ -719,7 +719,6 @@ The develop workflow uses:
 
 This allows the extension to work in both development and production modes.
 
-
 ## Documentation Structure
 
 This project has two separate documentation systems:
@@ -746,4 +745,3 @@ Internal development reference for contributors:
 **Quick links:**
 - User docs: [docs/README.md](./docs/README.md)
 - Dev docs: [docs-dev/README.md](./docs-dev/README.md)
-

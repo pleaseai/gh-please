@@ -1,7 +1,7 @@
 {
   "name": "@pleaseai/gh-please-docs",
-  "private": true,
   "version": "1.0.0",
+  "private": true,
   "description": "Documentation for gh-please GitHub CLI extension",
   "scripts": {
     "dev": "nuxt dev --extends docus",
@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@nuxtjs/i18n": "^9.1.2",
-    "docus": "latest",
     "better-sqlite3": "^12.2.0",
+    "docus": "latest",
     "nuxt": "^4.1.2"
   },
   "devDependencies": {
