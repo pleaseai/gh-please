@@ -63,7 +63,7 @@ gh please issue develop 123
 gh please issue cleanup
 ```
 
-[워크플로우 상세 가이드 →](docs/content/4.workflows/1.issue-workflow.md)
+[워크플로우 상세 가이드 →](docs/content/ko/4.workflows/1.issue-workflow.md)
 
 ### Sub-Issue 관리
 
@@ -83,7 +83,7 @@ gh please pr review reply <comment-id> -b "커밋 abc123에서 수정"
 gh please pr review thread resolve 456 --all
 ```
 
-[PR 리뷰 가이드 →](docs/content/4.workflows/2.pr-review-workflow.md)
+[PR 리뷰 가이드 →](docs/content/ko/4.workflows/2.pr-review-workflow.md)
 
 ### LLM 친화적 출력
 
@@ -101,22 +101,22 @@ gh please issue sub-issue list 123 --format xml
 ## 📚 문서
 
 ### 시작하기
-- [설치 가이드](docs/content/1.guide/1.getting-started.md)
-- [5분 퀵스타트](docs/content/1.guide/2.quick-start.md)
+- [설치 가이드](docs/content/ko/1.guide/1.getting-started.md)
+- [5분 퀵스타트](docs/content/ko/1.guide/2.quick-start.md)
 
 ### 기능 가이드
-- [이슈 관리](docs/content/2.features/1.issue-management.md) - Sub-issue, 의존성, 개발 워크플로우
-- [PR 관리](docs/content/2.features/2.pr-management.md) - 리뷰 답변, 스레드 해결
-- [LLM 친화적 출력](docs/content/2.features/3.output-formats.md) - JSON, Markdown, XML
-- [플러그인 시스템](docs/content/2.features/4.plugin-system.md) - 확장 기능
+- [이슈 관리](docs/content/ko/2.features/1.issue-management.md) - Sub-issue, 의존성, 개발 워크플로우
+- [PR 관리](docs/content/ko/2.features/2.pr-management.md) - 리뷰 답변, 스레드 해결
+- [LLM 친화적 출력](docs/content/ko/2.features/3.output-formats.md) - JSON, Markdown, XML
+- [플러그인 시스템](docs/content/ko/2.features/4.plugin-system.md) - 확장 기능
 
 ### 워크플로우
-- [이슈 개발 워크플로우](docs/content/4.workflows/1.issue-workflow.md)
-- [PR 리뷰 워크플로우](docs/content/4.workflows/2.pr-review-workflow.md)
+- [이슈 개발 워크플로우](docs/content/ko/4.workflows/1.issue-workflow.md)
+- [PR 리뷰 워크플로우](docs/content/ko/4.workflows/2.pr-review-workflow.md)
 
 ### 고급 주제
-- [다국어 지원 (i18n)](docs/content/5.advanced/1.i18n.md)
-- [API 제한사항](docs/content/5.advanced/2.api-limitations.md)
+- [다국어 지원 (i18n)](docs/content/ko/5.advanced/1.i18n.md)
+- [API 제한사항](docs/content/ko/5.advanced/2.api-limitations.md)
 
 ## 공통 옵션
 
@@ -171,7 +171,7 @@ gh please plugin uninstall <name>
 **사용 가능한 플러그인:**
 - **@pleaseai/gh-please-ai** (프리미엄) - AI 기반 코드 리뷰 및 이슈 자동화
 
-[플러그인 가이드 →](docs/content/2.features/4.plugin-system.md) | [플러그인 개발 →](./docs/PLUGIN_DEVELOPMENT.md)
+[플러그인 가이드 →](docs/content/ko/2.features/4.plugin-system.md) | [플러그인 개발 →](./docs/PLUGIN_DEVELOPMENT.md)
 
 ## 개발
 

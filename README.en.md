@@ -63,7 +63,7 @@ gh please issue develop 123
 gh please issue cleanup
 ```
 
-[Detailed Workflow Guide →](docs/content/4.workflows/1.issue-workflow.md)
+[Detailed Workflow Guide →](docs/content/en/4.workflows/1.issue-workflow.md)
 
 ### Sub-Issue Management
 
@@ -83,7 +83,7 @@ gh please pr review reply <comment-id> -b "Fixed in commit abc123"
 gh please pr review thread resolve 456 --all
 ```
 
-[PR Review Guide →](docs/content/4.workflows/2.pr-review-workflow.md)
+[PR Review Guide →](docs/content/en/4.workflows/2.pr-review-workflow.md)
 
 ### LLM-Friendly Output
 
@@ -101,22 +101,22 @@ gh please issue sub-issue list 123 --format xml
 ## 📚 Documentation
 
 ### Getting Started
-- [Installation Guide](docs/content/1.guide/1.getting-started.md)
-- [5-Minute Quick Start](docs/content/1.guide/2.quick-start.md)
+- [Installation Guide](docs/content/en/1.guide/1.getting-started.md)
+- [5-Minute Quick Start](docs/content/en/1.guide/2.quick-start.md)
 
 ### Feature Guides
-- [Issue Management](docs/content/2.features/1.issue-management.md) - Sub-issues, dependencies, development workflow
-- [PR Management](docs/content/2.features/2.pr-management.md) - Review replies, thread resolution
-- [LLM-Friendly Output](docs/content/2.features/3.output-formats.md) - JSON, Markdown, XML
-- [Plugin System](docs/content/2.features/4.plugin-system.md) - Extension capabilities
+- [Issue Management](docs/content/en/2.features/1.issue-management.md) - Sub-issues, dependencies, development workflow
+- [PR Management](docs/content/en/2.features/2.pr-management.md) - Review replies, thread resolution
+- [LLM-Friendly Output](docs/content/en/2.features/3.output-formats.md) - JSON, Markdown, XML
+- [Plugin System](docs/content/en/2.features/4.plugin-system.md) - Extension capabilities
 
 ### Workflows
-- [Issue Development Workflow](docs/content/4.workflows/1.issue-workflow.md)
-- [PR Review Workflow](docs/content/4.workflows/2.pr-review-workflow.md)
+- [Issue Development Workflow](docs/content/en/4.workflows/1.issue-workflow.md)
+- [PR Review Workflow](docs/content/en/4.workflows/2.pr-review-workflow.md)
 
 ### Advanced Topics
-- [Internationalization (i18n)](docs/content/5.advanced/1.i18n.md)
-- [API Limitations](docs/content/5.advanced/2.api-limitations.md)
+- [Internationalization (i18n)](docs/content/en/5.advanced/1.i18n.md)
+- [API Limitations](docs/content/en/5.advanced/2.api-limitations.md)
 
 ## Common Options
 
@@ -171,7 +171,7 @@ gh please plugin uninstall <name>
 **Available Plugins:**
 - **@pleaseai/gh-please-ai** (Premium) - AI-powered code review and issue automation
 
-[Plugin Guide →](docs/content/2.features/4.plugin-system.md) | [Plugin Development →](./docs/PLUGIN_DEVELOPMENT.md)
+[Plugin Guide →](docs/content/en/2.features/4.plugin-system.md) | [Plugin Development →](./docs/PLUGIN_DEVELOPMENT.md)
 
 ## Development
 
