@@ -43,25 +43,22 @@ export function createThreadListCommand(): Command {
           const unresolvedThreads = threads.filter(t => !t.isResolved)
           const resolvedThreads = threads.filter(t => t.isResolved)
 
-          // Apply filter if requested
-          const threadsToShow = options.unresolvedOnly ? unresolvedThreads : threads
-
-          if (threadsToShow.length === 0) {
-            console.log(msg.noThreads)
+          // Check for empty results with better messaging
+          if (options.unresolvedOnly && unresolvedThreads.length === 0) {
+            console.log(msg.noUnresolvedThreads)
             return
           }
 
           // Show summary
           console.log(`\n${msg.foundThreads(threads.length, resolvedThreads.length, unresolvedThreads.length)}\n`)
 
-          // Show unresolved threads first (if any)
-          if (unresolvedThreads.length > 0 && !options.unresolvedOnly) {
-            console.log(msg.unresolvedThreadsHeader(unresolvedThreads.length))
-          }
+          // Show unresolved threads
+          if (unresolvedThreads.length > 0) {
+            if (!options.unresolvedOnly) {
+              console.log(msg.unresolvedThreadsHeader(unresolvedThreads.length))
+            }
 
-          if (options.unresolvedOnly || !options.unresolvedOnly) {
-            const displayThreads = options.unresolvedOnly ? unresolvedThreads : unresolvedThreads
-            displayThreads.forEach((thread, index) => {
+            unresolvedThreads.forEach((thread, index) => {
               const location = msg.threadAtLocation(thread.path, thread.line)
               const commentPreview = thread.firstCommentBody
                 ? `\n    💬 "${truncateComment(thread.firstCommentBody, 80)}"`

@@ -63,6 +63,7 @@ export interface PrMessages {
   unknownError: string
   listingThreads: (prNumber: number) => string
   noThreads: string
+  noUnresolvedThreads: string
   foundThreads: (total: number, resolved: number, unresolved: number) => string
   unresolvedThreadsHeader: (count: number) => string
   resolvedThreadsHeader: (count: number) => string
@@ -199,6 +200,7 @@ export const prMessages: Record<Language, PrMessages> = {
     unknownError: '예상치 못한 오류가 발생했습니다',
     listingThreads: (prNumber: number) => `📋 PR #${prNumber}의 리뷰 스레드 목록 가져오는 중...`,
     noThreads: '✅ 리뷰 스레드가 없습니다',
+    noUnresolvedThreads: '✅ 미해결 리뷰 스레드가 없습니다',
     foundThreads: (total: number, resolved: number, unresolved: number) => `📋 PR 리뷰 스레드 (총 ${total}개: 해결됨 ${resolved}개, 미해결 ${unresolved}개)`,
     unresolvedThreadsHeader: (count: number) => `\n미해결 스레드 (${count}개):`,
     resolvedThreadsHeader: (count: number) => `\n해결된 스레드 (${count}개):`,
@@ -225,6 +227,7 @@ export const prMessages: Record<Language, PrMessages> = {
     unknownError: '❌ An unexpected error occurred',
     listingThreads: (prNumber: number) => `📋 Listing review threads for PR #${prNumber}...`,
     noThreads: '✅ No review threads found',
+    noUnresolvedThreads: '✅ No unresolved review threads found',
     foundThreads: (total: number, resolved: number, unresolved: number) => `📋 Review Threads for PR (Total: ${total}, Resolved: ${resolved}, Unresolved: ${unresolved})`,
     unresolvedThreadsHeader: (count: number) => `\nUnresolved Threads (${count}):`,
     resolvedThreadsHeader: (count: number) => `\nResolved Threads (${count}):`,
