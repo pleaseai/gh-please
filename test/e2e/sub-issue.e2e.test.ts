@@ -4,10 +4,16 @@
  *
  * NOTE: These tests only run when GITHUB_TEST_TOKEN is set
  * Set the following environment variables to run these tests:
- * - GITHUB_TEST_TOKEN: GitHub personal access token
- * - GITHUB_TEST_OWNER: Test repository owner (default: gh-please-e2e)
- * - GITHUB_TEST_REPO: Test repository name (default: test-repo)
+ * - GITHUB_TEST_TOKEN: GitHub personal access token with 'repo' scope
+ * - GITHUB_TEST_OWNER: Test repository owner (default: pleaseai)
+ * - GITHUB_TEST_REPO: Test repository name (default: gh-please-e2e)
  * - E2E_SKIP_CLEANUP: Set to 'true' to skip cleanup (useful for debugging)
+ *
+ * REQUIREMENTS:
+ * - Token must have 'repo' scope (full repository access)
+ * - Test repository must have GitHub Issues enabled
+ * - Repository must have sub-issues feature enabled (GitHub Enterprise or beta)
+ * - If you get HTTP 403 errors, check token permissions and repository settings
  */
 
 import type { E2ETestHelper } from './setup'
@@ -66,11 +72,11 @@ describe('Sub-issue Management - E2E', () => {
     ], config)
 
     expect(result.exitCode).toBe(0)
-    expect(result.stdout).toContain('Sub-issue')
-    expect(result.stdout).toContain('created')
+    expect(result.stdout).toMatch(/created|linked/i)
 
     // Extract created issue number from output
-    const match = result.stdout.match(/#(\d+)/)
+    // Output format: "Sub-issue #38 created and linked to #29!"
+    const match = result.stdout.match(/Sub-issue #(\d+) created/)
     expect(match).toBeTruthy()
 
     if (match) {
@@ -102,7 +108,7 @@ describe('Sub-issue Management - E2E', () => {
     ], config)
 
     expect(result.exitCode).toBe(0)
-    expect(result.stdout).toContain('linked as sub-issue')
+    expect(result.stdout).toMatch(/sub-issue linked successfully/i)
 
     console.log(`✓ Linked #${childIssueNumber} as sub-issue of #${parentIssueNumber}`)
   })
@@ -123,7 +129,7 @@ describe('Sub-issue Management - E2E', () => {
     ], config)
 
     expect(result.exitCode).toBe(0)
-    expect(result.stdout).toContain('Sub-issues of')
+    expect(result.stdout).toMatch(/sub-issue/i)
     expect(result.stdout).toContain(`#${childIssueNumber}`)
 
     console.log(`✓ Listed sub-issues of #${parentIssueNumber}`)
