@@ -20,7 +20,9 @@ English | [한국어](./README.ko.md)
 - **Multilingual**: Automatic Korean/English detection
 - **Plugin System**: Extensible architecture
 
-### Latest Updates (v0.8.0)
+### Latest Updates (v0.11.0)
+- ✨ **PR Review Thread List** - Display review threads with Node IDs and copy-ready resolve commands
+- ✨ **E2E Testing** - Comprehensive end-to-end test coverage (26 tests, 100% pass rate)
 - ✨ **LLM-Friendly Output Formats** - JSON, Markdown, XML support (Phase 1-3 complete)
 - ✨ **Comment Management** - List and edit Issue/PR comments
 - ✨ **Worktree Location** - Unified management at `~/.please/worktrees/`
@@ -44,6 +46,8 @@ gh please issue develop 123  # Auto-create worktree
 
 # PR management
 gh please pr review reply 1234567890 -b "Fixed!"
+gh please pr review thread list 456              # List threads with Node IDs
+gh please pr review thread list 456 --unresolved-only
 gh please pr review thread resolve 456 --all
 
 # Comment management
@@ -207,9 +211,10 @@ bun run lint:fix
 
 # Test
 bun test
-bun run test:unit       # Unit tests only
+bun run test:unit         # Unit tests only
 bun run test:integration  # Integration tests
-bun run test:coverage   # With coverage
+bun run test:e2e          # End-to-end tests (requires GITHUB_TOKEN)
+bun run test:coverage     # With coverage
 ```
 
 ### Quality Checks

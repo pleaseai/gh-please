@@ -873,3 +873,23 @@ Internal development reference for contributors:
 **Quick links:**
 - User docs: [docs/README.md](./docs/README.md)
 - Dev docs: [docs-dev/README.md](./docs-dev/README.md)
+
+## Claude Code Plugin Structure
+
+The project includes a Claude Code plugin for IDE integration. All plugin components are located at the **project root**:
+
+```
+/ (project root)
+├── skills/          # Reusable skills for plugin distribution
+├── commands/        # Slash commands for Claude Code
+├── agents/          # Specialized agents
+├── hooks/           # Event hooks
+└── .claude-plugin/  # Plugin metadata and configuration
+```
+
+**Directory purposes:**
+- `skills/` - Skills distributed with the plugin to Claude Code marketplace
+- `commands/` - Custom slash commands for workflow automation
+- `agents/` - Specialized agents for complex tasks
+- `hooks/` - Event hooks for git operations and tool lifecycle
+- `.claude-plugin/` - Plugin metadata, configuration, and installation files

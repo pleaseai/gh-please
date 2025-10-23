@@ -4,14 +4,16 @@ Comprehensive guide to managing pull request reviews with the `gh-please` extens
 
 ## Overview
 
-The `gh-please` extension provides two main PR review capabilities:
+The `gh-please` extension provides comprehensive PR review capabilities:
 
-1. **review-reply**: Respond to review comments
-2. **resolve**: Resolve review discussion threads
+1. **pr review reply**: Respond to review comments
+2. **pr review thread list**: List review threads with Node IDs
+3. **pr review thread resolve**: Resolve review discussion threads
+4. **pr review comment edit**: Edit review comments
 
 These commands complement GitHub's web UI and provide CLI-based review workflows.
 
-## review-reply Command
+## pr review reply Command
 
 ### Purpose
 
@@ -33,72 +35,48 @@ Reply to pull request review comments programmatically from the command line.
 ### Syntax
 
 ```bash
-gh please pr review-reply <comment-id> --body <text> [--repo owner/repo]
-gh please pr review-reply <comment-id> -b <text> [--repo owner/repo]
+gh please pr review reply <comment-id> --body <text> [--repo owner/repo]
+gh please pr review reply <comment-id> -b <text> [--repo owner/repo]
 
 # From stdin
-echo "text" | gh please pr review-reply <comment-id> [--repo owner/repo]
+echo "text" | gh please pr review reply <comment-id> [--repo owner/repo]
 ```
 
-### Finding Comment IDs
+**Note:** The old command `gh please pr review-reply` is deprecated but still works with a warning.
 
-**Method 1: GitHub Web UI**
+### Finding Comment Database IDs
+
+**Method 1: GitHub Web UI (Recommended)**
 
 1. Navigate to PR review comment
-2. Check URL: `https://github.com/owner/repo/pull/123#discussion_r987654`
-3. Use number after `discussion_r`: `987654`
+2. Check URL: `https://github.com/owner/repo/pull/123#discussion_r1234567890`
+3. Use number after `discussion_r`: `1234567890`
 
 **Example:**
 ```
 URL: https://github.com/pleaseai/gh-please/pull/456#discussion_r1234567890
-Comment ID: 1234567890
+Comment Database ID: 1234567890
 ```
 
-**Method 2: gh CLI (JSON output)**
+**Method 2: List comments via gh CLI**
 
 ```bash
 # View PR with comments
 gh pr view 456 --json comments
-
-# Extract comment IDs
-gh api /repos/OWNER/REPO/pulls/456/comments | jq '.[] | {id, body}'
 ```
 
-**Output:**
-```json
-{
-  "id": 1234567890,
-  "body": "This could be optimized"
-}
-{
-  "id": 1234567891,
-  "body": "Add error handling here"
-}
-```
-
-**Method 3: gh API (detailed)**
-
-```bash
-gh api /repos/OWNER/REPO/pulls/456/comments \
-  --jq '.[] | "\(.id): \(.path):\(.line) - \(.body | split("\n")[0])"'
-```
-
-**Output:**
-```
-1234567890: src/app.ts:45 - This could be optimized
-1234567891: src/auth.ts:23 - Add error handling here
-```
+**Note:** Use Database ID (numeric) for comment operations. For review threads, use Node ID from `gh please pr review thread list`.
 
 ### Basic Usage
 
 **Simple reply:**
 ```bash
-gh please pr review-reply 1234567890 -b "Fixed in commit abc123"
+gh please pr review reply 1234567890 -b "Fixed in commit abc123"
 ```
 
 **Multi-line reply:**
 ```bash
-gh please pr review-reply 1234567890 --body "$(cat <<'EOF'
+gh please pr review reply 1234567890 --body "$(cat <<'EOF'
 Good catch! I've addressed this by:
 
 1. Adding input validation
@@ -112,7 +90,7 @@ EOF
 
 **From stdin:**
 ```bash
-echo "Thanks for the review!" | gh please pr review-reply 1234567890
+echo "Thanks for the review!" | gh please pr review reply 1234567890
 ```
 
 **With template:**
@@ -128,15 +106,15 @@ I've updated the implementation as suggested:
 Please re-review when ready.
 
 # Use template
-gh please pr review-reply 1234567890 --body "$(cat review-reply-template.txt)"
+gh please pr review reply 1234567890 --body "$(cat review-reply-template.txt)"
 ```
 
 ### Cross-repository Usage
 
 ```bash
 # Reply to comment in different repo
-gh please pr review-reply 1234567890 -b "Fixed" --repo owner/repo
-gh please pr review-reply 1234567890 -b "Fixed" -R owner/repo  # Short form
+gh please pr review reply 1234567890 -b "Fixed" --repo owner/repo
+gh please pr review reply 1234567890 -b "Fixed" -R owner/repo  # Short form
 ```
 
 ### API Limitation: Top-level Comments Only
@@ -152,7 +130,7 @@ POST /repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}/replies
 ```
 PR #456
 └── Review Comment #1 (top-level)
-    └── ✅ Your reply (via gh please pr review-reply 1)
+    └── ✅ Your reply (via gh please pr review reply 1)
 ```
 
 **What doesn't work:**
@@ -165,7 +143,7 @@ PR #456
 
 **Error message if you try:**
 ```bash
-gh please pr review-reply 2 -b "Reply to reply"
+gh please pr review reply 2 -b "Reply to reply"
 # Error: API error: Comment 2 is not a top-level review comment
 ```
 
@@ -182,7 +160,7 @@ Review comment:
 
 Reply:
 ```bash
-gh please pr review-reply 111 --body "$(cat <<'EOF'
+gh please pr review reply 111 --body "$(cat <<'EOF'
 You're absolutely right. I've updated to use bcrypt:
 
 \`\`\`typescript
@@ -201,7 +179,7 @@ Review comment:
 
 Reply:
 ```bash
-gh please pr review-reply 222 --body "$(cat <<'EOF'
+gh please pr review reply 222 --body "$(cat <<'EOF'
 Good catch! Fixed with eager loading:
 
 Before:
@@ -229,11 +207,72 @@ EOF
 # Address multiple comments
 COMMENTS=(111 222 333 444)
 for id in "${COMMENTS[@]}"; do
-  gh please pr review-reply $id -b "Fixed in latest commit, please re-review"
+  gh please pr review reply $id -b "Fixed in latest commit, please re-review"
 done
 ```
 
-## resolve Command
+## pr review thread list Command
+
+### Purpose
+
+List all review threads on a pull request with their Node IDs for use in resolve operations.
+
+### Syntax
+
+```bash
+gh please pr review thread list <pr-number> [--unresolved-only] [--repo owner/repo]
+```
+
+### Basic Usage
+
+**List all threads:**
+```bash
+gh please pr review thread list 456
+```
+
+**Output:**
+```
+🧵 Review Threads for PR #456
+
+Thread PRRT_kwDOABC123 (unresolved)
+  📝 src/auth.ts:45
+  💬 "Add error handling here"
+  👤 reviewer1
+
+  ▶ Copy to resolve:
+  gh please pr review thread resolve 456 --thread PRRT_kwDOABC123
+
+Thread PRRT_kwDODEF456 (resolved)
+  📝 src/utils.ts:12
+  💬 "This could be optimized"
+  👤 reviewer2
+  ✅ Resolved by author
+
+Summary: 2 total threads (1 unresolved, 1 resolved)
+View: https://github.com/owner/repo/pull/456
+```
+
+**List only unresolved threads:**
+```bash
+gh please pr review thread list 456 --unresolved-only
+```
+
+### Output Formats
+
+Supports JSON, Markdown, and XML output:
+
+```bash
+# JSON for automation
+gh please pr review thread list 456 --format json
+
+# Markdown for documentation
+gh please pr review thread list 456 --format markdown
+
+# XML for LLM processing
+gh please pr review thread list 456 --format xml
+```
+
+## pr review thread resolve Command
 
 ### Purpose
 
@@ -254,49 +293,34 @@ Resolve review discussion threads programmatically.
 ### Syntax
 
 ```bash
-# Resolve specific thread
-gh please pr resolve <pr-number> --thread <thread-id> [--repo owner/repo]
+# Resolve specific thread (use Node ID from thread list)
+gh please pr review thread resolve <pr-number> --thread <thread-node-id> [--repo owner/repo]
 
 # Resolve all threads
-gh please pr resolve <pr-number> --all [--repo owner/repo]
+gh please pr review thread resolve <pr-number> --all [--repo owner/repo]
 ```
 
-### Finding Thread IDs
+**Note:** The old command `gh please pr resolve` is deprecated but still works with a warning.
 
-**Method 1: List all threads**
+### Finding Thread Node IDs
+
+**Use the thread list command (Recommended):**
 
 ```bash
-# Get thread IDs for PR #456
-gh api graphql -f query='
-  query($owner: String!, $repo: String!, $number: Int!) {
-    repository(owner: $owner, name: $repo) {
-      pullRequest(number: $number) {
-        reviewThreads(first: 50) {
-          nodes {
-            id
-            isResolved
-            comments(first: 1) {
-              nodes {
-                body
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-' -F owner=OWNER -F repo=REPO -F number=456
+# List all threads with Node IDs
+gh please pr review thread list 456
+
+# List only unresolved threads
+gh please pr review thread list 456 --unresolved-only
 ```
 
-**Method 2: Using extension (internal)**
-
-Extension automatically fetches thread IDs when using `--all`.
+The output includes copy-ready resolve commands with the correct Node IDs.
 
 ### Basic Usage
 
 **Resolve all threads:**
 ```bash
-gh please pr resolve 456 --all
+gh please pr review thread resolve 456 --all
 ```
 
 **Output:**
@@ -311,12 +335,16 @@ View: https://github.com/owner/repo/pull/456
 
 **Resolve specific thread:**
 ```bash
-gh please pr resolve 456 --thread MDEyOlB1bGxSZXF1ZXN0UmV2aWV3VGhyZWFk...
+# Get Node ID from thread list command first
+gh please pr review thread list 456
+
+# Then resolve specific thread
+gh please pr review thread resolve 456 --thread PRRT_kwDOABC123
 ```
 
 **Output:**
 ```
-✓ Resolved thread MDEyOl...
+✓ Resolved thread PRRT_kwDOABC123
    View: https://github.com/owner/repo/pull/456
 ```
 
@@ -324,8 +352,8 @@ gh please pr resolve 456 --thread MDEyOlB1bGxSZXF1ZXN0UmV2aWV3VGhyZWFk...
 
 ```bash
 # Resolve threads in different repo
-gh please pr resolve 456 --all --repo owner/repo
-gh please pr resolve 456 --all -R owner/repo  # Short form
+gh please pr review thread resolve 456 --all --repo owner/repo
+gh please pr review thread resolve 456 --all -R owner/repo  # Short form
 ```
 
 ### When to Resolve vs Keep Open
@@ -363,7 +391,7 @@ git commit -m "fix: Address PR review feedback"
 git push
 
 # 2. Resolve all threads
-gh please pr resolve 456 --all
+gh please pr review thread resolve 456 --all
 
 # 3. Request re-review
 gh pr ready 456
@@ -373,13 +401,12 @@ gh pr comment 456 --body "All feedback addressed, ready for re-review"
 **Example 2: Selective Resolution**
 
 ```bash
-# Get thread IDs
-THREADS=$(gh api graphql -f query='...' | jq -r '.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved == false) | .id')
+# List unresolved threads
+gh please pr review thread list 456 --unresolved-only
 
-# Resolve only specific threads (e.g., first two)
-echo "$THREADS" | head -n 2 | while read thread_id; do
-  gh please pr resolve 456 --thread "$thread_id"
-done
+# Resolve specific threads by Node ID
+gh please pr review thread resolve 456 --thread PRRT_kwDOABC123
+gh please pr review thread resolve 456 --thread PRRT_kwDODEF456
 
 # Leave remaining threads open for discussion
 ```
@@ -400,7 +427,7 @@ gh pr checks $PR_NUMBER --watch
 
 # 3. Resolve all threads if CI passes
 if gh pr checks $PR_NUMBER | grep -q "All checks have passed"; then
-  gh please pr resolve $PR_NUMBER --all
+  gh please pr review thread resolve $PR_NUMBER --all
   echo "✓ All threads resolved, CI passed"
 else
   echo "⚠️ CI failed, keeping threads open"
@@ -459,13 +486,13 @@ I'll look into this later
 **Strategy 1: Reply individually**
 ```bash
 # Reviewer A wants approach X
-gh please pr review-reply 111 -b "Implemented X as suggested"
+gh please pr review reply 111 -b "Implemented X as suggested"
 
 # Reviewer B wants approach Y (conflicts with X)
-gh please pr review-reply 222 -b "I went with X (per Reviewer A) because... Does this work for you?"
+gh please pr review reply 222 -b "I went with X (per Reviewer A) because... Does this work for you?"
 
 # Reviewer C: minor nits
-gh please pr review-reply 333 -b "Fixed all nits, thanks!"
+gh please pr review reply 333 -b "Fixed all nits, thanks!"
 ```
 
 **Strategy 2: Summary comment + resolve all**
@@ -486,7 +513,7 @@ EOF
 )"
 
 # Resolve all threads
-gh please pr resolve 456 --all
+gh please pr review thread resolve 456 --all
 ```
 
 ### Handling Conflicting Feedback
@@ -529,10 +556,10 @@ EOF
 **Example tone:**
 ```bash
 # ✅ Good
-gh please pr review-reply 111 -b "Great point! I've updated to use..."
+gh please pr review reply 111 -b "Great point! I've updated to use..."
 
 # ❌ Bad
-gh please pr review-reply 111 -b "This is wrong, my approach is better"
+gh please pr review reply 111 -b "This is wrong, my approach is better"
 ```
 
 ## Practical Workflows
@@ -544,11 +571,11 @@ Address feedback incrementally as you work:
 ```bash
 # 1. Address first comment
 git commit -m "fix: Add error handling (addresses PR comment #111)"
-gh please pr review-reply 111 -b "Added error handling, see commit abc123"
+gh please pr review reply 111 -b "Added error handling, see commit abc123"
 
 # 2. Address second comment
 git commit -m "test: Add edge case tests (addresses PR comment #222)"
-gh please pr review-reply 222 -b "Added tests, see commit def456"
+gh please pr review reply 222 -b "Added tests, see commit def456"
 
 # 3. Continue for remaining comments...
 
@@ -556,7 +583,7 @@ gh please pr review-reply 222 -b "Added tests, see commit def456"
 git push
 
 # 5. Resolve all threads
-gh please pr resolve 456 --all
+gh please pr review thread resolve 456 --all
 ```
 
 ### Workflow 2: Batch Response
@@ -573,11 +600,11 @@ COMMENTS=(111 222 333 444)
 MESSAGE="Addressed in latest commit abc123"
 
 for id in "${COMMENTS[@]}"; do
-  gh please pr review-reply $id -b "$MESSAGE"
+  gh please pr review reply $id -b "$MESSAGE"
 done
 
 # 3. Resolve all threads
-gh please pr resolve 456 --all
+gh please pr review thread resolve 456 --all
 
 # 4. Request re-review
 gh pr comment 456 -b "All feedback addressed, ready for re-review @reviewers"
@@ -609,7 +636,7 @@ if gh pr checks $PR --jq '.[] | select(.conclusion != "success")' | grep -q .; t
   gh pr comment $PR -b "CI failing, will address before resolving threads"
 else
   echo "✅ CI passed, resolving threads"
-  gh please pr resolve $PR --all
+  gh please pr review thread resolve $PR --all
   gh pr comment $PR -b "All feedback addressed, CI passing, ready for re-review"
 fi
 ```
@@ -627,18 +654,18 @@ fi
 - Or reply to the original top-level comment
 
 **"Thread not resolved"**
-- Check thread ID is correct
+- Check thread Node ID is correct (use `gh please pr review thread list`)
 - Verify PR is in correct state (not merged/closed)
 - Ensure you have write permissions
 
 **"--all resolves wrong threads"**
 - Extension resolves ALL unresolved threads
-- Use `--thread` for selective resolution
-- Review threads before bulk resolution
+- Use `--thread` for selective resolution with Node ID
+- Review threads with `thread list` before bulk resolution
 
 **"Reply appears on wrong PR"**
-- Comment ID might belong to different PR
-- Verify with: `gh api /repos/OWNER/REPO/pulls/comments/COMMENT_ID`
+- Comment Database ID might belong to different PR
+- Verify comment ID from GitHub UI URL
 
 ## Tips and Tricks
 
@@ -656,30 +683,36 @@ I've addressed all your feedback:
 Please re-review when you have time.
 
 # Use template
-gh please pr review-reply 111 --body "$(cat ~/.gh-please/templates/review-thanks.txt)"
+gh please pr review reply 111 --body "$(cat ~/.gh-please/templates/review-thanks.txt)"
 ```
 
 ### Keyboard Shortcuts (via aliases)
 
 ```bash
 # Add to ~/.bashrc or ~/.zshrc
-alias prreply='gh please pr review-reply'
-alias prresolve='gh please pr resolve'
+alias prreply='gh please pr review reply'
+alias prresolve='gh please pr review thread resolve'
+alias prthreads='gh please pr review thread list'
 
 # Usage
 prreply 111 -b "Fixed"
+prthreads 456 --unresolved-only
 prresolve 456 --all
 ```
 
-### Batch Operations with jq
+### Batch Operations
 
 ```bash
-# Get all unresolved comment IDs
-gh api /repos/OWNER/REPO/pulls/456/comments \
-  | jq -r '.[] | select(.in_reply_to_id == null) | .id' \
-  | while read id; do
-      gh please pr review-reply $id -b "Addressed in latest commit"
-    done
+# Reply to multiple comments
+COMMENTS=(111 222 333 444)
+for id in "${COMMENTS[@]}"; do
+  gh please pr review reply $id -b "Addressed in latest commit"
+done
+
+# List unresolved threads and resolve selectively
+gh please pr review thread list 456 --unresolved-only
+# Copy Node IDs from output and resolve specific ones
+gh please pr review thread resolve 456 --thread PRRT_kwDOABC123
 ```
 
 ### Integration with Git Hooks
@@ -697,12 +730,45 @@ if [ -n "$PR" ]; then
   read -p "Resolve all review threads? (y/n) " -n 1 -r
   echo
   if [[ $REPLY =~ ^[Yy]$ ]]; then
-    gh please pr resolve $PR --all
+    gh please pr review thread resolve $PR --all
   fi
 fi
 ```
 
+## pr review comment edit Command
+
+### Purpose
+
+Edit existing PR review comments.
+
+### Syntax
+
+```bash
+gh please pr review comment edit <comment-id> --body <text> [--repo owner/repo]
+```
+
+### Usage
+
+```bash
+# Edit review comment (use Database ID from GitHub UI)
+gh please pr review comment edit 1234567890 --body "Updated comment text"
+
+# Multi-line edit
+gh please pr review comment edit 1234567890 --body "$(cat <<'EOF'
+Updated explanation:
+
+1. Clarified the approach
+2. Added code example
+3. Referenced documentation
+EOF
+)"
+```
+
+**Finding comment Database ID:**
+- GitHub UI: URL shows `#discussion_r1234567890` → use `1234567890`
+- Same ID used for `pr review reply` command
+
 ---
 
-**Last Updated:** 2025-10-19
-**Related:** [AI-WORKFLOWS.md](./AI-WORKFLOWS.md), [ISSUE-MANAGEMENT.md](./ISSUE-MANAGEMENT.md)
+**Last Updated:** 2025-10-24
+**Related:** [ISSUE-MANAGEMENT.md](./ISSUE-MANAGEMENT.md)

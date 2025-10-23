@@ -20,7 +20,9 @@
 - **다국어 지원**: 한글/영문 자동 감지
 - **플러그인 시스템**: 확장 가능한 아키텍처
 
-### 최신 업데이트 (v0.8.0)
+### 최신 업데이트 (v0.11.0)
+- ✨ **PR 리뷰 스레드 목록** - Node ID와 복사 가능한 resolve 명령어 표시
+- ✨ **E2E 테스팅** - 포괄적인 종단간 테스트 커버리지 (26개 테스트, 100% 통과율)
 - ✨ **LLM 친화적 출력 형식** - JSON, Markdown, XML 지원 (Phase 1-3 완료)
 - ✨ **코멘트 관리** - Issue/PR 코멘트 리스트 조회 및 편집
 - ✨ **워크트리 위치 변경** - `~/.please/worktrees/`로 통합 관리
@@ -44,6 +46,8 @@ gh please issue develop 123  # 워크트리 자동 생성
 
 # PR 관리
 gh please pr review reply 1234567890 -b "수정했습니다!"
+gh please pr review thread list 456              # Node ID와 함께 스레드 목록 표시
+gh please pr review thread list 456 --unresolved-only
 gh please pr review thread resolve 456 --all
 
 # 코멘트 관리
@@ -207,9 +211,10 @@ bun run lint:fix
 
 # 테스트
 bun test
-bun run test:unit       # 단위 테스트만
+bun run test:unit         # 단위 테스트만
 bun run test:integration  # 통합 테스트
-bun run test:coverage   # 커버리지와 함께
+bun run test:e2e          # 종단간 테스트 (GITHUB_TOKEN 필요)
+bun run test:coverage     # 커버리지와 함께
 ```
 
 ### 품질 검사
