@@ -1,0 +1,35 @@
+# Development files
+test/
+docs/
+docs-dev/
+script/
+scripts/
+.github/
+.claude/
+
+# Build artifacts - exclude platform binaries, keep JS/types
+dist/gh-please_*
+dist/gh-please
+
+# Configuration files
+.*
+!.npmignore
+*.config.*
+tsconfig*.json
+bunfig.toml
+bun.lockb
+
+# Documentation - Korean README not needed for npm
+README.ko.md
+
+# Source files - only distribute built files
+src/
+
+# Plugin submodules
+plugins/
+
+# Other
+*.log
+*.tgz
+coverage/
+node_modules/
