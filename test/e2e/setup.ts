@@ -32,8 +32,8 @@ export function shouldRunE2ETests(): boolean {
  */
 export function getE2EConfig(): E2EConfig {
   const githubToken = process.env.GITHUB_TEST_TOKEN || ''
-  const testOwner = process.env.GITHUB_TEST_OWNER || 'gh-please-e2e'
-  const testRepo = process.env.GITHUB_TEST_REPO || 'test-repo'
+  const testOwner = process.env.GITHUB_TEST_OWNER || 'pleaseai'
+  const testRepo = process.env.GITHUB_TEST_REPO || 'gh-please-e2e'
   const skipCleanup = process.env.E2E_SKIP_CLEANUP === 'true'
 
   return {
@@ -131,8 +131,11 @@ export class E2ETestHelper {
       args.push('-f', `body=${body}`)
     }
 
+    // GitHub API requires labels as an array in JSON format
     if (labels && labels.length > 0) {
-      args.push('-f', `labels=${labels.join(',')}`)
+      for (const label of labels) {
+        args.push('-f', `labels[]=${label}`)
+      }
     }
 
     const proc = Bun.spawn(['gh', ...args], {
@@ -147,8 +150,19 @@ export class E2ETestHelper {
     await proc.exited
 
     const stdout = await new Response(proc.stdout).text()
+    const stderr = await new Response(proc.stderr).text()
+
+    // Check for errors
+    if (proc.exitCode !== 0) {
+      throw new Error(`Failed to create issue: ${stderr || stdout}`)
+    }
+
     const response = JSON.parse(stdout)
     const issueNumber = response.number
+
+    if (!issueNumber) {
+      throw new Error(`Failed to get issue number from response: ${stdout}`)
+    }
 
     this.artifacts.addIssue(issueNumber)
 
@@ -300,13 +314,22 @@ export function setupE2ESuite(): E2ETestHelper | null {
 
 /**
  * Run gh please CLI command for E2E tests
+ * Uses local source code (dist/index.js) instead of installed extension
  */
 export async function runE2ECommand(
   args: string[],
   config: E2EConfig,
 ): Promise<{ exitCode: number | null, stdout: string, stderr: string }> {
+  // Add --repo flag if not already present
+  const commandArgs = [...args]
+  if (!commandArgs.includes('--repo')) {
+    commandArgs.push('--repo', `${config.testOwner}/${config.testRepo}`)
+  }
+
+  // Run local build directly instead of installed gh extension
+  // This ensures we're testing the current code, not an older installed version
   const proc = Bun.spawn(
-    ['gh', 'please', ...args],
+    ['bun', 'run', 'dist/index.js', ...commandArgs],
     {
       env: {
         ...process.env,
@@ -314,6 +337,7 @@ export async function runE2ECommand(
       },
       stdout: 'pipe',
       stderr: 'pipe',
+      cwd: process.cwd(),
     },
   )
 

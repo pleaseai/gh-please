@@ -4,10 +4,16 @@
  *
  * NOTE: These tests only run when GITHUB_TEST_TOKEN is set
  * Set the following environment variables to run these tests:
- * - GITHUB_TEST_TOKEN: GitHub personal access token
- * - GITHUB_TEST_OWNER: Test repository owner (default: gh-please-e2e)
- * - GITHUB_TEST_REPO: Test repository name (default: test-repo)
+ * - GITHUB_TEST_TOKEN: GitHub personal access token with 'repo' scope
+ * - GITHUB_TEST_OWNER: Test repository owner (default: pleaseai)
+ * - GITHUB_TEST_REPO: Test repository name (default: gh-please-e2e)
  * - E2E_SKIP_CLEANUP: Set to 'true' to skip cleanup (useful for debugging)
+ *
+ * REQUIREMENTS:
+ * - Token must have 'repo' scope (full repository access)
+ * - Test repository must have GitHub Issues enabled
+ * - Repository must have sub-issues feature enabled (GitHub Enterprise or beta)
+ * - If you get HTTP 403 errors, check token permissions and repository settings
  */
 
 import type { E2ETestHelper } from './setup'
@@ -116,7 +122,7 @@ describe('Dependency Management - E2E', () => {
     ], config)
 
     expect(result.exitCode).toBe(0)
-    expect(result.stdout).toContain('Dependencies blocking')
+    expect(result.stdout).toMatch(/blocked by \d+ issue/i)
     expect(result.stdout).toContain(`#${blockingIssue1Number}`)
     expect(result.stdout).toContain(`#${blockingIssue2Number}`)
 
