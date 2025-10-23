@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.0](https://github.com/pleaseai/gh-please/compare/github-v0.10.0...github-v0.11.0) (2025-10-23)
+
+
+### Features
+
+* add pr review thread list command with Node IDs ([#62](https://github.com/pleaseai/gh-please/issues/62)) ([978ef1e](https://github.com/pleaseai/gh-please/commit/978ef1e4b39ed07fb86a1b03c0898586342cc93c))
+
 ## [0.10.0](https://github.com/pleaseai/gh-please/compare/github-v0.9.0...github-v0.10.0) (2025-10-23)
 
 
