@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.9.0](https://github.com/pleaseai/gh-please/compare/github-v0.8.0...github-v0.9.0) (2025-10-23)
+
+
+### Features
+
+* Add LLM-friendly output formats (Markdown/XML) - Phases 1-3 ([#53](https://github.com/pleaseai/gh-please/issues/53)) ([c90cf3b](https://github.com/pleaseai/gh-please/commit/c90cf3b53ca578c69a5e71f8654ac7d1be7836bc))
+* automate npm publish in release workflow ([#59](https://github.com/pleaseai/gh-please/issues/59)) ([18af496](https://github.com/pleaseai/gh-please/commit/18af496a15853369405baa5f7ae8614205e5f26b)), closes [#35](https://github.com/pleaseai/gh-please/issues/35)
+
+
+### Bug Fixes
+
+* revert package-name to 'github' in release-please config ([d598b38](https://github.com/pleaseai/gh-please/commit/d598b38d7942f9baf9a6d45227bd3a90aebe5471)), closes [#60](https://github.com/pleaseai/gh-please/issues/60) [#55](https://github.com/pleaseai/gh-please/issues/55)
+
+
+### Documentation
+
+* fix component resolution errors and restructure documentation ([#56](https://github.com/pleaseai/gh-please/issues/56)) ([b3ce1f9](https://github.com/pleaseai/gh-please/commit/b3ce1f9bb1db6a50543d1dda9384a9a82cab2a6c))
+* fix documentation links to include language prefix ([#58](https://github.com/pleaseai/gh-please/issues/58)) ([d42ae13](https://github.com/pleaseai/gh-please/commit/d42ae137e307762ed33257fc881ed880525c5b62))
+
 ## [0.8.0](https://github.com/pleaseai/gh-please/compare/github-v0.7.0...github-v0.8.0) (2025-10-21)
 
 
