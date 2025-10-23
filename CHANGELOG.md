@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.12.0](https://github.com/pleaseai/gh-please/compare/github-v0.11.0...github-v0.12.0) (2025-10-23)
+
+
+### Features
+
+* add E2E tests for PR review threads and comment management ([#66](https://github.com/pleaseai/gh-please/issues/66)) ([1975793](https://github.com/pleaseai/gh-please/commit/197579362902e30cba5c489bf26353c4d81eaa3d))
+
+
+### Bug Fixes
+
+* improve E2E test infrastructure and move to manual-only workflow ([#64](https://github.com/pleaseai/gh-please/issues/64)) ([4b261e7](https://github.com/pleaseai/gh-please/commit/4b261e7e6eb35c0e5120505b858a3ff4279c6619))
+
+
+### Documentation
+
+* update documentation to v0.11.0 with latest features ([#67](https://github.com/pleaseai/gh-please/issues/67)) ([280bd85](https://github.com/pleaseai/gh-please/commit/280bd85253e25e9de31030520b041b1e5b1a0cf9))
+
 ## [0.11.0](https://github.com/pleaseai/gh-please/compare/github-v0.10.0...github-v0.11.0) (2025-10-23)
 
 
