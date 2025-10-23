@@ -49,11 +49,12 @@ export interface BlockedByIssue {
 }
 
 export interface ReviewThread {
-  id: string
   nodeId: string
   isResolved: boolean
   path: string
   line: number | null
+  firstCommentBody?: string
+  resolvedBy?: string
 }
 
 export type PleaseTriggerType = 'triage' | 'investigate' | 'fix' | 'review' | 'apply'

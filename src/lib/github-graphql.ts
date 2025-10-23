@@ -386,11 +386,12 @@ export async function listReviewThreads(
   prNodeId: string,
 ): Promise<
   Array<{
-    id: string
     nodeId: string
     isResolved: boolean
     path: string
     line: number | null
+    firstCommentBody?: string
+    resolvedBy?: string
   }>
 > {
   const query = `
@@ -403,6 +404,14 @@ export async function listReviewThreads(
               isResolved
               path
               line
+              comments(first: 1) {
+                nodes {
+                  body
+                }
+              }
+              resolvedBy {
+                login
+              }
             }
           }
         }
@@ -417,10 +426,11 @@ export async function listReviewThreads(
   }
 
   return data.node.reviewThreads.nodes.map((thread: any) => ({
-    id: thread.id,
     nodeId: thread.id,
     isResolved: thread.isResolved,
     path: thread.path,
     line: thread.line,
+    firstCommentBody: thread.comments?.nodes?.[0]?.body,
+    resolvedBy: thread.resolvedBy?.login,
   }))
 }

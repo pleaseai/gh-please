@@ -132,6 +132,7 @@ gh please issue comment edit <comment-id> --body "text"   # Edit issue comment
 
 # Core PR Management (Built-in)
 gh please pr review reply <comment-id> -b "text"  # Reply to review comment
+gh please pr review thread list <pr-number> [--unresolved-only]          # List review threads with Node IDs
 gh please pr review thread resolve <pr-number> [--thread <id> | --all]   # Resolve threads
 gh please pr review comment edit <comment-id> --body "text"  # Edit PR review comment
 
@@ -673,11 +674,17 @@ gh please pr review reply 2442802556 -b "Fixed PluginType definition mismatch in
 After addressing feedback and responding, resolve review threads:
 
 ```bash
+# List all review threads to get Node IDs
+gh please pr review thread list <pr-number>
+
+# List only unresolved threads
+gh please pr review thread list <pr-number> --unresolved-only
+
 # Resolve all threads on a PR (recommended after addressing all feedback)
 gh please pr review thread resolve <pr-number> --all
 
-# Resolve a specific thread
-gh please pr review thread resolve <pr-number> --thread <thread-id>
+# Resolve a specific thread (use Node ID from list command)
+gh please pr review thread resolve <pr-number> --thread <thread-node-id>
 ```
 
 **Example Workflow:**
