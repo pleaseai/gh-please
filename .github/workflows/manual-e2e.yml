@@ -6,11 +6,11 @@ on:
       test_owner:
         description: GitHub test repository owner
         required: false
-        default: gh-please-e2e
+        default: pleaseai
       test_repo:
         description: GitHub test repository name
         required: false
-        default: test-repo
+        default: gh-please-e2e
       skip_cleanup:
         description: Skip cleanup after tests (for debugging)
         required: false
@@ -44,7 +44,7 @@ jobs:
 
       - name: Run E2E tests
         env:
-          GITHUB_TEST_TOKEN: ${{ secrets.GITHUB_TEST_TOKEN }}
+          GITHUB_TEST_TOKEN: ${{ secrets.GH_PLEASE_TEST_TOKEN }}
           GITHUB_TEST_OWNER: ${{ inputs.test_owner }}
           GITHUB_TEST_REPO: ${{ inputs.test_repo }}
           E2E_SKIP_CLEANUP: ${{ inputs.skip_cleanup && 'true' || 'false' }}
