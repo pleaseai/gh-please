@@ -58,6 +58,7 @@ export function createSubIssueCommand(): Command {
             ...(options.body ? ['-b', options.body] : []),
           ],
           {
+            env: process.env,
             stdout: 'pipe',
             stderr: 'pipe',
           },
