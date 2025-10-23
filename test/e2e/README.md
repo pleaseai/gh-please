@@ -6,17 +6,20 @@ End-to-end tests that verify commands against the real GitHub API.
 
 ### 1. Create GitHub Personal Access Token
 
-Create a token with the following scopes:
-- `repo` (full repository access) - **Required** for GraphQL operations
+**Important**: You must use a **Classic Personal Access Token** (not fine-grained). Fine-grained tokens do not support all GraphQL operations (e.g., sub-issue mutations).
 
-Create token at: https://github.com/settings/tokens/new
+Create a Classic token with the following scopes:
+- `repo` (full repository access) - **Required** for GraphQL operations
+- `read:org` (read organization data) - **Required** for sub-issue operations
+
+Create Classic token at: https://github.com/settings/tokens/new
 
 ### 2. Create Test Repository
 
 Create a test repository on GitHub:
 - Repository name: `gh-please-e2e` (or your custom name)
 - Enable GitHub Issues
-- **Important**: Sub-issues feature requires GitHub Enterprise or beta access
+- **Important**: Sub-issues feature is available for public repositories with the feature enabled
 
 ### 3. Set Environment Variables
 
@@ -28,6 +31,9 @@ export GITHUB_TEST_TOKEN=ghp_...    # Your GitHub PAT with 'repo' scope
 export GITHUB_TEST_OWNER=pleaseai   # Repository owner
 export GITHUB_TEST_REPO=gh-please-e2e  # Repository name
 export E2E_SKIP_CLEANUP=false       # Set to 'true' to keep test artifacts
+
+# For PR-specific tests (review thread, PR comments)
+export GITHUB_TEST_PR=123           # Existing PR number with review comments
 ```
 
 ### 4. Run E2E Tests
@@ -39,6 +45,8 @@ bun test test/e2e/
 # Run specific test suite
 bun test test/e2e/sub-issue.e2e.test.ts
 bun test test/e2e/dependency.e2e.test.ts
+bun test test/e2e/pr-review-thread.e2e.test.ts
+bun test test/e2e/comment.e2e.test.ts
 ```
 
 ## Test Behavior
@@ -128,6 +136,20 @@ E2E tests are **not** run automatically in CI to avoid API rate limits and test 
 - ✅ Remove dependency
 - ✅ Handle issues with no dependencies
 - ✅ Error handling (invalid issue, invalid blocker)
+
+### PR Review Thread Management (pr-review-thread.e2e.test.ts)
+- ✅ List all review threads on a PR
+- ✅ List only unresolved review threads
+- ✅ Resolve all review threads
+- ✅ Error handling (invalid PR, invalid thread ID)
+- ⚠️ **Note**: Requires `GITHUB_TEST_PR` environment variable set to existing PR number
+
+### Comment Management (comment.e2e.test.ts)
+- ✅ List issue comments
+- ✅ Edit issue comment
+- ✅ List PR review comments
+- ✅ Error handling (invalid issue, invalid PR, invalid comment ID)
+- ⚠️ **Note**: PR review comment tests require `GITHUB_TEST_PR` environment variable
 
 ## Development
 

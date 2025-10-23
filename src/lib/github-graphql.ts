@@ -42,6 +42,7 @@ export async function executeGraphQL(
   }
 
   const proc = Bun.spawn([getGhCommand(), ...args], {
+    env: process.env,
     stdout: 'pipe',
     stderr: 'pipe',
   })

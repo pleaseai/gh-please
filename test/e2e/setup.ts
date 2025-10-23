@@ -142,6 +142,7 @@ export class E2ETestHelper {
       env: {
         ...process.env,
         GITHUB_TOKEN: this.config.githubToken,
+        GH_TOKEN: this.config.githubToken,
       },
       stdout: 'pipe',
       stderr: 'pipe',
@@ -186,6 +187,7 @@ export class E2ETestHelper {
         env: {
           ...process.env,
           GITHUB_TOKEN: this.config.githubToken,
+          GH_TOKEN: this.config.githubToken,
         },
       }).exited
     }
@@ -322,9 +324,12 @@ export async function runE2ECommand(
 ): Promise<{ exitCode: number | null, stdout: string, stderr: string }> {
   // Add --repo flag if not already present
   const commandArgs = [...args]
-  if (!commandArgs.includes('--repo')) {
+  if (!commandArgs.includes('--repo') && !commandArgs.includes('-R')) {
     commandArgs.push('--repo', `${config.testOwner}/${config.testRepo}`)
   }
+
+  // Debug: Log the command being run
+  // console.log('🔧 Running command:', ['bun', 'run', 'dist/index.js', ...commandArgs].join(' '))
 
   // Run local build directly instead of installed gh extension
   // This ensures we're testing the current code, not an older installed version
@@ -334,6 +339,7 @@ export async function runE2ECommand(
       env: {
         ...process.env,
         GITHUB_TOKEN: config.githubToken,
+        GH_TOKEN: config.githubToken, // gh CLI prefers GH_TOKEN for API calls
       },
       stdout: 'pipe',
       stderr: 'pipe',
