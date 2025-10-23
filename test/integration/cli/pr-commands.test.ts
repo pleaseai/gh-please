@@ -207,6 +207,72 @@ describe('PR Commands - CLI Integration', () => {
     })
   })
 
+  describe('gh please pr review thread list', () => {
+    test('should list all threads with summary', async () => {
+      const result = await runCliExpectSuccess([
+        'pr',
+        'review',
+        'thread',
+        'list',
+        String(mockPr.number),
+      ], {
+        env: { GH_PATH: mockGhPath! },
+      })
+
+      assertOutputContains(result, 'Listing review threads')
+      assertOutputContains(result, 'Review Threads for PR')
+      assertOutputContains(result, 'Node ID:')
+      assertOutputContains(result, 'gh please pr review thread resolve')
+      assertExitCode(result, 0)
+    })
+
+    test('should list only unresolved threads with --unresolved-only flag', async () => {
+      const result = await runCliExpectSuccess([
+        'pr',
+        'review',
+        'thread',
+        'list',
+        String(mockPr.number),
+        '--unresolved-only',
+      ], {
+        env: { GH_PATH: mockGhPath! },
+      })
+
+      assertOutputContains(result, 'Listing review threads')
+      assertOutputContains(result, 'Thread')
+      assertOutputContains(result, 'Node ID:')
+      assertExitCode(result, 0)
+    })
+
+    test('should show help with --help flag', async () => {
+      const result = await runCliExpectSuccess(['pr', 'review', 'thread', 'list', '--help'], {
+        env: { GH_PATH: mockGhPath! },
+      })
+
+      assertOutputContains(result, 'Usage:')
+      assertOutputContains(result, 'List review threads on a pull request')
+      assertOutputContains(result, '--unresolved-only')
+      assertOutputContains(result, '--repo')
+    })
+
+    test('should fail with invalid PR number', async () => {
+      const result = await runCliExpectFailure([
+        'pr',
+        'review',
+        'thread',
+        'list',
+        'not-a-number',
+      ], {
+        env: { GH_PATH: mockGhPath! },
+      })
+
+      assertOutputContains(result, 'Error', 'any')
+    })
+
+    // Note: Additional edge cases (no threads, all resolved) are covered by unit tests
+    // Integration tests focus on the happy path with mocked GitHub API
+  })
+
   describe('gh please pr review thread resolve', () => {
     test('should resolve specific thread with --thread option', async () => {
       const result = await runCliExpectSuccess([
