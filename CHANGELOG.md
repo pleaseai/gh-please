@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.10.0](https://github.com/pleaseai/gh-please/compare/github-v0.9.0...github-v0.10.0) (2025-10-23)
+
+
+### Features
+
+* export lib and types for plugin consumption ([3a8751b](https://github.com/pleaseai/gh-please/commit/3a8751bd7f6138ffc86203cfe80473d14c7016ce))
+
+
+### Documentation
+
+* add npm version badge to README files ([cc7ddf0](https://github.com/pleaseai/gh-please/commit/cc7ddf044d17b9ca3df536c1c2b6616f4c0f2d18))
+
 ## [0.9.0](https://github.com/pleaseai/gh-please/compare/github-v0.8.0...github-v0.9.0) (2025-10-23)
 
 
