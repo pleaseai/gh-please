@@ -5,16 +5,14 @@
       "Bash(bun run type-check)",
       "Bash(bun run build)",
       "Bash(bun test)",
-      "Bash(bun test:*)",
-      "Bash(gh issue develop:*)",
+      "Bash(bun test :*)",
+      "Bash(gh issue develop :*)",
       "Bash(gh --version)",
       "WebFetch(domain:docs.github.com)",
-      "Bash(gh issue view *)",
-      "Bash(gh pr list)",
-      "Bash(gh pr list)",
-      "Bash(gh pr view *)",
-      "Bash(gh pr diff *)",
-      "Bash(gh issue view:*)"
+      "Bash(gh pr list :*)",
+      "Bash(gh pr view :*)",
+      "Bash(gh pr diff :*)",
+      "Bash(gh issue view :*)"
     ],
     "deny": [],
     "ask": []

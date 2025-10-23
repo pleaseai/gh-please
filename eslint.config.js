@@ -7,6 +7,9 @@ export default antfu({
     // Ignore Claude Code skills documentation
     '.claude/skills/**',
     'skills/**',
+    // Ignore documentation markdown files with code blocks
+    'CLAUDE.md',
+    'docs-dev/**/*.md',
   ],
 }, {
   rules: {

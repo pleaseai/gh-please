@@ -35,9 +35,20 @@
   "bin": {
     "gh-please": "./dist/index.js"
   },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "dist/**/*.d.ts",
+    "dist/index.js"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "bun build src/index.ts --outdir dist --target bun --format esm",
+    "build:types": "tsc --project tsconfig.build.json",
     "build:prod": "bun build --compile --minify --sourcemap --bytecode src/index.ts --outfile dist/gh-please",
+    "prepublishOnly": "bun run build && bun run build:types",
     "dev": "bun run src/index.ts",
     "type-check": "tsc --noEmit",
     "lint": "eslint .",
