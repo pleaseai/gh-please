@@ -378,6 +378,15 @@ gh please issue comment edit 123456789 --body "Corrected"
 **ID Type Detection**:
 Numeric input is automatically treated as Database ID for comment operations.
 
+**ID Converter Utility** (`src/lib/id-converter.ts`):
+The CLI automatically converts Database ID to Node ID when needed:
+1. Detects input format (Database ID or Node ID)
+2. If Database ID: fetches comment list from REST API, extracts `node_id`
+3. If Node ID: uses directly without conversion
+4. Performs GraphQL operations using Node ID
+
+This enables support for **general review comments** (`line: null`) that cannot be accessed via REST API.
+
 #### 3. Node ID (GraphQL Global ID) - **REQUIRED FOR THREADS**
 
 GraphQL's universal identifier, required for types without Database ID.
@@ -394,9 +403,15 @@ GraphQL's universal identifier, required for types without Database ID.
 # Thread operations - Node ID required (GraphQL-only type)
 gh please pr review thread list 456                    # Get Node IDs
 gh please pr review thread resolve 456 --thread PRRT_kwDOABC123
+
+# Comment operations - Both Database ID and Node ID supported
+gh please pr review reply 2442802556 -b "Reply"              # Database ID
+gh please pr review reply PRRC_kwDOP34zbs6ShH0J -b "Reply"  # Node ID (direct)
 ```
 
 **Why Node ID is required for threads**: `PullRequestReviewThread` is a GraphQL-exclusive type with no REST API equivalent and no `databaseId` field.
+
+**Why both IDs work for comments**: The ID converter utility (`src/lib/id-converter.ts`) automatically handles conversion, enabling flexible input and support for all comment types including general review comments.
 
 #### ID Compatibility Matrix
 

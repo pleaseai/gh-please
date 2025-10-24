@@ -1,8 +1,8 @@
 import { Command } from 'commander'
-import { getReviewComment, updateReviewComment } from '../../../lib/comment-api'
 import { getRepoInfo } from '../../../lib/github-api'
+import { updateReviewCommentByNodeId } from '../../../lib/github-graphql'
 import { detectSystemLanguage, getCommentMessages } from '../../../lib/i18n'
-import { validateCommentId } from '../../../lib/validation'
+import { toReviewCommentNodeId, validateCommentIdentifier } from '../../../lib/id-converter'
 
 /**
  * Creates a command to edit PR review comments
@@ -13,17 +13,18 @@ export function createReviewCommentEditCommand(): Command {
 
   command
     .description('Edit a PR review comment')
-    .argument('<comment-id>', 'ID of the review comment to edit')
+    .argument('<comment-id>', 'Database ID (number) or Node ID (PRRC_...) of the review comment')
     .option('-b, --body <text>', 'New comment body text')
     .option('-F, --body-file <file>', 'Read body from file (use "-" for stdin)')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
-    .action(async (commentIdStr: string, options: { body?: string, bodyFile?: string, repo?: string }) => {
+    .option('--pr <number>', 'PR number (required when using Database ID with --repo)')
+    .action(async (commentIdStr: string, options: { body?: string, bodyFile?: string, repo?: string, pr?: string }) => {
       const lang = detectSystemLanguage()
       const msg = getCommentMessages(lang)
 
       try {
-        // Validate comment ID
-        const commentId = validateCommentId(commentIdStr)
+        // Validate comment identifier (Database ID or Node ID)
+        const commentIdentifier = validateCommentIdentifier(commentIdStr)
 
         let body = options.body
 
@@ -67,19 +68,55 @@ export function createReviewCommentEditCommand(): Command {
           process.exit(1)
         }
 
-        // Get repository info
+        // Get repository info and PR number
         const { owner, repo } = await getRepoInfo(options.repo)
 
-        // Fetch current comment (for verification)
-        console.log(msg.fetchingComment(commentId))
-        await getReviewComment(owner, repo, commentId)
+        // Convert comment identifier to Node ID
+        // For Database ID, we need PR number to fetch the comment list
+        let commentNodeId: string
 
-        // Update comment
-        console.log(msg.updatingComment(commentId))
-        await updateReviewComment(owner, repo, commentId, body)
+        if (commentIdentifier.startsWith('PRRC_')) {
+          // Already a Node ID, use directly
+          commentNodeId = commentIdentifier
+          console.log(`✓ Node ID detected, using directly`)
+        }
+        else {
+          // Database ID - need PR number to convert
+          if (!options.pr) {
+            throw new Error(
+              'PR number is required when using Database ID. '
+              + 'Use --pr <number> or provide Node ID instead.',
+            )
+          }
+
+          const prNumber = Number.parseInt(options.pr, 10)
+          if (Number.isNaN(prNumber)) {
+            throw new TypeError('Invalid PR number')
+          }
+
+          console.log(`🔄 Converting Database ID to Node ID...`)
+          commentNodeId = await toReviewCommentNodeId(
+            commentIdentifier,
+            owner,
+            repo,
+            prNumber,
+          )
+        }
+
+        // Update comment using GraphQL
+        const displayId = Number.parseInt(commentIdentifier, 10) || commentIdentifier
+        console.log(msg.updatingComment(typeof displayId === 'number' ? displayId : 0))
+        await updateReviewCommentByNodeId(commentNodeId, body)
 
         console.log(msg.commentUpdated)
-        console.log(`   https://github.com/${owner}/${repo}/pull#discussion_r${commentId}`)
+        // Show URL (best effort - may not have PR number for Node ID input)
+        if (options.pr) {
+          const prNumber = Number.parseInt(options.pr, 10)
+          const dbId = Number.parseInt(commentIdentifier, 10)
+          if (!Number.isNaN(dbId)) {
+            console.log(`   https://github.com/${owner}/${repo}/pull/${prNumber}#discussion_r${dbId}`)
+          }
+        }
       }
       catch (error) {
         if (error instanceof Error) {
