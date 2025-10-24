@@ -126,8 +126,9 @@ Respond to review comments, manage discussion threads, and edit comments:
 #### Reply to Comments
 
 ```bash
-# Reply to review comment (use Database ID from GitHub UI)
-gh please pr review reply 1234567890 -b "Fixed in latest commit"
+# Reply to review comment (supports both Database ID and Node ID)
+gh please pr review reply 1234567890 -b "Fixed in latest commit"        # Database ID
+gh please pr review reply PRRC_kwDOP34zbs6ShH0J -b "Fixed!"            # Node ID also supported
 
 # Multi-line reply
 gh please pr review reply 1234567890 --body "$(cat <<'EOF'
@@ -145,9 +146,10 @@ EOF
 echo "Thanks for the review!" | gh please pr review reply 1234567890
 ```
 
-**Finding comment Database ID:**
-- GitHub UI: URL shows `#discussion_r1234567890` → use `1234567890`
-- Use `gh please pr review comment list <pr-number>` to see all comments
+**Finding comment IDs:**
+- **Database ID** (numeric): GitHub UI URL shows `#discussion_r1234567890` → use `1234567890`
+- **Node ID** (string): Use `gh please pr review thread list <pr-number>` to get Node IDs
+- Both formats are auto-detected and supported
 
 **Limitation:** Only top-level review comments supported (API restriction).
 
@@ -178,12 +180,18 @@ gh please pr review thread resolve 456 --all --repo owner/repo
 #### Edit Comments
 
 ```bash
-# Edit PR review comment (use Database ID)
-gh please pr review comment edit 1234567890 --body "Updated comment text"
+# Edit PR review comment (supports both Database ID and Node ID)
+gh please pr review comment edit 1234567890 --body "Updated text" --pr 456     # Database ID (requires --pr)
+gh please pr review comment edit PRRC_kwDOABC123 --body "Updated text"        # Node ID (--pr optional)
 
-# Edit issue comment
-gh please issue comment edit 987654321 --body "Corrected information"
+# Edit issue comment (supports both Database ID and Node ID)
+gh please issue comment edit 987654321 --body "Corrected" --issue 123         # Database ID (requires --issue)
+gh please issue comment edit IC_kwDOABC123 --body "Corrected"                 # Node ID (--issue optional)
 ```
+
+**ID Requirements:**
+- **Database ID**: Requires `--pr <number>` or `--issue <number>` for conversion to Node ID
+- **Node ID**: Can be used directly without additional options
 
 ### Configuration
 
@@ -381,16 +389,25 @@ GitHub uses three ID systems:
    - Format: Large integer like `1234567890`
    - Use for: Comments (auto-detected from numeric input)
    - Example: `gh please pr review reply 1234567890 -b "Fixed"`
+   - Note: Automatically converted to Node ID internally
 
 3. **Node ID** - GraphQL global identifier
-   - Format: Base64 string like `PRRT_kwDOABC123`
-   - Use for: Review threads (GraphQL-only type)
-   - Example: `gh please pr review thread resolve 456 --thread PRRT_kwDOABC123`
+   - Format: Base64 string like `PRRC_kwDOABC123`, `IC_kwDOABC123`
+   - Use for: Comments (direct), Review threads (required)
+   - Examples:
+     - `gh please pr review reply PRRC_kwDOABC123 -b "Fixed"`
+     - `gh please pr review thread resolve 456 --thread PRRT_kwDOABC123`
 
 **When to use which:**
 - Always use **Number** for issues and PRs
-- Use **Database ID** for comments (from GitHub UI URL)
+- Use **Database ID** or **Node ID** for comments (both auto-detected)
 - Use **Node ID** for threads (from `thread list` command)
+
+**ID Converter (v0.11.0+):**
+All comment operations now support both Database ID and Node ID:
+- **Database ID** → Automatically converted to Node ID via REST API
+- **Node ID** → Used directly (no conversion needed)
+- Auto-detection based on format pattern
 
 ## Tips
 

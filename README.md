@@ -21,10 +21,11 @@ English | [한국어](./README.ko.md)
 - **Plugin System**: Extensible architecture
 
 ### Latest Updates (v0.11.0)
+- ✨ **ID Converter Utility** - Support both Database ID and Node ID for comment operations
 - ✨ **PR Review Thread List** - Display review threads with Node IDs and copy-ready resolve commands
 - ✨ **E2E Testing** - Comprehensive end-to-end test coverage (26 tests, 100% pass rate)
 - ✨ **LLM-Friendly Output Formats** - JSON, Markdown, XML support (Phase 1-3 complete)
-- ✨ **Comment Management** - List and edit Issue/PR comments
+- ✨ **Comment Management** - List and edit Issue/PR comments with flexible ID formats
 - ✨ **Worktree Location** - Unified management at `~/.please/worktrees/`
 - ✨ **PR Review Commands** - Consistent command structure
 
@@ -45,14 +46,16 @@ gh please issue dependency add 200 --blocked-by 199
 gh please issue develop 123  # Auto-create worktree
 
 # PR management
-gh please pr review reply 1234567890 -b "Fixed!"
+gh please pr review reply 1234567890 -b "Fixed!"        # Database ID
+gh please pr review reply PRRC_kwDOABC123 -b "Fixed!"    # Node ID also supported
 gh please pr review thread list 456              # List threads with Node IDs
 gh please pr review thread list 456 --unresolved-only
 gh please pr review thread resolve 456 --all
 
 # Comment management
 gh please issue comment list 123 --format json
-gh please pr comment edit 987654321 --body "Updated content"
+gh please issue comment edit 987654321 --body "Updated"  # Requires --issue option
+gh please pr review comment edit 987654321 --body "Updated" --pr 456
 ```
 
 ## Key Features
@@ -81,8 +84,13 @@ gh please issue sub-issue list 100 --format markdown
 ### PR Review Workflow
 
 ```bash
-# Respond to feedback
-gh please pr review reply <comment-id> -b "Fixed in commit abc123"
+# Respond to feedback (supports both Database ID and Node ID)
+gh please pr review reply 1234567890 -b "Fixed in commit abc123"  # Database ID
+gh please pr review reply PRRC_kwDOABC123 -b "Fixed!"            # Node ID
+
+# Edit comments with flexible ID support
+gh please pr review comment edit 1234567890 --body "Updated" --pr 456
+gh please issue comment edit 987654321 --body "Updated" --issue 123
 
 # Resolve all threads
 gh please pr review thread resolve 456 --all

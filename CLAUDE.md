@@ -128,13 +128,13 @@ gh please issue dependency remove <issue> <blocker>               # Remove block
 gh please issue dependency list <issue>                           # List blockers
 gh please issue develop <issue-number> [--repo owner/repo] [--worktree] [--base <branch>] [--name <branch>]  # Start developing on issue (alias: dev)
 gh please issue cleanup [--repo owner/repo] [--all]       # Clean up unused worktrees
-gh please issue comment edit <comment-id> --body "text"   # Edit issue comment
+gh please issue comment edit <comment-id> --body "text" [--issue <number>]  # Edit issue comment (supports both ID formats)
 
 # Core PR Management (Built-in)
-gh please pr review reply <comment-id> -b "text"  # Reply to review comment
+gh please pr review reply <comment-id> -b "text"  # Reply to review comment (supports both Database ID and Node ID)
 gh please pr review thread list <pr-number> [--unresolved-only]          # List review threads with Node IDs
 gh please pr review thread resolve <pr-number> [--thread <id> | --all]   # Resolve threads
-gh please pr review comment edit <comment-id> --body "text"  # Edit PR review comment
+gh please pr review comment edit <comment-id> --body "text" [--pr <number>]  # Edit PR review comment (supports both ID formats)
 
 # AI Commands (Requires @pleaseai/gh-please-ai plugin)
 gh please ai triage <issue-number>         # Trigger triage bot
@@ -194,12 +194,25 @@ All command output messages (success, errors, progress) are internationalized. G
 
 ### Core Libraries
 
+- **`src/lib/id-converter.ts`**: Unified ID conversion utility for GitHub identifiers
+  - **Purpose**: Central utility to handle Database ID ↔ Node ID conversion for comments
+  - **Key functions**:
+    - `isNodeId(identifier)` - Detect Node ID format (e.g., `PRRC_kwDO...`, `IC_kwDO...`)
+    - `isDatabaseId(identifier)` - Detect Database ID format (numeric)
+    - `validateCommentIdentifier(identifier)` - Validate and return identifier
+    - `toReviewCommentNodeId(identifier, owner, repo, prNumber)` - Convert review comment ID to Node ID
+    - `toIssueCommentNodeId(identifier, owner, repo, issueNumber)` - Convert issue comment ID to Node ID
+  - **Implementation**: Uses REST API list endpoints to fetch `node_id` field when Database ID provided
+  - **Benefits**: Supports both ID formats, backward compatible, reusable across commands
+  - **Use cases**: PR review reply, PR review comment edit, issue comment edit
+
 - **`src/lib/github-graphql.ts`**: GraphQL API layer for advanced GitHub operations
   - Executes GraphQL queries and mutations via `gh api graphql`
   - Handles Node ID conversions for issues and PRs
   - Sub-issue management: `addSubIssue()`, `removeSubIssue()`, `listSubIssues()`
   - Issue dependencies: `addBlockedBy()`, `removeBlockedBy()`, `listBlockedBy()`
   - Review threads: `resolveReviewThread()`, `listReviewThreads()`
+  - Comment mutations: `createReviewCommentReply()`, `updateReviewCommentByNodeId()`, `updateIssueCommentByNodeId()`
   - Key functions: `executeGraphQL()`, `getIssueNodeId()`, `getPrNodeId()`
   - Requires GraphQL-Features header for sub_issues mutations
 
@@ -209,14 +222,15 @@ All command output messages (success, errors, progress) are internationalized. G
   - Common utilities: `getRepoInfo()`, `createIssueComment()`, `createPrComment()`
   - Key functions: `getCurrentPrInfo()`, `getReviewComment()`, `createReviewReply()`
 
-- **`src/lib/comment-api.ts`**: Comment editing utilities
+- **`src/lib/comment-api.ts`**: Comment editing utilities (deprecated, replaced by GraphQL functions)
   - Get and update issue comments and PR review comments
   - Key functions: `getIssueComment()`, `updateIssueComment()`, `getReviewComment()`, `updateReviewComment()`
-  - Used by: issue comment edit, PR review-comment edit commands
+  - Note: Comment operations now use `id-converter.ts` + GraphQL for better compatibility
 
 - **`src/lib/validation.ts`**: Input validation
-  - Validates comment IDs and reply body text
+  - Validates reply body text
   - Uses Zod schemas for type-safe validation
+  - Note: Comment ID validation moved to `id-converter.ts`
 
 - **`src/lib/repo-manager.ts`**: Repository management utilities
   - `parseRepoString()` - Parse "owner/repo" or GitHub URL format
@@ -369,14 +383,18 @@ Internal identifier used by REST API, automatically handled by gh-please.
 
 **Usage in gh-please**:
 ```bash
-# Comment operations - Database ID auto-detected (numeric input)
-gh please pr review reply 2442802556 -b "Fixed!"
-gh please pr review comment edit 2442802556 --body "Updated"
-gh please issue comment edit 123456789 --body "Corrected"
+# Comment operations - Both Database ID and Node ID supported (auto-detected)
+gh please pr review reply 2442802556 -b "Fixed!"                  # Database ID (numeric)
+gh please pr review reply PRRC_kwDOP34zbs6ShH0J -b "Fixed!"       # Node ID (string)
+gh please pr review comment edit 2442802556 --body "Updated" --pr 456
+gh please pr review comment edit PRRC_kwDOP34zbs6ShH0J --body "Updated"
+gh please issue comment edit 123456789 --body "Corrected" --issue 123
+gh please issue comment edit IC_kwDOABC123 --body "Corrected"
 ```
 
 **ID Type Detection**:
-Numeric input is automatically treated as Database ID for comment operations.
+- Node ID: Auto-detected by format pattern (`^[A-Z]{1,4}_[\w-]+$`)
+- Database ID: Auto-detected by numeric format, converted to Node ID via REST API list endpoint
 
 **ID Converter Utility** (`src/lib/id-converter.ts`):
 The CLI automatically converts Database ID to Node ID when needed:
