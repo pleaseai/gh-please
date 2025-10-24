@@ -104,8 +104,13 @@ export function createIssueCommentEditCommand(): Command {
         }
 
         // Update comment using GraphQL
-        const displayId = Number.parseInt(commentIdentifier, 10) || commentIdentifier
-        console.log(msg.updatingComment(typeof displayId === 'number' ? displayId : 0))
+        const displayId = Number.parseInt(commentIdentifier, 10)
+        if (!Number.isNaN(displayId)) {
+          console.log(msg.updatingComment(displayId))
+        }
+        else {
+          console.log(`🔄 Updating comment ${commentIdentifier}...`)
+        }
         await updateIssueCommentByNodeId(commentNodeId, body)
 
         console.log(msg.commentUpdated)

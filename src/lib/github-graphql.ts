@@ -509,10 +509,14 @@ export async function updateReviewCommentByNodeId(
     }
   `
 
-  await executeGraphQL(mutation, {
+  const data = await executeGraphQL(mutation, {
     commentId: commentNodeId,
     body,
   })
+
+  if (!data.updatePullRequestReviewComment?.pullRequestReviewComment) {
+    throw new Error('Failed to update review comment')
+  }
 }
 
 /**
@@ -539,8 +543,12 @@ export async function updateIssueCommentByNodeId(
     }
   `
 
-  await executeGraphQL(mutation, {
+  const data = await executeGraphQL(mutation, {
     commentId: commentNodeId,
     body,
   })
+
+  if (!data.updateIssueComment?.issueComment) {
+    throw new Error('Failed to update issue comment')
+  }
 }

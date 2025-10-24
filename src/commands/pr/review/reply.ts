@@ -76,9 +76,14 @@ export function createReviewReplyCommand(): Command {
           prInfo.number,
         )
 
-        // For display purposes, show original identifier or convert to number if possible
-        const displayId = Number.parseInt(commentIdentifier, 10) || 0
-        console.log(msg.creatingReply(displayId, prInfo.number))
+        // For display purposes, show original identifier
+        const displayId = Number.parseInt(commentIdentifier, 10)
+        if (!Number.isNaN(displayId)) {
+          console.log(msg.creatingReply(displayId, prInfo.number))
+        }
+        else {
+          console.log(`🔄 Creating reply to comment ${commentIdentifier} on PR #${prInfo.number}...`)
+        }
 
         // Create reply using GraphQL (supports all comment types including general comments)
         const result = await createReviewCommentReply(commentNodeId, body)
