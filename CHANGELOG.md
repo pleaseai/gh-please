@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.0](https://github.com/pleaseai/gh-please/compare/github-v0.12.0...github-v0.13.0) (2025-10-24)
+
+
+### Features
+
+* Add ID converter utility to support Node ID input and general review comments ([#69](https://github.com/pleaseai/gh-please/issues/69)) ([5b4421f](https://github.com/pleaseai/gh-please/commit/5b4421f4c78924125e75ae709e515e1bdbfc7da5))
+
 ## [0.12.0](https://github.com/pleaseai/gh-please/compare/github-v0.11.0...github-v0.12.0) (2025-10-23)
 
 
