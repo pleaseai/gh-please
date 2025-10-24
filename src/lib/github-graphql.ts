@@ -435,3 +435,120 @@ export async function listReviewThreads(
     resolvedBy: thread.resolvedBy?.login,
   }))
 }
+
+/**
+ * Create a reply to a PR review comment using Node ID
+ *
+ * @param commentNodeId - Node ID of the comment to reply to (PRRC_...)
+ * @param body - Reply body text
+ * @returns Created reply information
+ * @throws Error if the mutation fails
+ */
+export async function createReviewCommentReply(
+  commentNodeId: string,
+  body: string,
+): Promise<{
+  nodeId: string
+  databaseId: number
+  url: string
+}> {
+  const mutation = `
+    mutation($commentId: ID!, $body: String!) {
+      addPullRequestReviewComment(input: {
+        inReplyTo: $commentId
+        body: $body
+      }) {
+        comment {
+          id
+          databaseId
+          url
+        }
+      }
+    }
+  `
+
+  const data = await executeGraphQL(mutation, {
+    commentId: commentNodeId,
+    body,
+  })
+
+  if (!data.addPullRequestReviewComment?.comment) {
+    throw new Error('Failed to create review comment reply')
+  }
+
+  const comment = data.addPullRequestReviewComment.comment
+
+  return {
+    nodeId: comment.id,
+    databaseId: comment.databaseId,
+    url: comment.url,
+  }
+}
+
+/**
+ * Update a PR review comment using Node ID
+ *
+ * @param commentNodeId - Node ID of the comment to update (PRRC_...)
+ * @param body - New comment body text
+ * @throws Error if the mutation fails
+ */
+export async function updateReviewCommentByNodeId(
+  commentNodeId: string,
+  body: string,
+): Promise<void> {
+  const mutation = `
+    mutation($commentId: ID!, $body: String!) {
+      updatePullRequestReviewComment(input: {
+        pullRequestReviewCommentId: $commentId
+        body: $body
+      }) {
+        pullRequestReviewComment {
+          id
+        }
+      }
+    }
+  `
+
+  const data = await executeGraphQL(mutation, {
+    commentId: commentNodeId,
+    body,
+  })
+
+  if (!data.updatePullRequestReviewComment?.pullRequestReviewComment) {
+    throw new Error('Failed to update review comment')
+  }
+}
+
+/**
+ * Update an issue comment using Node ID
+ *
+ * @param commentNodeId - Node ID of the comment to update (IC_...)
+ * @param body - New comment body text
+ * @throws Error if the mutation fails
+ */
+export async function updateIssueCommentByNodeId(
+  commentNodeId: string,
+  body: string,
+): Promise<void> {
+  const mutation = `
+    mutation($commentId: ID!, $body: String!) {
+      updateIssueComment(input: {
+        id: $commentId
+        body: $body
+      }) {
+        issueComment {
+          id
+        }
+      }
+    }
+  `
+
+  const data = await executeGraphQL(mutation, {
+    commentId: commentNodeId,
+    body,
+  })
+
+  if (!data.updateIssueComment?.issueComment) {
+    throw new Error('Failed to update issue comment')
+  }
+}

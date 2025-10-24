@@ -50,6 +50,26 @@ describe('PR Commands - CLI Integration', () => {
           exitCode: 0,
         },
       },
+      // Mock list all review comments (REST API - for ID conversion)
+      {
+        args: /api -H Accept: application\/vnd.github\+json -H X-GitHub-Api-Version: 2022-11-28 \/repos\/.*\/.*\/pulls\/[0-9]+\/comments$/,
+        response: {
+          stdout: JSON.stringify([
+            {
+              id: mockReviewComment.id,
+              node_id: 'PRRC_kwDOTestNodeId',
+              body: mockReviewComment.body,
+              path: mockReviewComment.path,
+              line: mockReviewComment.line,
+              user: { login: 'test-user' },
+              created_at: '2024-01-01T00:00:00Z',
+              updated_at: '2024-01-01T00:00:00Z',
+              html_url: `https://github.com/test-owner/test-repo/pull/${mockPr.number}#discussion_r${mockReviewComment.id}`,
+            },
+          ]),
+          exitCode: 0,
+        },
+      },
       // Mock get review comment (REST API)
       {
         args: /api -H Accept: application\/vnd.github\+json -H X-GitHub-Api-Version: 2022-11-28 \/repos\/.*\/.*\/pulls\/[0-9]+\/comments\/[0-9]+/,
@@ -120,6 +140,24 @@ describe('PR Commands - CLI Integration', () => {
           stdout: JSON.stringify(
             createResolveThreadResponse(mockReviewThread.id),
           ),
+          exitCode: 0,
+        },
+      },
+      // Mock create review comment reply (GraphQL)
+      {
+        args: /api graphql -f query=.*addPullRequestReviewComment.*inReplyTo.*-F commentId=.*-F body=/,
+        response: {
+          stdout: JSON.stringify({
+            data: {
+              addPullRequestReviewComment: {
+                comment: {
+                  id: 'PRRC_kwDOTestReplyNodeId',
+                  databaseId: 999888777,
+                  url: `https://github.com/test-owner/test-repo/pull/${mockPr.number}#discussion_r999888777`,
+                },
+              },
+            },
+          }),
           exitCode: 0,
         },
       },

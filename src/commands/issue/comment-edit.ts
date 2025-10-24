@@ -1,8 +1,8 @@
 import { Command } from 'commander'
-import { getIssueComment, updateIssueComment } from '../../lib/comment-api'
 import { getRepoInfo } from '../../lib/github-api'
+import { updateIssueCommentByNodeId } from '../../lib/github-graphql'
 import { detectSystemLanguage, getCommentMessages } from '../../lib/i18n'
-import { validateCommentId } from '../../lib/validation'
+import { toIssueCommentNodeId, validateCommentIdentifier } from '../../lib/id-converter'
 
 /**
  * Creates a command to edit issue comments
@@ -13,17 +13,18 @@ export function createIssueCommentEditCommand(): Command {
 
   command
     .description('Edit an issue comment')
-    .argument('<comment-id>', 'ID of the issue comment to edit')
+    .argument('<comment-id>', 'Database ID (number) or Node ID (IC_...) of the issue comment')
     .option('-b, --body <text>', 'New comment body text')
     .option('-F, --body-file <file>', 'Read body from file (use "-" for stdin)')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
-    .action(async (commentIdStr: string, options: { body?: string, bodyFile?: string, repo?: string }) => {
+    .option('--issue <number>', 'Issue number (required when using Database ID with --repo)')
+    .action(async (commentIdStr: string, options: { body?: string, bodyFile?: string, repo?: string, issue?: string }) => {
       const lang = detectSystemLanguage()
       const msg = getCommentMessages(lang)
 
       try {
-        // Validate comment ID
-        const commentId = validateCommentId(commentIdStr)
+        // Validate comment identifier (Database ID or Node ID)
+        const commentIdentifier = validateCommentIdentifier(commentIdStr)
 
         let body = options.body
 
@@ -67,19 +68,60 @@ export function createIssueCommentEditCommand(): Command {
           process.exit(1)
         }
 
-        // Get repository info
+        // Get repository info and issue number
         const { owner, repo } = await getRepoInfo(options.repo)
 
-        // Fetch current comment (for verification)
-        console.log(msg.fetchingComment(commentId))
-        await getIssueComment(owner, repo, commentId)
+        // Convert comment identifier to Node ID
+        // For Database ID, we need issue number to fetch the comment list
+        let commentNodeId: string
 
-        // Update comment
-        console.log(msg.updatingComment(commentId))
-        await updateIssueComment(owner, repo, commentId, body)
+        if (commentIdentifier.startsWith('IC_')) {
+          // Already a Node ID, use directly
+          commentNodeId = commentIdentifier
+          console.log(`✓ Node ID detected, using directly`)
+        }
+        else {
+          // Database ID - need issue number to convert
+          if (!options.issue) {
+            throw new Error(
+              'Issue number is required when using Database ID. '
+              + 'Use --issue <number> or provide Node ID instead.',
+            )
+          }
+
+          const issueNumber = Number.parseInt(options.issue, 10)
+          if (Number.isNaN(issueNumber)) {
+            throw new TypeError('Invalid issue number')
+          }
+
+          console.log(`🔄 Converting Database ID to Node ID...`)
+          commentNodeId = await toIssueCommentNodeId(
+            commentIdentifier,
+            owner,
+            repo,
+            issueNumber,
+          )
+        }
+
+        // Update comment using GraphQL
+        const displayId = Number.parseInt(commentIdentifier, 10)
+        if (!Number.isNaN(displayId)) {
+          console.log(msg.updatingComment(displayId))
+        }
+        else {
+          console.log(`🔄 Updating comment ${commentIdentifier}...`)
+        }
+        await updateIssueCommentByNodeId(commentNodeId, body)
 
         console.log(msg.commentUpdated)
-        console.log(`   https://github.com/${owner}/${repo}/issues#issuecomment-${commentId}`)
+        // Show URL (best effort - may not have issue number for Node ID input)
+        if (options.issue) {
+          const issueNumber = Number.parseInt(options.issue, 10)
+          const dbId = Number.parseInt(commentIdentifier, 10)
+          if (!Number.isNaN(dbId)) {
+            console.log(`   https://github.com/${owner}/${repo}/issues/${issueNumber}#issuecomment-${dbId}`)
+          }
+        }
       }
       catch (error) {
         if (error instanceof Error) {

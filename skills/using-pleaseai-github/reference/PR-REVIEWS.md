@@ -42,11 +42,15 @@ gh please pr review reply <comment-id> -b <text> [--repo owner/repo]
 echo "text" | gh please pr review reply <comment-id> [--repo owner/repo]
 ```
 
+**Comment ID formats supported:**
+- **Database ID** (numeric): `1234567890` - automatically converted to Node ID
+- **Node ID** (string): `PRRC_kwDOP34zbs6ShH0J` - used directly
+
 **Note:** The old command `gh please pr review-reply` is deprecated but still works with a warning.
 
-### Finding Comment Database IDs
+### Finding Comment IDs
 
-**Method 1: GitHub Web UI (Recommended)**
+**Method 1: GitHub Web UI (Recommended for Database ID)**
 
 1. Navigate to PR review comment
 2. Check URL: `https://github.com/owner/repo/pull/123#discussion_r1234567890`
@@ -58,20 +62,38 @@ URL: https://github.com/pleaseai/gh-please/pull/456#discussion_r1234567890
 Comment Database ID: 1234567890
 ```
 
-**Method 2: List comments via gh CLI**
+**Method 2: List threads to get Node IDs**
 
 ```bash
-# View PR with comments
+# List review threads with Node IDs
+gh please pr review thread list 456
+```
+
+**Output includes both formats:**
+- Node ID for the thread (e.g., `PRRT_kwDOABC123`)
+- Database IDs visible in GitHub UI URLs
+
+**Method 3: List comments via gh CLI**
+
+```bash
+# View PR with comments (includes both IDs)
 gh pr view 456 --json comments
 ```
 
-**Note:** Use Database ID (numeric) for comment operations. For review threads, use Node ID from `gh please pr review thread list`.
+**ID Format Support (v0.11.0+):**
+- **Database ID** (numeric): Automatically converted to Node ID via REST API
+- **Node ID** (string): Used directly without conversion
+- Both formats are auto-detected and supported in all comment operations
 
 ### Basic Usage
 
-**Simple reply:**
+**Simple reply (both ID formats supported):**
 ```bash
+# Using Database ID (numeric)
 gh please pr review reply 1234567890 -b "Fixed in commit abc123"
+
+# Using Node ID (string) - also supported
+gh please pr review reply PRRC_kwDOP34zbs6ShH0J -b "Fixed in commit abc123"
 ```
 
 **Multi-line reply:**
@@ -744,14 +766,21 @@ Edit existing PR review comments.
 ### Syntax
 
 ```bash
-gh please pr review comment edit <comment-id> --body <text> [--repo owner/repo]
+gh please pr review comment edit <comment-id> --body <text> [--pr <number>] [--repo owner/repo]
 ```
+
+**Comment ID formats supported:**
+- **Database ID** (numeric): Requires `--pr <number>` for conversion
+- **Node ID** (string): Can be used directly without `--pr` option
 
 ### Usage
 
 ```bash
-# Edit review comment (use Database ID from GitHub UI)
-gh please pr review comment edit 1234567890 --body "Updated comment text"
+# Edit review comment with Database ID (requires --pr for conversion)
+gh please pr review comment edit 1234567890 --body "Updated comment text" --pr 456
+
+# Edit review comment with Node ID (--pr is optional)
+gh please pr review comment edit PRRC_kwDOP34zbs6ShH0J --body "Updated comment text"
 
 # Multi-line edit
 gh please pr review comment edit 1234567890 --body "$(cat <<'EOF'
@@ -761,12 +790,13 @@ Updated explanation:
 2. Added code example
 3. Referenced documentation
 EOF
-)"
+)" --pr 456
 ```
 
-**Finding comment Database ID:**
-- GitHub UI: URL shows `#discussion_r1234567890` → use `1234567890`
-- Same ID used for `pr review reply` command
+**Finding comment IDs:**
+- **Database ID**: GitHub UI URL shows `#discussion_r1234567890` → use `1234567890`
+- **Node ID**: Use `gh please pr review thread list <pr-number>` to get Node IDs
+- Both formats supported, auto-detected by pattern
 
 ---
 

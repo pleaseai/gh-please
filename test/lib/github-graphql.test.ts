@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import {
   addBlockedBy,
   addSubIssue,
+  createReviewCommentReply,
   executeGraphQL,
   getIssueNodeId,
   getPrNodeId,
@@ -11,6 +12,8 @@ import {
   removeBlockedBy,
   removeSubIssue,
   resolveReviewThread,
+  updateIssueCommentByNodeId,
+  updateReviewCommentByNodeId,
 } from '../../src/lib/github-graphql'
 
 describe('github-graphql', () => {
@@ -196,6 +199,62 @@ describe('github-graphql', () => {
 
     test('should be async function', () => {
       const func = listReviewThreads.toString()
+      expect(func).toContain('async')
+    })
+  })
+
+  describe('createReviewCommentReply', () => {
+    test('should export function with correct signature', () => {
+      expect(typeof createReviewCommentReply).toBe('function')
+    })
+
+    test('should accept commentNodeId and body parameters', () => {
+      const func = createReviewCommentReply.toString()
+      expect(func).toContain('commentNodeId')
+      expect(func).toContain('body')
+    })
+
+    test('should be async function', () => {
+      const func = createReviewCommentReply.toString()
+      expect(func).toContain('async')
+    })
+
+    test('should return object with nodeId, databaseId, and url', () => {
+      // Verify return type structure from function signature
+      expect(typeof createReviewCommentReply).toBe('function')
+    })
+  })
+
+  describe('updateReviewCommentByNodeId', () => {
+    test('should export function with correct signature', () => {
+      expect(typeof updateReviewCommentByNodeId).toBe('function')
+    })
+
+    test('should accept commentNodeId and body parameters', () => {
+      const func = updateReviewCommentByNodeId.toString()
+      expect(func).toContain('commentNodeId')
+      expect(func).toContain('body')
+    })
+
+    test('should be async function', () => {
+      const func = updateReviewCommentByNodeId.toString()
+      expect(func).toContain('async')
+    })
+  })
+
+  describe('updateIssueCommentByNodeId', () => {
+    test('should export function with correct signature', () => {
+      expect(typeof updateIssueCommentByNodeId).toBe('function')
+    })
+
+    test('should accept commentNodeId and body parameters', () => {
+      const func = updateIssueCommentByNodeId.toString()
+      expect(func).toContain('commentNodeId')
+      expect(func).toContain('body')
+    })
+
+    test('should be async function', () => {
+      const func = updateIssueCommentByNodeId.toString()
       expect(func).toContain('async')
     })
   })

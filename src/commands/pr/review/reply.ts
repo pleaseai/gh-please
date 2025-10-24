@@ -1,7 +1,9 @@
 import { Command } from 'commander'
-import { createReviewReply, getCurrentPrInfo, getRepoInfo } from '../../../lib/github-api'
+import { getCurrentPrInfo, getRepoInfo } from '../../../lib/github-api'
+import { createReviewCommentReply } from '../../../lib/github-graphql'
 import { detectSystemLanguage, getPrMessages } from '../../../lib/i18n'
-import { validateCommentId, validateReplyBody } from '../../../lib/validation'
+import { toReviewCommentNodeId, validateCommentIdentifier } from '../../../lib/id-converter'
+import { validateReplyBody } from '../../../lib/validation'
 
 /**
  * Creates a command to reply to PR review comments
@@ -12,7 +14,7 @@ export function createReviewReplyCommand(): Command {
 
   command
     .description('Create a reply to a PR review comment')
-    .argument('<comment-id>', 'ID of the review comment to reply to')
+    .argument('<comment-id>', 'Database ID (number) or Node ID (PRRC_...) of the review comment')
     .option('-b, --body <text>', 'Reply body text')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format (required if not in PR context)')
     .option('--pr <number>', 'PR number (required with --repo)')
@@ -21,8 +23,8 @@ export function createReviewReplyCommand(): Command {
       const msg = getPrMessages(lang)
 
       try {
-        // Validate comment ID
-        const commentId = validateCommentId(commentIdStr)
+        // Validate comment identifier (Database ID or Node ID)
+        const commentIdentifier = validateCommentIdentifier(commentIdStr)
 
         let body = options.body
 
@@ -65,12 +67,31 @@ export function createReviewReplyCommand(): Command {
           prInfo = await getCurrentPrInfo()
         }
 
-        console.log(msg.creatingReply(commentId, prInfo.number))
-        await createReviewReply({
-          commentId,
-          body,
-          prInfo,
-        })
+        // Convert comment identifier to Node ID (supports both Database ID and Node ID)
+        console.log(`🔄 Converting comment identifier to Node ID...`)
+        const commentNodeId = await toReviewCommentNodeId(
+          commentIdentifier,
+          prInfo.owner,
+          prInfo.repo,
+          prInfo.number,
+        )
+
+        // For display purposes, show original identifier
+        const displayId = Number.parseInt(commentIdentifier, 10)
+        if (!Number.isNaN(displayId)) {
+          console.log(msg.creatingReply(displayId, prInfo.number))
+        }
+        else {
+          console.log(`🔄 Creating reply to comment ${commentIdentifier} on PR #${prInfo.number}...`)
+        }
+
+        // Create reply using GraphQL (supports all comment types including general comments)
+        const result = await createReviewCommentReply(commentNodeId, body)
+
+        console.log(`✅ Reply created successfully!`)
+        console.log(`   Comment ID: ${result.databaseId}`)
+        console.log(`   Node ID: ${result.nodeId}`)
+        console.log(`   View: ${result.url}`)
       }
       catch (error) {
         if (error instanceof Error) {
