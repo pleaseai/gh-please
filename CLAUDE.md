@@ -248,6 +248,64 @@ All command output messages (success, errors, progress) are internationalized. G
   - `removeWorktree()` - Remove worktree via `git worktree remove`
   - Enables efficient multi-branch development with isolated workspaces
 
+- **`src/lib/json-output.ts`**: JSON output utilities for machine-readable CLI output
+  - **Purpose**: Provides structured JSON output for automation and LLM integration
+  - **Key functions**:
+    - `parseFields(fieldString)` - Parse comma-separated field list for selection
+    - `filterFields(data, fields)` - Filter objects/arrays to include only specified fields
+    - `outputJson(data)` - Format and print JSON to stdout with 2-space indentation
+  - **Usage**: All list commands support `--json [fields]` flag
+  - **Benefits**: GitHub CLI compatible, machine-readable, supports field selection
+
+### JSON Output
+
+All list commands support `--json` flag for machine-readable output, following GitHub CLI patterns:
+
+```bash
+# Output all fields as JSON
+gh please issue sub-issue list 123 --json
+
+# Output specific fields only
+gh please issue sub-issue list 123 --json number,title,state
+
+# Pipe to jq for processing
+gh please issue sub-issue list 123 --json | jq '.[] | select(.state == "OPEN")'
+```
+
+**Available fields by command:**
+
+| Command | Available Fields |
+|---------|-----------------|
+| `issue sub-issue list` | `number`, `title`, `state`, `nodeId`, `url` |
+| `issue dependency list` | `number`, `title`, `state`, `nodeId`, `url` |
+| `pr review thread list` | `nodeId`, `isResolved`, `path`, `line`, `resolvedBy`, `firstCommentBody`, `url` |
+| `issue comment list` | `id`, `body`, `author`, `createdAt`, `updatedAt`, `url` |
+| `pr review comment list` | `id`, `body`, `author`, `path`, `line`, `createdAt`, `updatedAt`, `url` |
+
+**Examples:**
+
+```bash
+# Get all open sub-issues with jq
+gh please issue sub-issue list 123 --json | jq '.[] | select(.state == "OPEN") | .number'
+
+# Get only unresolved review threads as JSON
+gh please pr review thread list 456 --unresolved-only --json
+
+# Extract comment IDs for automation
+gh please issue comment list 789 --json id,author | jq '.[].id'
+
+# Check blocking dependencies
+gh please issue dependency list 100 --json number,title,state
+```
+
+**JSON Mode Behavior:**
+- Progress messages are suppressed (clean output for piping)
+- Errors still output to stderr in human-readable format
+- Output is always valid JSON (array of objects or single object)
+- Field selection applies filtering after data fetch
+
+**Related:** ADR 0003 - JSON Output Implementation
+
 ### Plugin System
 
 **Plugin Interface** (`src/plugins/plugin-interface.ts`):
