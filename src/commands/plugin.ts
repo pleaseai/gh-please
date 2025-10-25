@@ -84,7 +84,7 @@ export function createPluginCommand(): Command {
     .description('Search for available plugins')
     .argument('[query]', 'Search query (optional)')
     .option('--json [fields]', 'Output in JSON format with optional field selection (name,description,author,premium,package)')
-    .action(async (query?: string, options?: { json?: string | boolean }) => {
+    .action(async (query: string | undefined, options: { json?: string | boolean }) => {
       // Hardcoded list for now - in production this would query a registry
       const availablePlugins = [
         {
@@ -125,7 +125,7 @@ export function createPluginCommand(): Command {
         : availablePlugins
 
       // JSON output mode
-      if (options?.json !== undefined) {
+      if (options.json !== undefined) {
         const fields = parseFields(options.json)
         const data = filtered.map(plugin => ({
           name: plugin.name,
