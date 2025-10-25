@@ -6,6 +6,7 @@
       "dependencies": {
         "@clack/prompts": "^0.11.0",
         "commander": "^12.1.0",
+        "es-toolkit": "^1.41.0",
         "zod": "^4.1.12",
       },
       "devDependencies": {
@@ -19,7 +20,7 @@
     },
     "plugins/ai": {
       "name": "@pleaseai/gh-please-ai",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "dependencies": {
         "@clack/prompts": "^0.11.0",
         "@pleaseai/gh-please": "file:../..",
@@ -243,6 +244,8 @@
     "enhanced-resolve": ["enhanced-resolve@5.18.3", "", { "dependencies": { "graceful-fs": "^4.2.4", "tapable": "^2.2.0" } }, "sha512-d4lC8xfavMeBjzGr2vECC3fsGXziXZQyJxD868h2M/mBI3PwAuODxAkLkq5HYuvrPYcUtiLzsTo8U3PgX3Ocww=="],
 
     "entities": ["entities@4.5.0", "", {}, "sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw=="],
+
+    "es-toolkit": ["es-toolkit@1.41.0", "", {}, "sha512-bDd3oRmbVgqZCJS6WmeQieOrzpl3URcWBUVDXxOELlUW2FuW+0glPOz1n0KnRie+PdyvUZcXz2sOn00c6pPRIA=="],
 
     "escalade": ["escalade@3.2.0", "", {}, "sha512-WUj2qlxaQtO4g6Pq5c29GTcWGDyd8itL8zTlipgECz3JesAiiOKotd8JU6otB3PACgG6xkJUyVhboMS+bje/jA=="],
 

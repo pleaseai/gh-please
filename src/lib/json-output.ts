@@ -7,6 +7,8 @@
  * @module json-output
  */
 
+import { pick } from 'es-toolkit'
+
 /**
  * Parse comma-separated field list from --json argument
  *
@@ -30,6 +32,8 @@ export function parseFields(fieldString?: string | boolean): string[] | null {
 /**
  * Filter object or array to include only specified fields
  *
+ * Uses es-toolkit's pick function for optimal performance (3.43x faster than lodash).
+ *
  * @param data - Object or array to filter
  * @param fields - Field names to include (null = all fields)
  * @returns Filtered data with only specified fields
@@ -44,22 +48,15 @@ export function parseFields(fieldString?: string | boolean): string[] | null {
  * filterFields(obj, ['a'])  // { a: 1 }
  * ```
  */
-export function filterFields<T extends Record<string, unknown>>(
+export function filterFields<T extends Record<string, any>>(
   data: T | T[],
   fields: string[] | null,
-): Partial<T> | Partial<T>[] {
+): Pick<T, keyof T> | Pick<T, keyof T>[] {
   if (!fields) {
     return data
   }
 
-  const filterObject = (obj: T): Partial<T> => {
-    return fields.reduce((acc, field) => {
-      if (field in obj) {
-        acc[field as keyof T] = obj[field as keyof T]
-      }
-      return acc
-    }, {} as Partial<T>)
-  }
+  const filterObject = (obj: T) => pick(obj, fields as (keyof T)[])
 
   return Array.isArray(data) ? data.map(filterObject) : filterObject(data)
 }
