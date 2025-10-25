@@ -2,7 +2,9 @@
 
 ## Status
 
-Proposed
+Rejected (2025-10-25)
+
+See ADR 0003 for the approved JSON-only approach.
 
 ## Context
 
@@ -453,3 +455,35 @@ gh please issue sub-issue list 123 --format xml  # Uses XML, not markdown
 ```
 
 This provides convenience without sacrificing per-command flexibility.
+
+## Rejection Reason (2025-10-25)
+
+After further analysis and testing, this ADR is **rejected** in favor of a JSON-only approach (see ADR 0003).
+
+### Key Findings
+
+1. **LLMs handle JSON better than Markdown/XML**
+   - JSON has clear key-value structure that LLMs parse accurately
+   - Markdown tables require more complex reasoning to extract data
+   - XML is verbose and prone to generation errors (missing closing tags)
+
+2. **GitHub CLI compatibility**
+   - Users are already familiar with `gh issue list --json`
+   - Consistent UX across GitHub tooling
+   - Existing tooling ecosystem (jq, python json module)
+
+3. **Simplicity and YAGNI**
+   - Markdown/XML add implementation and maintenance complexity
+   - No concrete use case where Markdown/XML outperform JSON
+   - Human-readable output already available (default behavior)
+
+4. **Automation priority**
+   - Primary use case is scripting and CI/CD integration
+   - JSON is the de facto standard for machine-readable output
+   - Field selection (`--json field1,field2`) covers most needs
+
+### Decision
+
+Implement `--json` flag only. If specific use cases for Markdown/XML emerge in the future, they can be added incrementally.
+
+**Reference**: ADR 0003 - JSON Output Implementation
