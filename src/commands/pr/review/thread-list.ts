@@ -2,6 +2,7 @@ import { Command } from 'commander'
 import { getRepoInfo } from '../../../lib/github-api'
 import { getPrNodeId, listReviewThreads } from '../../../lib/github-graphql'
 import { detectSystemLanguage, getPrMessages } from '../../../lib/i18n'
+import { filterFields, outputJson, parseFields } from '../../../lib/json-output'
 
 /**
  * Creates a command to list review threads on pull requests
@@ -15,10 +16,11 @@ export function createThreadListCommand(): Command {
     .argument('<pr-number>', 'Pull request number')
     .option('--unresolved-only', 'Show only unresolved threads')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
+    .option('--json [fields]', 'Output in JSON format with optional field selection (nodeId,isResolved,path,line,resolvedBy,firstCommentBody,url)')
     .action(
       async (
         prNumberStr: string,
-        options: { unresolvedOnly?: boolean, repo?: string },
+        options: { unresolvedOnly?: boolean, repo?: string, json?: string | boolean },
       ) => {
         const lang = detectSystemLanguage()
         const msg = getPrMessages(lang)
@@ -32,16 +34,39 @@ export function createThreadListCommand(): Command {
           const { owner, repo } = await getRepoInfo(options.repo)
           const prNodeId = await getPrNodeId(owner, repo, prNumber)
 
-          console.log(msg.listingThreads(prNumber))
+          // Fetch data (no progress messages in JSON mode)
+          if (options.json === undefined) {
+            console.log(msg.listingThreads(prNumber))
+          }
           const threads = await listReviewThreads(prNodeId)
 
+          const unresolvedThreads = threads.filter(t => !t.isResolved)
+          const resolvedThreads = threads.filter(t => t.isResolved)
+
+          // JSON output mode
+          if (options.json !== undefined) {
+            const fields = parseFields(options.json)
+            // Filter threads based on --unresolved-only flag
+            const threadsToOutput = options.unresolvedOnly ? unresolvedThreads : threads
+            const data = threadsToOutput.map(thread => ({
+              nodeId: thread.nodeId,
+              isResolved: thread.isResolved,
+              path: thread.path,
+              line: thread.line,
+              resolvedBy: thread.resolvedBy || null,
+              firstCommentBody: thread.firstCommentBody || null,
+              url: `https://github.com/${owner}/${repo}/pull/${prNumber}#discussion_r${thread.firstCommentDatabaseId}`,
+            }))
+            const output = filterFields(data, fields)
+            outputJson(output)
+            return
+          }
+
+          // Human-readable output
           if (threads.length === 0) {
             console.log(msg.noThreads)
             return
           }
-
-          const unresolvedThreads = threads.filter(t => !t.isResolved)
-          const resolvedThreads = threads.filter(t => t.isResolved)
 
           // Check for empty results with better messaging
           if (options.unresolvedOnly && unresolvedThreads.length === 0) {

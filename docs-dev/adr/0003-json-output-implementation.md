@@ -368,17 +368,18 @@ gh please issue sub-issue list 123 --json --fields number,title
 
 - [x] Create ADR 0003 (this document)
 - [x] Update ADR 0002 status to Rejected
-- [ ] Create GitHub issue (#TBD)
-- [ ] Implement `src/lib/json-output.ts`
-- [ ] Add tests: `test/lib/json-output.test.ts`
-- [ ] Update `issue sub-issue list` command
-- [ ] Update `issue dependency list` command
-- [ ] Update `pr review thread list` command
-- [ ] Update `issue comment list` command
-- [ ] Update `pr review comment list` command
-- [ ] Add integration tests for each command
-- [ ] Update `CLAUDE.md` with `--json` examples
-- [ ] Update command help text
+- [x] Create GitHub issue (#74)
+- [x] Implement `src/lib/json-output.ts`
+- [x] Add tests: `test/lib/json-output.test.ts` (23 tests passing)
+- [x] Update `issue sub-issue list` command
+- [x] Update `issue dependency list` command
+- [x] Update `pr review thread list` command
+- [x] Update `issue comment list` command
+- [x] Update `pr review comment list` command
+- [x] Update `CLAUDE.md` with `--json` examples and field reference
+- [x] Add `--json [fields]` option help text to all commands
+- [ ] Add integration tests for each command (future enhancement)
+- [ ] Document field selection in command --help output (future enhancement)
 
 ## Related Issues
 

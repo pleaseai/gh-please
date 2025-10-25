@@ -3,6 +3,7 @@ import { Command } from 'commander'
 import { listIssueComments } from '../../lib/comment-api'
 import { getRepoInfo } from '../../lib/github-api'
 import { detectSystemLanguage, getCommentMessages } from '../../lib/i18n'
+import { filterFields, outputJson, parseFields } from '../../lib/json-output'
 
 const BODY_PREVIEW_LENGTH = 80
 
@@ -41,7 +42,8 @@ export function createIssueCommentListCommand(): Command {
     .description('List all comments for an issue')
     .argument('<issue-number>', 'Issue number')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
-    .action(async (issueNumberStr: string, options: { repo?: string }) => {
+    .option('--json [fields]', 'Output in JSON format with optional field selection (id,body,author,createdAt,updatedAt,url)')
+    .action(async (issueNumberStr: string, options: { repo?: string, json?: string | boolean }) => {
       const lang = detectSystemLanguage()
       const msg = getCommentMessages(lang)
 
@@ -56,10 +58,29 @@ export function createIssueCommentListCommand(): Command {
         // Get repository info
         const { owner, repo } = await getRepoInfo(options.repo)
 
-        // Fetch comments
-        console.log(msg.listingIssueComments(issueNumber))
+        // Fetch comments (no progress messages in JSON mode)
+        if (options.json === undefined) {
+          console.log(msg.listingIssueComments(issueNumber))
+        }
         const comments = await listIssueComments(owner, repo, issueNumber)
 
+        // JSON output mode
+        if (options.json !== undefined) {
+          const fields = parseFields(options.json)
+          const data = comments.map(comment => ({
+            id: comment.id,
+            body: comment.body,
+            author: comment.user.login,
+            createdAt: comment.created_at,
+            updatedAt: comment.updated_at,
+            url: comment.html_url,
+          }))
+          const output = filterFields(data, fields)
+          outputJson(output)
+          return
+        }
+
+        // Human-readable output
         if (comments.length === 0) {
           console.log(msg.noComments)
           return

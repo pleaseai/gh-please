@@ -7,6 +7,7 @@ import {
   removeBlockedBy,
 } from '../../lib/github-graphql'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
+import { filterFields, outputJson, parseFields } from '../../lib/json-output'
 
 /**
  * Creates a command to manage issue dependencies (blocked_by relationships)
@@ -110,7 +111,8 @@ export function createDependencyCommand(): Command {
     .description('List all issues blocking a given issue')
     .argument('<issue>', 'Issue number')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
-    .action(async (issueStr: string, options: { repo?: string }) => {
+    .option('--json [fields]', 'Output in JSON format with optional field selection (number,title,state,nodeId,url)')
+    .action(async (issueStr: string, options: { repo?: string, json?: string | boolean }) => {
       const lang = detectSystemLanguage()
       const msg = getIssueMessages(lang)
 
@@ -122,10 +124,29 @@ export function createDependencyCommand(): Command {
 
         const { owner, repo } = await getRepoInfo(options.repo)
 
-        console.log(msg.fetchingBlockers(issueNumber))
+        // Fetch data (no progress messages in JSON mode)
+        if (options.json === undefined) {
+          console.log(msg.fetchingBlockers(issueNumber))
+        }
         const issueNodeId = await getIssueNodeId(owner, repo, issueNumber)
         const blockers = await listBlockedBy(issueNodeId)
 
+        // JSON output mode
+        if (options.json !== undefined) {
+          const fields = parseFields(options.json)
+          const data = blockers.map(blocker => ({
+            number: blocker.number,
+            title: blocker.title,
+            state: blocker.state,
+            nodeId: blocker.nodeId,
+            url: `https://github.com/${owner}/${repo}/issues/${blocker.number}`,
+          }))
+          const output = filterFields(data, fields)
+          outputJson(output)
+          return
+        }
+
+        // Human-readable output
         if (blockers.length === 0) {
           console.log(msg.noBlockers(issueNumber))
           return

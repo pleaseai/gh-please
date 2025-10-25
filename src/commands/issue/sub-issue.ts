@@ -7,6 +7,7 @@ import {
   removeSubIssue,
 } from '../../lib/github-graphql'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
+import { filterFields, outputJson, parseFields } from '../../lib/json-output'
 
 /**
  * Creates a command to manage issue sub-issue relationships
@@ -187,7 +188,8 @@ export function createSubIssueCommand(): Command {
     .description('List all sub-issues of a parent issue')
     .argument('<parent-issue>', 'Parent issue number')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
-    .action(async (parentStr: string, options: { repo?: string }) => {
+    .option('--json [fields]', 'Output in JSON format with optional field selection (number,title,state,nodeId,url)')
+    .action(async (parentStr: string, options: { repo?: string, json?: string | boolean }) => {
       const lang = detectSystemLanguage()
       const msg = getIssueMessages(lang)
 
@@ -199,10 +201,29 @@ export function createSubIssueCommand(): Command {
 
         const { owner, repo } = await getRepoInfo(options.repo)
 
-        console.log(msg.fetchingSubIssues(parentNumber))
+        // Fetch data (no progress messages in JSON mode)
+        if (options.json === undefined) {
+          console.log(msg.fetchingSubIssues(parentNumber))
+        }
         const parentNodeId = await getIssueNodeId(owner, repo, parentNumber)
         const subIssues = await listSubIssues(parentNodeId)
 
+        // JSON output mode
+        if (options.json !== undefined) {
+          const fields = parseFields(options.json)
+          const data = subIssues.map(issue => ({
+            number: issue.number,
+            title: issue.title,
+            state: issue.state,
+            nodeId: issue.nodeId,
+            url: `https://github.com/${owner}/${repo}/issues/${issue.number}`,
+          }))
+          const output = filterFields(data, fields)
+          outputJson(output)
+          return
+        }
+
+        // Human-readable output
         if (subIssues.length === 0) {
           console.log(msg.noSubIssues(parentNumber))
           return

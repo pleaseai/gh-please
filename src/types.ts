@@ -54,6 +54,7 @@ export interface ReviewThread {
   path: string
   line: number | null
   firstCommentBody?: string
+  firstCommentDatabaseId?: number
   resolvedBy?: string
 }
 
