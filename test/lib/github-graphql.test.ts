@@ -222,7 +222,7 @@ describe('github-graphql', () => {
     test('should use GraphQL query to fetch thread information', () => {
       const func = getThreadIdFromComment.toString()
       expect(func).toContain('query')
-      expect(func).toContain('reviewThreads')
+      expect(func).toContain('reviewThread')
     })
 
     test('should return thread ID string', () => {

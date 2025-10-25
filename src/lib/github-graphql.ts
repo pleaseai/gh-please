@@ -450,19 +450,8 @@ export async function getThreadIdFromComment(
     query($commentId: ID!) {
       node(id: $commentId) {
         ... on PullRequestReviewComment {
-          pullRequestReview {
-            pullRequest {
-              reviewThreads(first: 100) {
-                nodes {
-                  id
-                  comments(first: 10) {
-                    nodes {
-                      id
-                    }
-                  }
-                }
-              }
-            }
+          reviewThread {
+            id
           }
         }
       }
@@ -471,20 +460,12 @@ export async function getThreadIdFromComment(
 
   const data = await executeGraphQL(query, { commentId: commentNodeId })
 
-  if (!data.node?.pullRequestReview?.pullRequest?.reviewThreads) {
-    throw new Error(`Comment ${commentNodeId} not found or invalid`)
+  const threadId = data.node?.reviewThread?.id
+  if (!threadId) {
+    throw new Error(`Thread not found for comment ${commentNodeId}`)
   }
 
-  // Find the thread that contains this comment
-  const threads = data.node.pullRequestReview.pullRequest.reviewThreads.nodes
-  for (const thread of threads) {
-    const commentIds = thread.comments.nodes.map((c: any) => c.id)
-    if (commentIds.includes(commentNodeId)) {
-      return thread.id
-    }
-  }
-
-  throw new Error(`Thread not found for comment ${commentNodeId}`)
+  return threadId
 }
 
 /**
