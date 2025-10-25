@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.15.0](https://github.com/pleaseai/gh-please/compare/github-v0.14.0...github-v0.15.0) (2025-10-25)
+
+
+### Features
+
+* add --json output to plugin list and search commands ([#77](https://github.com/pleaseai/gh-please/issues/77)) ([381d491](https://github.com/pleaseai/gh-please/commit/381d49150269c2d88aed39e7f327a5c6db2796ab))
+
 ## [0.14.0](https://github.com/pleaseai/gh-please/compare/github-v0.13.0...github-v0.14.0) (2025-10-25)
 
 
