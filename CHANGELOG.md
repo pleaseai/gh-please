@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.14.0](https://github.com/pleaseai/gh-please/compare/github-v0.13.0...github-v0.14.0) (2025-10-25)
+
+
+### Features
+
+* implement --json output flag for list commands ([#75](https://github.com/pleaseai/gh-please/issues/75)) ([7db0cef](https://github.com/pleaseai/gh-please/commit/7db0cef87d91e22c7420602cef82eec28bf855cc))
+* implement JSON output format for CLI commands with field selection ([40ef909](https://github.com/pleaseai/gh-please/commit/40ef909c6afa9af4dd1d3722cc8d28e5b0e4ce29))
+
+
+### Bug Fixes
+
+* **config:** change bot response language from Korean to English ([3fd0f59](https://github.com/pleaseai/gh-please/commit/3fd0f593f928462ff4cc241a489b7852735c5516))
+* replace deprecated GraphQL API for PR review replies ([#73](https://github.com/pleaseai/gh-please/issues/73)) ([fdf12a8](https://github.com/pleaseai/gh-please/commit/fdf12a83dc7737cdb4507cba63a4c4ab6b7f9ec3))
+
 ## [0.13.0](https://github.com/pleaseai/gh-please/compare/github-v0.12.0...github-v0.13.0) (2025-10-24)
 
 
