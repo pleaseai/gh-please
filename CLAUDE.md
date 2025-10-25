@@ -281,6 +281,8 @@ gh please issue sub-issue list 123 --json | jq '.[] | select(.state == "OPEN")'
 | `pr review thread list` | `nodeId`, `isResolved`, `path`, `line`, `resolvedBy`, `firstCommentBody`, `url` |
 | `issue comment list` | `id`, `body`, `author`, `createdAt`, `updatedAt`, `url` |
 | `pr review comment list` | `id`, `body`, `author`, `path`, `line`, `createdAt`, `updatedAt`, `url` |
+| `plugin list` | `name`, `version`, `type`, `description`, `author`, `premium` |
+| `plugin search` | `name`, `description`, `author`, `premium`, `package` |
 
 **Examples:**
 
@@ -296,6 +298,15 @@ gh please issue comment list 789 --json id,author | jq '.[].id'
 
 # Check blocking dependencies
 gh please issue dependency list 100 --json number,title,state
+
+# List installed plugins with specific fields
+gh please plugin list --json name,version,premium
+
+# Search for premium plugins
+gh please plugin search --json | jq '.[] | select(.premium == true)'
+
+# Find AI-related plugins
+gh please plugin search ai --json name,package
 ```
 
 **JSON Mode Behavior:**
