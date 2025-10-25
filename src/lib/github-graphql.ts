@@ -437,6 +437,38 @@ export async function listReviewThreads(
 }
 
 /**
+ * Get the Thread ID for a review comment
+ *
+ * @param commentNodeId - Node ID of the review comment (PRRC_...)
+ * @returns Thread Node ID (PRRT_...)
+ * @throws Error if the comment or thread is not found
+ */
+export async function getThreadIdFromComment(
+  commentNodeId: string,
+): Promise<string> {
+  const query = `
+    query($commentId: ID!) {
+      node(id: $commentId) {
+        ... on PullRequestReviewComment {
+          reviewThread {
+            id
+          }
+        }
+      }
+    }
+  `
+
+  const data = await executeGraphQL(query, { commentId: commentNodeId })
+
+  const threadId = data.node?.reviewThread?.id
+  if (!threadId) {
+    throw new Error(`Thread not found for comment ${commentNodeId}`)
+  }
+
+  return threadId
+}
+
+/**
  * Create a reply to a PR review comment using Node ID
  *
  * @param commentNodeId - Node ID of the comment to reply to (PRRC_...)
@@ -452,10 +484,13 @@ export async function createReviewCommentReply(
   databaseId: number
   url: string
 }> {
+  // Get the thread ID from the comment
+  const threadId = await getThreadIdFromComment(commentNodeId)
+
   const mutation = `
-    mutation($commentId: ID!, $body: String!) {
-      addPullRequestReviewComment(input: {
-        inReplyTo: $commentId
+    mutation($threadId: ID!, $body: String!) {
+      addPullRequestReviewThreadReply(input: {
+        pullRequestReviewThreadId: $threadId
         body: $body
       }) {
         comment {
@@ -468,15 +503,15 @@ export async function createReviewCommentReply(
   `
 
   const data = await executeGraphQL(mutation, {
-    commentId: commentNodeId,
+    threadId,
     body,
   })
 
-  if (!data.addPullRequestReviewComment?.comment) {
+  if (!data.addPullRequestReviewThreadReply?.comment) {
     throw new Error('Failed to create review comment reply')
   }
 
-  const comment = data.addPullRequestReviewComment.comment
+  const comment = data.addPullRequestReviewThreadReply.comment
 
   return {
     nodeId: comment.id,

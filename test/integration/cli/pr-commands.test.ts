@@ -143,13 +143,29 @@ describe('PR Commands - CLI Integration', () => {
           exitCode: 0,
         },
       },
-      // Mock create review comment reply (GraphQL)
+      // Mock get thread ID from comment (GraphQL - new query)
       {
-        args: /api graphql -f query=.*addPullRequestReviewComment.*inReplyTo.*-F commentId=.*-F body=/,
+        args: /api graphql.*PullRequestReviewComment.*reviewThread.*-F commentId=/s,
         response: {
           stdout: JSON.stringify({
             data: {
-              addPullRequestReviewComment: {
+              node: {
+                reviewThread: {
+                  id: mockReviewThread.id,
+                },
+              },
+            },
+          }),
+          exitCode: 0,
+        },
+      },
+      // Mock create review comment reply (GraphQL - new API)
+      {
+        args: /api graphql -f query=.*addPullRequestReviewThreadReply.*pullRequestReviewThreadId.*-F threadId=.*-F body=/,
+        response: {
+          stdout: JSON.stringify({
+            data: {
+              addPullRequestReviewThreadReply: {
                 comment: {
                   id: 'PRRC_kwDOTestReplyNodeId',
                   databaseId: 999888777,
