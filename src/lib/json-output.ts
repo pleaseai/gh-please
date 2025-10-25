@@ -44,17 +44,21 @@ export function parseFields(fieldString?: string | boolean): string[] | null {
  * filterFields(obj, ['a'])  // { a: 1 }
  * ```
  */
-export function filterFields<T>(data: T | T[], fields: string[] | null): any {
-  if (!fields)
+export function filterFields<T extends Record<string, unknown>>(
+  data: T | T[],
+  fields: string[] | null,
+): Partial<T> | Partial<T>[] {
+  if (!fields) {
     return data
+  }
 
-  const filterObject = (obj: any) => {
-    const filtered: any = {}
-    fields.forEach((field) => {
-      if (field in obj)
-        filtered[field] = obj[field]
-    })
-    return filtered
+  const filterObject = (obj: T): Partial<T> => {
+    return fields.reduce((acc, field) => {
+      if (field in obj) {
+        acc[field as keyof T] = obj[field as keyof T]
+      }
+      return acc
+    }, {} as Partial<T>)
   }
 
   return Array.isArray(data) ? data.map(filterObject) : filterObject(data)

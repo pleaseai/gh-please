@@ -55,7 +55,7 @@ export function createThreadListCommand(): Command {
               line: thread.line,
               resolvedBy: thread.resolvedBy || null,
               firstCommentBody: thread.firstCommentBody || null,
-              url: `https://github.com/${owner}/${repo}/pull/${prNumber}#discussion_r${thread.nodeId}`,
+              url: `https://github.com/${owner}/${repo}/pull/${prNumber}#discussion_r${thread.firstCommentDatabaseId}`,
             }))
             const output = filterFields(data, fields)
             outputJson(output)

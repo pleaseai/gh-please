@@ -392,6 +392,7 @@ export async function listReviewThreads(
     path: string
     line: number | null
     firstCommentBody?: string
+    firstCommentDatabaseId?: number
     resolvedBy?: string
   }>
 > {
@@ -408,6 +409,7 @@ export async function listReviewThreads(
               comments(first: 1) {
                 nodes {
                   body
+                  databaseId
                 }
               }
               resolvedBy {
@@ -432,6 +434,7 @@ export async function listReviewThreads(
     path: thread.path,
     line: thread.line,
     firstCommentBody: thread.comments?.nodes?.[0]?.body,
+    firstCommentDatabaseId: thread.comments?.nodes?.[0]?.databaseId,
     resolvedBy: thread.resolvedBy?.login,
   }))
 }
