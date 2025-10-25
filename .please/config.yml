@@ -79,4 +79,4 @@ code_workspace:
 ignore_patterns: []
 
 # Language for bot responses (ko, en)
-language: ko
+language: en
