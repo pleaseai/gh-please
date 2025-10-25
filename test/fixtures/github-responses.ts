@@ -71,6 +71,7 @@ export const mockPr = {
  */
 export const mockReviewComment = {
   id: 987654321,
+  nodeId: 'PRRC_kwDOTestNodeId',
   body: 'This is a review comment',
   path: 'src/index.ts',
   line: 42,
@@ -89,7 +90,12 @@ export const mockReviewThread = {
   path: 'src/index.ts',
   line: 42,
   comments: {
-    nodes: [mockReviewComment],
+    nodes: [
+      {
+        id: mockReviewComment.nodeId,
+        body: mockReviewComment.body,
+      },
+    ],
   },
 }
 

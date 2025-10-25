@@ -57,7 +57,7 @@ describe('PR Commands - CLI Integration', () => {
           stdout: JSON.stringify([
             {
               id: mockReviewComment.id,
-              node_id: 'PRRC_kwDOTestNodeId',
+              node_id: mockReviewComment.nodeId,
               body: mockReviewComment.body,
               path: mockReviewComment.path,
               line: mockReviewComment.line,
@@ -143,15 +143,40 @@ describe('PR Commands - CLI Integration', () => {
           exitCode: 0,
         },
       },
-      // Mock get thread ID from comment (GraphQL - new query)
+      // Mock get PR ID from comment (GraphQL - Step 1 of getThreadIdFromComment)
       {
-        args: /api graphql.*PullRequestReviewComment.*reviewThread.*-F commentId=/s,
+        args: /api graphql.*-F commentId=PRRC_/,
         response: {
           stdout: JSON.stringify({
             data: {
               node: {
-                reviewThread: {
-                  id: mockReviewThread.id,
+                pullRequest: {
+                  id: mockPr.nodeId,
+                },
+              },
+            },
+          }),
+          exitCode: 0,
+        },
+      },
+      // Mock get review threads with comments (GraphQL - Step 2 of getThreadIdFromComment)
+      {
+        args: /api graphql.*-F prId=PR_/,
+        response: {
+          stdout: JSON.stringify({
+            data: {
+              node: {
+                reviewThreads: {
+                  nodes: [
+                    {
+                      id: mockReviewThread.id,
+                      comments: {
+                        nodes: [
+                          { id: mockReviewComment.nodeId },
+                        ],
+                      },
+                    },
+                  ],
                 },
               },
             },

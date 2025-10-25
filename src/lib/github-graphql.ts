@@ -449,11 +449,12 @@ export async function listReviewThreads(
 export async function getThreadIdFromComment(
   commentNodeId: string,
 ): Promise<string> {
-  const query = `
+  // Step 1: Get PR ID from the comment
+  const commentQuery = `
     query($commentId: ID!) {
       node(id: $commentId) {
         ... on PullRequestReviewComment {
-          reviewThread {
+          pullRequest {
             id
           }
         }
@@ -461,14 +462,46 @@ export async function getThreadIdFromComment(
     }
   `
 
-  const data = await executeGraphQL(query, { commentId: commentNodeId })
+  const commentData = await executeGraphQL(commentQuery, { commentId: commentNodeId })
 
-  const threadId = data.node?.reviewThread?.id
-  if (!threadId) {
-    throw new Error(`Thread not found for comment ${commentNodeId}`)
+  const prId = commentData.node?.pullRequest?.id
+  if (!prId) {
+    throw new Error(`Could not find pull request for comment ${commentNodeId}`)
   }
 
-  return threadId
+  // Step 2: Get all review threads and find the one containing this comment
+  const threadsQuery = `
+    query($prId: ID!) {
+      node(id: $prId) {
+        ... on PullRequest {
+          reviewThreads(first: 100) {
+            nodes {
+              id
+              comments(first: 100) {
+                nodes {
+                  id
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  `
+
+  const threadsData = await executeGraphQL(threadsQuery, { prId })
+
+  const threads = threadsData.node?.reviewThreads?.nodes || []
+
+  // Find thread containing our comment
+  for (const thread of threads) {
+    const commentIds = thread.comments?.nodes?.map((c: any) => c.id) || []
+    if (commentIds.includes(commentNodeId)) {
+      return thread.id
+    }
+  }
+
+  throw new Error(`Thread not found for comment ${commentNodeId}`)
 }
 
 /**
