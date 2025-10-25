@@ -6,6 +6,7 @@ import {
   executeGraphQL,
   getIssueNodeId,
   getPrNodeId,
+  getThreadIdFromComment,
   listBlockedBy,
   listReviewThreads,
   listSubIssues,
@@ -203,6 +204,33 @@ describe('github-graphql', () => {
     })
   })
 
+  describe('getThreadIdFromComment', () => {
+    test('should export function with correct signature', () => {
+      expect(typeof getThreadIdFromComment).toBe('function')
+    })
+
+    test('should accept commentNodeId parameter', () => {
+      const func = getThreadIdFromComment.toString()
+      expect(func).toContain('commentNodeId')
+    })
+
+    test('should be async function', () => {
+      const func = getThreadIdFromComment.toString()
+      expect(func).toContain('async')
+    })
+
+    test('should use GraphQL query to fetch thread information', () => {
+      const func = getThreadIdFromComment.toString()
+      expect(func).toContain('query')
+      expect(func).toContain('reviewThreads')
+    })
+
+    test('should return thread ID string', () => {
+      // Verify function returns a Promise<string>
+      expect(typeof getThreadIdFromComment).toBe('function')
+    })
+  })
+
   describe('createReviewCommentReply', () => {
     test('should export function with correct signature', () => {
       expect(typeof createReviewCommentReply).toBe('function')
@@ -217,6 +245,16 @@ describe('github-graphql', () => {
     test('should be async function', () => {
       const func = createReviewCommentReply.toString()
       expect(func).toContain('async')
+    })
+
+    test('should call getThreadIdFromComment', () => {
+      const func = createReviewCommentReply.toString()
+      expect(func).toContain('getThreadIdFromComment')
+    })
+
+    test('should use addPullRequestReviewThreadReply mutation', () => {
+      const func = createReviewCommentReply.toString()
+      expect(func).toContain('addPullRequestReviewThreadReply')
     })
 
     test('should return object with nodeId, databaseId, and url', () => {
