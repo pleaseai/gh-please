@@ -5,6 +5,7 @@
  */
 
 import { Command } from 'commander'
+import { filterFields, outputJson, parseFields } from '../lib/json-output'
 import { installPlugin, uninstallPlugin } from '../plugins/plugin-installer'
 import { PluginRegistry } from '../plugins/plugin-registry'
 
@@ -22,12 +23,30 @@ export function createPluginCommand(): Command {
   command
     .command('list')
     .description('List installed plugins')
-    .action(async () => {
+    .option('--json [fields]', 'Output in JSON format with optional field selection (name,version,type,description,author,premium)')
+    .action(async (options: { json?: string | boolean }) => {
       const registry = new PluginRegistry()
       await registry.loadPlugins()
 
       const plugins = registry.listAll()
 
+      // JSON output mode
+      if (options.json !== undefined) {
+        const fields = parseFields(options.json)
+        const data = plugins.map(plugin => ({
+          name: plugin.name,
+          version: plugin.version,
+          type: plugin.type,
+          description: plugin.description || null,
+          author: plugin.author || null,
+          premium: plugin.premium || false,
+        }))
+        const output = filterFields(data, fields)
+        outputJson(output)
+        return
+      }
+
+      // Human-readable output
       if (plugins.length === 0) {
         console.log('📦 No plugins installed')
         console.log('')
@@ -64,9 +83,8 @@ export function createPluginCommand(): Command {
     .command('search')
     .description('Search for available plugins')
     .argument('[query]', 'Search query (optional)')
-    .action(async (query?: string) => {
-      console.log('🔍 Available gh-please plugins:\n')
-
+    .option('--json [fields]', 'Output in JSON format with optional field selection (name,description,author,premium,package)')
+    .action(async (query: string | undefined, options: { json?: string | boolean }) => {
       // Hardcoded list for now - in production this would query a registry
       const availablePlugins = [
         {
@@ -105,6 +123,24 @@ export function createPluginCommand(): Command {
             || p.description.toLowerCase().includes(query.toLowerCase()),
           )
         : availablePlugins
+
+      // JSON output mode
+      if (options.json !== undefined) {
+        const fields = parseFields(options.json)
+        const data = filtered.map(plugin => ({
+          name: plugin.name,
+          description: plugin.description,
+          author: plugin.author,
+          premium: plugin.premium,
+          package: plugin.package,
+        }))
+        const output = filterFields(data, fields)
+        outputJson(output)
+        return
+      }
+
+      // Human-readable output
+      console.log('🔍 Available gh-please plugins:\n')
 
       if (filtered.length === 0) {
         console.log(`No plugins found matching '${query}'`)
