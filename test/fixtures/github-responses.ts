@@ -71,6 +71,7 @@ export const mockPr = {
  */
 export const mockReviewComment = {
   id: 987654321,
+  nodeId: 'PRRC_kwDOTestNodeId',
   body: 'This is a review comment',
   path: 'src/index.ts',
   line: 42,
@@ -89,7 +90,12 @@ export const mockReviewThread = {
   path: 'src/index.ts',
   line: 42,
   comments: {
-    nodes: [mockReviewComment],
+    nodes: [
+      {
+        id: mockReviewComment.nodeId,
+        body: mockReviewComment.body,
+      },
+    ],
   },
 }
 
@@ -278,7 +284,7 @@ export function createResolveThreadResponse(threadId: string) {
 /**
  * GraphQL Response: List Review Threads
  */
-export function createListReviewThreadsResponse(threads: Array<{ id: string, isResolved: boolean, path: string, line: number | null }>) {
+export function createListReviewThreadsResponse(threads: Array<{ id: string, isResolved: boolean, path: string, line: number | null, comments?: Array<{ id: string }> }>) {
   return {
     data: {
       node: {
@@ -288,6 +294,9 @@ export function createListReviewThreadsResponse(threads: Array<{ id: string, isR
             isResolved: thread.isResolved,
             path: thread.path,
             line: thread.line,
+            comments: {
+              nodes: thread.comments || [],
+            },
           })),
         },
       },
