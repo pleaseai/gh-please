@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.15.0](https://github.com/pleaseai/gh-please/compare/github-v0.14.0...github-v0.15.0) (2025-10-26)
+
+
+### Features
+
+* add --json output to plugin list and search commands ([#77](https://github.com/pleaseai/gh-please/issues/77)) ([381d491](https://github.com/pleaseai/gh-please/commit/381d49150269c2d88aed39e7f327a5c6db2796ab))
+
+
+### Bug Fixes
+
+* correct GraphQL query for review comment thread lookup ([#81](https://github.com/pleaseai/gh-please/issues/81)) ([b30ce57](https://github.com/pleaseai/gh-please/commit/b30ce5747c8f468419df4312e0b5e3bfe43b440c))
+
 ## [0.14.0](https://github.com/pleaseai/gh-please/compare/github-v0.13.0...github-v0.14.0) (2025-10-25)
 
 
