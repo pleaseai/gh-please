@@ -121,6 +121,7 @@ describe('PR Commands - CLI Integration', () => {
                 isResolved: false,
                 path: mockReviewThread.path,
                 line: mockReviewThread.line,
+                comments: [{ id: mockReviewComment.nodeId }],
               },
               {
                 id: 'PRRT_kwDOABCDEF67890',

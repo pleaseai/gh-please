@@ -462,12 +462,22 @@ export async function getThreadIdFromComment(
     }
   `
 
+  console.log(`🔍 Looking up pull request for review comment ${commentNodeId}...`)
   const commentData = await executeGraphQL(commentQuery, { commentId: commentNodeId })
 
   const prId = commentData.node?.pullRequest?.id
   if (!prId) {
-    throw new Error(`Could not find pull request for comment ${commentNodeId}`)
+    throw new Error(
+      `Could not find pull request for review comment ${commentNodeId}.\n`
+      + `Possible reasons:\n`
+      + `  • The comment may have been deleted\n`
+      + `  • The comment ID may be incorrect (use 'gh please pr review thread list <pr>' to see valid IDs)\n`
+      + `  • You may lack permissions to view this PR\n`
+      + `\n`
+      + `Please verify the comment ID and try again.`,
+    )
   }
+  console.log(`✓ Found PR: ${prId}`)
 
   // Step 2: Get all review threads and find the one containing this comment
   const threadsQuery = `
@@ -489,19 +499,41 @@ export async function getThreadIdFromComment(
     }
   `
 
+  console.log(`🔍 Fetching review threads for PR...`)
   const threadsData = await executeGraphQL(threadsQuery, { prId })
 
-  const threads = threadsData.node?.reviewThreads?.nodes || []
+  const threads = threadsData.node?.reviewThreads?.nodes
+  if (!threads) {
+    throw new Error(
+      `Could not fetch review threads for PR.\n`
+      + `The PR may not exist, you may lack permissions, or there was an API error.`,
+    )
+  }
+  console.log(`✓ Retrieved ${threads.length} review thread(s)`)
 
   // Find thread containing our comment
   for (const thread of threads) {
-    const commentIds = thread.comments?.nodes?.map((c: any) => c.id) || []
+    if (!thread.comments?.nodes) {
+      console.warn(`⚠️  Warning: Thread ${thread.id} returned without comment data, skipping`)
+      continue
+    }
+
+    const commentIds = thread.comments.nodes.map((c: any) => c.id)
     if (commentIds.includes(commentNodeId)) {
       return thread.id
     }
   }
 
-  throw new Error(`Thread not found for comment ${commentNodeId}`)
+  throw new Error(
+    `Thread not found for review comment ${commentNodeId}.\n`
+    + `Searched ${threads.length} review thread(s) on this PR but none contained this comment.\n`
+    + `Possible reasons:\n`
+    + `  • The comment ID may be incorrect\n`
+    + `  • The comment may have been deleted\n`
+    + `  • There may be a data synchronization issue with GitHub\n`
+    + `\n`
+    + `Try running 'gh please pr review thread list <pr-number>' to see available threads.`,
+  )
 }
 
 /**

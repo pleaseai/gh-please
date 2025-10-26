@@ -284,7 +284,7 @@ export function createResolveThreadResponse(threadId: string) {
 /**
  * GraphQL Response: List Review Threads
  */
-export function createListReviewThreadsResponse(threads: Array<{ id: string, isResolved: boolean, path: string, line: number | null }>) {
+export function createListReviewThreadsResponse(threads: Array<{ id: string, isResolved: boolean, path: string, line: number | null, comments?: Array<{ id: string }> }>) {
   return {
     data: {
       node: {
@@ -294,6 +294,9 @@ export function createListReviewThreadsResponse(threads: Array<{ id: string, isR
             isResolved: thread.isResolved,
             path: thread.path,
             line: thread.line,
+            comments: {
+              nodes: thread.comments || [],
+            },
           })),
         },
       },
