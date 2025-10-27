@@ -692,7 +692,17 @@ export async function listIssueTypes(
 
   const data = await executeGraphQL(query, { owner, repo })
 
-  if (!data.repository?.issueTypes?.nodes) {
+  if (!data.repository) {
+    throw new Error(
+      `Repository ${owner}/${repo} not found.\n`
+      + `Possible reasons:\n`
+      + `  • The repository does not exist\n`
+      + `  • You lack permissions to view this repository\n`
+      + `  • The owner or repo name may be misspelled`,
+    )
+  }
+
+  if (!data.repository.issueTypes?.nodes) {
     return []
   }
 
@@ -722,7 +732,13 @@ export async function getRepositoryNodeId(
   const data = await executeGraphQL(query, { owner, repo })
 
   if (!data.repository?.id) {
-    throw new Error(`Repository ${owner}/${repo} not found`)
+    throw new Error(
+      `Repository ${owner}/${repo} not found.\n`
+      + `Possible reasons:\n`
+      + `  • The repository does not exist\n`
+      + `  • You lack permissions to view this repository\n`
+      + `  • The owner or repo name may be misspelled`,
+    )
   }
 
   return data.repository.id
@@ -781,7 +797,14 @@ export async function createIssueWithType(
   const data = await executeGraphQL(mutation, variables)
 
   if (!data.createIssue?.issue) {
-    throw new Error('Failed to create issue')
+    throw new Error(
+      `Failed to create issue in repository ${owner}/${repo}.\n`
+      + `Possible reasons:\n`
+      + `  • You lack permissions to create issues in this repository\n`
+      + `  • The repository may be archived or deleted\n`
+      + `  • The issue type ID may be invalid (if specified)\n`
+      + `  • The title may exceed the maximum length (256 characters)`,
+    )
   }
 
   return {
@@ -820,6 +843,13 @@ export async function updateIssueType(
   })
 
   if (!data.updateIssueIssueType?.issue) {
-    throw new Error('Failed to update issue type')
+    throw new Error(
+      `Failed to update issue type for issue ${issueId}.\n`
+      + `Possible reasons:\n`
+      + `  • The issue does not exist\n`
+      + `  • You lack permissions to modify this issue\n`
+      + `  • The issue type ID may be invalid (if specified)\n`
+      + `  • The issue may have been deleted or moved`,
+    )
   }
 }

@@ -382,6 +382,20 @@ describe('github-graphql', () => {
       const func = listIssueTypes.toString()
       expect(func).toContain('nodes')
     })
+
+    test('should throw error when repository not found', () => {
+      const { listIssueTypes } = require('../../src/lib/github-graphql')
+      const func = listIssueTypes.toString()
+      expect(func).toContain('Repository')
+      expect(func).toContain('not found')
+      expect(func).toContain('Possible reasons')
+    })
+
+    test('should return empty array when no issue types', () => {
+      const { listIssueTypes } = require('../../src/lib/github-graphql')
+      const func = listIssueTypes.toString()
+      expect(func).toContain('return []')
+    })
   })
 
   describe('getRepositoryNodeId', () => {
@@ -407,6 +421,14 @@ describe('github-graphql', () => {
       const { getRepositoryNodeId } = require('../../src/lib/github-graphql')
       const func = getRepositoryNodeId.toString()
       expect(func).toContain('repository')
+    })
+
+    test('should throw error when repository not found', () => {
+      const { getRepositoryNodeId } = require('../../src/lib/github-graphql')
+      const func = getRepositoryNodeId.toString()
+      expect(func).toContain('Repository')
+      expect(func).toContain('not found')
+      expect(func).toContain('Possible reasons')
     })
   })
 
@@ -442,6 +464,14 @@ describe('github-graphql', () => {
       const { createIssueWithType } = require('../../src/lib/github-graphql')
       expect(typeof createIssueWithType).toBe('function')
     })
+
+    test('should throw error when issue creation fails', () => {
+      const { createIssueWithType } = require('../../src/lib/github-graphql')
+      const func = createIssueWithType.toString()
+      expect(func).toContain('Failed to create issue')
+      expect(func).toContain('Possible reasons')
+      expect(func).toContain('permissions')
+    })
   })
 
   describe('updateIssueType', () => {
@@ -472,6 +502,14 @@ describe('github-graphql', () => {
     test('should support clearing type with null', () => {
       const { updateIssueType } = require('../../src/lib/github-graphql')
       expect(typeof updateIssueType).toBe('function')
+    })
+
+    test('should throw error when update fails', () => {
+      const { updateIssueType } = require('../../src/lib/github-graphql')
+      const func = updateIssueType.toString()
+      expect(func).toContain('Failed to update issue type')
+      expect(func).toContain('Possible reasons')
+      expect(func).toContain('does not exist')
     })
   })
 })

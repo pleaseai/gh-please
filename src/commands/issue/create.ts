@@ -64,7 +64,7 @@ export function createIssueCreateCommand(): Command {
 
           if (!matchingType) {
             console.error(`❌ ${msg.issueTypeNotFound(options.type)}`)
-            console.error(`\nAvailable types:`)
+            console.error(msg.availableTypes)
             for (const t of types) {
               console.error(`  - ${t.name}`)
             }

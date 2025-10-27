@@ -46,6 +46,7 @@ export interface IssueMessages {
   fetchingIssueTypes: string
   noIssueTypes: string
   issueTypeNotFound: (typeName: string) => string
+  availableTypes: string
   creatingIssue: string
   issueCreated: (issueNumber: number, typeName?: string) => string
   settingIssueType: (issueNumber: number, typeName: string) => string
@@ -53,7 +54,6 @@ export interface IssueMessages {
   removingIssueType: (issueNumber: number) => string
   issueTypeRemoved: string
   typeRequired: string
-  invalidTypeId: string
 }
 
 export interface PrMessages {
@@ -150,6 +150,7 @@ export const issueMessages: Record<Language, IssueMessages> = {
     fetchingIssueTypes: '🔍 이슈 타입 목록 가져오는 중...',
     noIssueTypes: '이 저장소에서 사용 가능한 이슈 타입을 찾을 수 없습니다',
     issueTypeNotFound: (typeName: string) => `이슈 타입 '${typeName}'을(를) 찾을 수 없습니다`,
+    availableTypes: '\n사용 가능한 타입:',
     creatingIssue: '📝 이슈 생성 중...',
     issueCreated: (issueNumber: number, typeName?: string) =>
       typeName
@@ -160,7 +161,6 @@ export const issueMessages: Record<Language, IssueMessages> = {
     removingIssueType: (issueNumber: number) => `🔓 이슈 #${issueNumber}의 타입 제거 중...`,
     issueTypeRemoved: '✅ 이슈 타입이 제거되었습니다!',
     typeRequired: '❌ 오류: --type 또는 --type-id가 필요합니다',
-    invalidTypeId: '❌ 오류: 유효하지 않은 이슈 타입 ID입니다',
   },
   en: {
     gettingParentIssue: (parentNumber: number) => `🔍 Getting parent issue #${parentNumber}...`,
@@ -208,6 +208,7 @@ export const issueMessages: Record<Language, IssueMessages> = {
     fetchingIssueTypes: '🔍 Fetching issue types...',
     noIssueTypes: 'No issue types available for this repository',
     issueTypeNotFound: (typeName: string) => `Issue type '${typeName}' not found`,
+    availableTypes: '\nAvailable types:',
     creatingIssue: '📝 Creating issue...',
     issueCreated: (issueNumber: number, typeName?: string) =>
       typeName
@@ -218,7 +219,6 @@ export const issueMessages: Record<Language, IssueMessages> = {
     removingIssueType: (issueNumber: number) => `🔓 Removing type from issue #${issueNumber}...`,
     issueTypeRemoved: '✅ Issue type removed successfully!',
     typeRequired: '❌ Error: --type or --type-id is required',
-    invalidTypeId: '❌ Error: Invalid issue type ID',
   },
 }
 
