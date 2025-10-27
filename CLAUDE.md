@@ -128,6 +128,10 @@ gh please issue dependency remove <issue> <blocker>               # Remove block
 gh please issue dependency list <issue>                           # List blockers
 gh please issue develop <issue-number> [--repo owner/repo] [--worktree] [--base <branch>] [--name <branch>]  # Start developing on issue (alias: dev)
 gh please issue cleanup [--repo owner/repo] [--all]       # Clean up unused worktrees
+gh please issue create --title "..." [--body "..."] [--type Bug] [--repo owner/repo]  # Create issue with optional type
+gh please issue type list [--repo owner/repo] [--json [fields]]  # List available issue types
+gh please issue type set <issue-number> --type Bug [--repo owner/repo]  # Set issue type
+gh please issue type remove <issue-number> [--repo owner/repo]  # Remove issue type
 gh please issue comment edit <comment-id> --body "text" [--issue <number>]  # Edit issue comment (supports both ID formats)
 
 # Core PR Management (Built-in)
@@ -211,9 +215,10 @@ All command output messages (success, errors, progress) are internationalized. G
   - Handles Node ID conversions for issues and PRs
   - Sub-issue management: `addSubIssue()`, `removeSubIssue()`, `listSubIssues()`
   - Issue dependencies: `addBlockedBy()`, `removeBlockedBy()`, `listBlockedBy()`
+  - Issue type management: `listIssueTypes()`, `createIssueWithType()`, `updateIssueType()`
   - Review threads: `resolveReviewThread()`, `listReviewThreads()`
   - Comment mutations: `createReviewCommentReply()`, `updateReviewCommentByNodeId()`, `updateIssueCommentByNodeId()`
-  - Key functions: `executeGraphQL()`, `getIssueNodeId()`, `getPrNodeId()`
+  - Key functions: `executeGraphQL()`, `getIssueNodeId()`, `getPrNodeId()`, `getRepositoryNodeId()`
   - Requires GraphQL-Features header for sub_issues mutations
 
 - **`src/lib/github-api.ts`**: REST API interaction layer
@@ -276,8 +281,10 @@ gh please issue sub-issue list 123 --json | jq '.[] | select(.state == "OPEN")'
 
 | Command | Available Fields |
 |---------|-----------------|
+| `issue create` | `number`, `title`, `url`, `type` |
 | `issue sub-issue list` | `number`, `title`, `state`, `nodeId`, `url` |
 | `issue dependency list` | `number`, `title`, `state`, `nodeId`, `url` |
+| `issue type list` | `id`, `name`, `description`, `color`, `isEnabled` |
 | `pr review thread list` | `nodeId`, `isResolved`, `path`, `line`, `resolvedBy`, `firstCommentBody`, `url` |
 | `issue comment list` | `id`, `body`, `author`, `createdAt`, `updatedAt`, `url` |
 | `pr review comment list` | `id`, `body`, `author`, `path`, `line`, `createdAt`, `updatedAt`, `url` |
@@ -307,6 +314,12 @@ gh please plugin search --json | jq '.[] | select(.premium == true)'
 
 # Find AI-related plugins
 gh please plugin search ai --json name,package
+
+# Create issue with type and get JSON output
+gh please issue create --title "Fix login bug" --type Bug --json
+
+# List available issue types
+gh please issue type list --json name,color
 ```
 
 **JSON Mode Behavior:**
@@ -358,6 +371,9 @@ export type PluginType = 'command-group' | 'provider' | 'utility'
 - `SubIssue`: Sub-issue information (number, title, state, nodeId)
 - `BlockedByIssue`: Blocking issue information
 - `ReviewThread`: Review thread metadata (id, isResolved, path, line)
+- `IssueType`: Issue type metadata (id, name, description, color, isEnabled)
+- `IssueTypeColor`: Issue type color enum (BLUE | GREEN | ORANGE | PINK | PURPLE | RED | YELLOW)
+- `CreateIssueOptions`: Options for creating issues (title, body, repo, type, typeId, labels, assignees)
 - `PleaseTriggerType`: Union type for automation triggers (triage | investigate | fix | review | apply) - **Note**: Moved to AI plugin
 - `Language`: Internationalization language type ('ko' | 'en')
 - `DevelopOptions`: Options for develop command (repo, worktree, base, name)

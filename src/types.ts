@@ -104,3 +104,46 @@ export interface EditCommentOptions {
   body: string
   repo?: string
 }
+
+/**
+ * GitHub Issue Type colors
+ * @see https://docs.github.com/graphql/reference/enums#issuetypecolor
+ */
+export type IssueTypeColor = 'BLUE' | 'GREEN' | 'ORANGE' | 'PINK' | 'PURPLE' | 'RED' | 'YELLOW'
+
+/**
+ * GitHub Issue Type
+ * Represents a custom issue type configured in a repository
+ */
+export interface IssueType {
+  /** Node ID of the issue type */
+  id: string
+  /** Name of the issue type (e.g., "Bug", "Feature") */
+  name: string
+  /** Optional description */
+  description?: string
+  /** Color of the issue type */
+  color: IssueTypeColor
+  /** Whether the issue type is enabled */
+  isEnabled: boolean
+}
+
+/**
+ * Options for creating a new issue
+ */
+export interface CreateIssueOptions {
+  /** Issue title (required) */
+  title: string
+  /** Issue body text */
+  body?: string
+  /** Repository in owner/repo format */
+  repo?: string
+  /** Issue type name (e.g., "Bug") - will be looked up */
+  type?: string
+  /** Issue type Node ID - used directly without lookup */
+  typeId?: string
+  /** Labels to add to the issue */
+  labels?: string[]
+  /** Assignees to add to the issue */
+  assignees?: string[]
+}

@@ -655,3 +655,171 @@ export async function updateIssueCommentByNodeId(
     throw new Error('Failed to update issue comment')
   }
 }
+
+/**
+ * List all issue types for a repository
+ *
+ * @param owner - Repository owner
+ * @param repo - Repository name
+ * @returns Array of issue types
+ * @throws Error if the query fails
+ */
+export async function listIssueTypes(
+  owner: string,
+  repo: string,
+): Promise<Array<{
+  id: string
+  name: string
+  description?: string
+  color: string
+  isEnabled: boolean
+}>> {
+  const query = `
+    query($owner: String!, $repo: String!) {
+      repository(owner: $owner, name: $repo) {
+        issueTypes(first: 100) {
+          nodes {
+            id
+            name
+            description
+            color
+            isEnabled
+          }
+        }
+      }
+    }
+  `
+
+  const data = await executeGraphQL(query, { owner, repo })
+
+  if (!data.repository?.issueTypes?.nodes) {
+    return []
+  }
+
+  return data.repository.issueTypes.nodes
+}
+
+/**
+ * Get the Node ID for a repository
+ *
+ * @param owner - Repository owner
+ * @param repo - Repository name
+ * @returns Repository Node ID
+ * @throws Error if the repository is not found
+ */
+export async function getRepositoryNodeId(
+  owner: string,
+  repo: string,
+): Promise<string> {
+  const query = `
+    query($owner: String!, $repo: String!) {
+      repository(owner: $owner, name: $repo) {
+        id
+      }
+    }
+  `
+
+  const data = await executeGraphQL(query, { owner, repo })
+
+  if (!data.repository?.id) {
+    throw new Error(`Repository ${owner}/${repo} not found`)
+  }
+
+  return data.repository.id
+}
+
+/**
+ * Create an issue with optional issue type
+ *
+ * @param owner - Repository owner
+ * @param repo - Repository name
+ * @param title - Issue title
+ * @param body - Issue body (optional)
+ * @param issueTypeId - Issue type Node ID (optional)
+ * @returns Object with issue number and Node ID
+ * @throws Error if the mutation fails
+ */
+export async function createIssueWithType(
+  owner: string,
+  repo: string,
+  title: string,
+  body?: string,
+  issueTypeId?: string,
+): Promise<{ number: number, nodeId: string }> {
+  // Get repository Node ID
+  const repositoryId = await getRepositoryNodeId(owner, repo)
+
+  const mutation = `
+    mutation($repositoryId: ID!, $title: String!, $body: String, $issueTypeId: ID) {
+      createIssue(input: {
+        repositoryId: $repositoryId
+        title: $title
+        body: $body
+        issueTypeId: $issueTypeId
+      }) {
+        issue {
+          id
+          number
+        }
+      }
+    }
+  `
+
+  const variables: Record<string, any> = {
+    repositoryId,
+    title,
+  }
+
+  if (body !== undefined) {
+    variables.body = body
+  }
+
+  if (issueTypeId !== undefined) {
+    variables.issueTypeId = issueTypeId
+  }
+
+  const data = await executeGraphQL(mutation, variables)
+
+  if (!data.createIssue?.issue) {
+    throw new Error('Failed to create issue')
+  }
+
+  return {
+    number: data.createIssue.issue.number,
+    nodeId: data.createIssue.issue.id,
+  }
+}
+
+/**
+ * Update the issue type of an existing issue
+ *
+ * @param issueId - Issue Node ID
+ * @param issueTypeId - Issue type Node ID (null to clear)
+ * @throws Error if the mutation fails
+ */
+export async function updateIssueType(
+  issueId: string,
+  issueTypeId: string | null,
+): Promise<void> {
+  const mutation = `
+    mutation($issueId: ID!, $issueTypeId: ID) {
+      updateIssueIssueType(input: {
+        issueId: $issueId
+        issueTypeId: $issueTypeId
+      }) {
+        issue {
+          id
+        }
+      }
+    }
+  `
+
+  const data = await executeGraphQL(mutation, {
+    issueId,
+    issueTypeId,
+  })
+
+  if (!data.updateIssueIssueType?.issue) {
+    throw new Error('Failed to update issue type')
+  }
+}

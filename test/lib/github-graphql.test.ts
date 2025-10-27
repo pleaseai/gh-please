@@ -350,4 +350,128 @@ describe('github-graphql', () => {
       expect(func).toContain('async')
     })
   })
+
+  describe('listIssueTypes', () => {
+    test('should export function with correct signature', () => {
+      const { listIssueTypes } = require('../../src/lib/github-graphql')
+      expect(typeof listIssueTypes).toBe('function')
+    })
+
+    test('should accept owner and repo parameters', () => {
+      const { listIssueTypes } = require('../../src/lib/github-graphql')
+      const func = listIssueTypes.toString()
+      expect(func).toContain('owner')
+      expect(func).toContain('repo')
+    })
+
+    test('should be async function', () => {
+      const { listIssueTypes } = require('../../src/lib/github-graphql')
+      const func = listIssueTypes.toString()
+      expect(func).toContain('async')
+    })
+
+    test('should query repository issueTypes', () => {
+      const { listIssueTypes } = require('../../src/lib/github-graphql')
+      const func = listIssueTypes.toString()
+      expect(func).toContain('repository')
+      expect(func).toContain('issueTypes')
+    })
+
+    test('should return array of IssueType objects', () => {
+      const { listIssueTypes } = require('../../src/lib/github-graphql')
+      const func = listIssueTypes.toString()
+      expect(func).toContain('nodes')
+    })
+  })
+
+  describe('getRepositoryNodeId', () => {
+    test('should export function with correct signature', () => {
+      const { getRepositoryNodeId } = require('../../src/lib/github-graphql')
+      expect(typeof getRepositoryNodeId).toBe('function')
+    })
+
+    test('should accept owner and repo parameters', () => {
+      const { getRepositoryNodeId } = require('../../src/lib/github-graphql')
+      const func = getRepositoryNodeId.toString()
+      expect(func).toContain('owner')
+      expect(func).toContain('repo')
+    })
+
+    test('should be async function', () => {
+      const { getRepositoryNodeId } = require('../../src/lib/github-graphql')
+      const func = getRepositoryNodeId.toString()
+      expect(func).toContain('async')
+    })
+
+    test('should query repository id', () => {
+      const { getRepositoryNodeId } = require('../../src/lib/github-graphql')
+      const func = getRepositoryNodeId.toString()
+      expect(func).toContain('repository')
+    })
+  })
+
+  describe('createIssueWithType', () => {
+    test('should export function with correct signature', () => {
+      const { createIssueWithType } = require('../../src/lib/github-graphql')
+      expect(typeof createIssueWithType).toBe('function')
+    })
+
+    test('should accept owner, repo, title, body, and issueTypeId parameters', () => {
+      const { createIssueWithType } = require('../../src/lib/github-graphql')
+      const func = createIssueWithType.toString()
+      expect(func).toContain('owner')
+      expect(func).toContain('repo')
+      expect(func).toContain('title')
+      expect(func).toContain('body')
+      expect(func).toContain('issueTypeId')
+    })
+
+    test('should be async function', () => {
+      const { createIssueWithType } = require('../../src/lib/github-graphql')
+      const func = createIssueWithType.toString()
+      expect(func).toContain('async')
+    })
+
+    test('should use createIssue mutation', () => {
+      const { createIssueWithType } = require('../../src/lib/github-graphql')
+      const func = createIssueWithType.toString()
+      expect(func).toContain('createIssue')
+    })
+
+    test('should return object with number and nodeId', () => {
+      const { createIssueWithType } = require('../../src/lib/github-graphql')
+      expect(typeof createIssueWithType).toBe('function')
+    })
+  })
+
+  describe('updateIssueType', () => {
+    test('should export function with correct signature', () => {
+      const { updateIssueType } = require('../../src/lib/github-graphql')
+      expect(typeof updateIssueType).toBe('function')
+    })
+
+    test('should accept issueId and issueTypeId parameters', () => {
+      const { updateIssueType } = require('../../src/lib/github-graphql')
+      const func = updateIssueType.toString()
+      expect(func).toContain('issueId')
+      expect(func).toContain('issueTypeId')
+    })
+
+    test('should be async function', () => {
+      const { updateIssueType } = require('../../src/lib/github-graphql')
+      const func = updateIssueType.toString()
+      expect(func).toContain('async')
+    })
+
+    test('should use updateIssueIssueType mutation', () => {
+      const { updateIssueType } = require('../../src/lib/github-graphql')
+      const func = updateIssueType.toString()
+      expect(func).toContain('updateIssueIssueType')
+    })
+
+    test('should support clearing type with null', () => {
+      const { updateIssueType } = require('../../src/lib/github-graphql')
+      expect(typeof updateIssueType).toBe('function')
+    })
+  })
 })
