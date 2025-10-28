@@ -694,11 +694,11 @@ export async function listIssueTypes(
 
   if (!data.repository) {
     throw new Error(
-      `Repository ${owner}/${repo} not found.\n`
+      `Repository ${owner}/${repo} not found or issue types are not available.\n`
       + `Possible reasons:\n`
-      + `  • The repository does not exist\n`
-      + `  • You lack permissions to view this repository\n`
-      + `  • The owner or repo name may be misspelled`,
+      + `  • The repository does not exist or you lack permissions to view it\n`
+      + `  • The owner or repo name may be misspelled\n`
+      + `  • Issue types may not be enabled for this repository`,
     )
   }
 
@@ -801,9 +801,10 @@ export async function createIssueWithType(
       `Failed to create issue in repository ${owner}/${repo}.\n`
       + `Possible reasons:\n`
       + `  • You lack permissions to create issues in this repository\n`
-      + `  • The repository may be archived or deleted\n`
-      + `  • The issue type ID may be invalid (if specified)\n`
-      + `  • The title may exceed the maximum length (256 characters)`,
+      + `  • The repository may be archived, locked, or deleted\n`
+      + `  • The issue type ID may be invalid or disabled (if specified)\n`
+      + `  • The title may exceed the maximum length (256 characters)\n`
+      + `  • Required fields may be missing or malformed`,
     )
   }
 
@@ -846,10 +847,11 @@ export async function updateIssueType(
     throw new Error(
       `Failed to update issue type for issue ${issueId}.\n`
       + `Possible reasons:\n`
-      + `  • The issue does not exist\n`
+      + `  • The issue does not exist or has been deleted\n`
       + `  • You lack permissions to modify this issue\n`
-      + `  • The issue type ID may be invalid (if specified)\n`
-      + `  • The issue may have been deleted or moved`,
+      + `  • The issue type ID may be invalid or disabled (if specified)\n`
+      + `  • The issue may be locked or in a restricted state\n`
+      + `  • The issue may have been transferred to another repository`,
     )
   }
 }

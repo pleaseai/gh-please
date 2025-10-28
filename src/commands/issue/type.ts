@@ -80,8 +80,9 @@ export function createIssueTypeCommand(): Command {
 
       try {
         const issueNumber = Number.parseInt(issueStr, 10)
-        if (Number.isNaN(issueNumber)) {
-          throw new TypeError(msg.issueNumberInvalid)
+        if (Number.isNaN(issueNumber) || issueNumber <= 0) {
+          console.error(`${msg.errorPrefix}: ${msg.issueNumberInvalid}`)
+          process.exit(1)
         }
 
         const { owner, repo } = await getRepoInfo(options.repo)
@@ -92,41 +93,34 @@ export function createIssueTypeCommand(): Command {
           process.exit(1)
         }
 
-        let issueTypeId: string
-        let issueTypeName: string
+        // Always fetch types to validate and get friendly names
+        console.log(msg.fetchingIssueTypes)
+        const types = await listIssueTypes(owner, repo)
 
-        if (options.typeId) {
-          // Direct Node ID provided
-          issueTypeId = options.typeId
-          issueTypeName = options.typeId // Fallback to ID if name unknown
+        if (types.length === 0) {
+          console.error(`❌ ${msg.noIssueTypes}`)
+          process.exit(1)
         }
-        else {
-          // Type name provided - need to look it up
-          console.log(msg.fetchingIssueTypes)
 
-          const types = await listIssueTypes(owner, repo)
+        // Find matching type by either Node ID or name
+        const matchingType = options.typeId
+          ? types.find(t => t.id === options.typeId)
+          : types.find(t => t.name.toLowerCase() === options.type!.toLowerCase())
 
-          if (types.length === 0) {
-            console.error(`❌ ${msg.noIssueTypes}`)
-            process.exit(1)
-          }
-
-          const matchingType = types.find(
-            t => t.name.toLowerCase() === options.type!.toLowerCase(),
-          )
-
-          if (!matchingType) {
-            console.error(`❌ ${msg.issueTypeNotFound(options.type!)}`)
+        if (!matchingType) {
+          const identifier = options.typeId || options.type!
+          console.error(`❌ ${msg.issueTypeNotFound(identifier)}`)
+          if (options.type) {
             console.error(msg.availableTypes)
             for (const t of types) {
               console.error(`  - ${t.name}`)
             }
-            process.exit(1)
           }
-
-          issueTypeId = matchingType.id
-          issueTypeName = matchingType.name
+          process.exit(1)
         }
+
+        const issueTypeId = matchingType.id
+        const issueTypeName = matchingType.name
 
         // Get issue Node ID
         const issueNodeId = await getIssueNodeId(owner, repo, issueNumber)
@@ -156,8 +150,9 @@ export function createIssueTypeCommand(): Command {
 
       try {
         const issueNumber = Number.parseInt(issueStr, 10)
-        if (Number.isNaN(issueNumber)) {
-          throw new TypeError(msg.issueNumberInvalid)
+        if (Number.isNaN(issueNumber) || issueNumber <= 0) {
+          console.error(`${msg.errorPrefix}: ${msg.issueNumberInvalid}`)
+          process.exit(1)
         }
 
         const { owner, repo } = await getRepoInfo(options.repo)
