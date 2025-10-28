@@ -14,7 +14,7 @@
 `@pleaseai/gh-please`는 GitHub CLI를 위한 강력한 확장 프로그램으로, 이슈 및 PR 관리를 향상시킵니다.
 
 ### 핵심 기능 (내장)
-- **이슈 관리**: Sub-issue 및 의존성 관계, 워크트리 기반 개발 워크플로우
+- **이슈 관리**: 이슈 타입, Sub-issue 및 의존성 관계, 워크트리 기반 개발 워크플로우
 - **PR 관리**: 리뷰 코멘트 답변, 스레드 해결, 코멘트 편집
 - **LLM 친화적 출력**: JSON, Markdown, XML 형식 지원
 - **다국어 지원**: 한글/영문 자동 감지
@@ -40,9 +40,15 @@ gh extension install pleaseai/gh-please
 
 ```bash
 # 이슈 관리
+gh please issue create --title "버그 수정" --type Bug
 gh please issue sub-issue create 100 --title "서브 태스크"
 gh please issue dependency add 200 --blocked-by 199
 gh please issue develop 123  # 워크트리 자동 생성
+
+# 이슈 타입
+gh please issue type list
+gh please issue type set 123 --type Feature
+gh please issue type remove 123
 
 # PR 관리
 gh please pr review reply 1234567890 -b "수정했습니다!"
@@ -69,6 +75,23 @@ gh please issue cleanup
 ```
 
 [워크플로우 상세 가이드 →](docs/content/4.workflows/1.issue-workflow.md)
+
+### 이슈 타입 관리
+
+```bash
+# 타입과 함께 이슈 생성
+gh please issue create --title "로그인 버그" --type Bug
+
+# 사용 가능한 이슈 타입 목록
+gh please issue type list
+gh please issue type list --json name,color
+
+# 이슈 타입 설정/수정
+gh please issue type set 123 --type Feature
+
+# 이슈 타입 제거
+gh please issue type remove 123
+```
 
 ### Sub-Issue 관리
 

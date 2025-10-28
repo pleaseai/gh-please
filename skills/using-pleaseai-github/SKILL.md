@@ -1,6 +1,6 @@
 ---
 name: Using PleaseAI GitHub Extension
-description: Automate GitHub workflows with gh-please CLI extension - trigger PleaseAI automation (triage, investigate, fix, review, apply), manage sub-issues and dependencies, reply to PR reviews, manage review threads, edit comments, and configure .please/config.yml. Use when user mentions gh please, /please, PleaseAI, create sub-issue, link sub-issue, add dependency, blocked-by, review-reply, review threads, comment management, worktree workflow, or extension commands.
+description: Automate GitHub workflows with gh-please CLI extension - create issues with types, manage sub-issues and dependencies, trigger PleaseAI automation (triage, investigate, fix, review, apply), reply to PR reviews, manage review threads, edit comments, and configure .please/config.yml. Use when user mentions gh please, /please, PleaseAI, issue types, create issue, create sub-issue, link sub-issue, add dependency, blocked-by, review-reply, review threads, comment management, worktree workflow, or extension commands.
 allowed-tools: Read, Bash, Grep, Glob, Edit, WebFetch
 ---
 
@@ -45,7 +45,35 @@ gh please ai triage 123 -R owner/repo  # Short form
 
 ### Issue Management
 
-Create hierarchical issue structures, manage dependencies, and streamline development workflows:
+Create issues with types, manage hierarchical structures, dependencies, and streamline development workflows:
+
+#### Issue Creation and Types
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `issue create` | Create issue with optional type | `gh please issue create --title "Fix bug" --type Bug` |
+| `issue type list` | List available issue types | `gh please issue type list [--json name,color]` |
+| `issue type set <issue>` | Set/update issue type | `gh please issue type set 123 --type Feature` |
+| `issue type remove <issue>` | Remove issue type | `gh please issue type remove 123` |
+
+```bash
+# Create issue with type (by name)
+gh please issue create --title "Login fails on Safari" --type Bug
+
+# Create issue with type (by Node ID)
+gh please issue create --title "Add dark mode" --type-id "IT_kwDO..." --json
+
+# List available issue types
+gh please issue type list
+gh please issue type list --json name,color  # For scripts
+
+# Set type on existing issue
+gh please issue type set 123 --type Feature
+gh please issue type set 123 --type-id "IT_kwDO..."  # By Node ID
+
+# Remove type from issue
+gh please issue type remove 123
+```
 
 #### Sub-issues
 
