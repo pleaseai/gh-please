@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.16.0](https://github.com/pleaseai/gh-please/compare/github-v0.15.0...github-v0.16.0) (2025-10-28)
+
+
+### Features
+
+* add issue type support for gh issue create command ([#83](https://github.com/pleaseai/gh-please/issues/83)) ([eec44e0](https://github.com/pleaseai/gh-please/commit/eec44e03dda69cdec436a485e2d223e5a238b31e))
+
+
+### Documentation
+
+* add issue type commands to documentation ([efd481b](https://github.com/pleaseai/gh-please/commit/efd481b39bbb761bb662c3c8457de9b37ba67287))
+
 ## [0.15.0](https://github.com/pleaseai/gh-please/compare/github-v0.14.0...github-v0.15.0) (2025-10-26)
 
 
