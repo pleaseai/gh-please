@@ -42,6 +42,18 @@ export interface IssueMessages {
   cleanupFoundPrunable: (count: number) => string
   cleanupRemoving: (path: string) => string
   cleanupRemoved: (count: number) => string
+  // Issue type messages
+  fetchingIssueTypes: string
+  noIssueTypes: string
+  issueTypeNotFound: (typeName: string) => string
+  availableTypes: string
+  creatingIssue: string
+  issueCreated: (issueNumber: number, typeName?: string) => string
+  settingIssueType: (issueNumber: number, typeName: string) => string
+  issueTypeSet: string
+  removingIssueType: (issueNumber: number) => string
+  issueTypeRemoved: string
+  typeRequired: string
 }
 
 export interface PrMessages {
@@ -134,6 +146,21 @@ export const issueMessages: Record<Language, IssueMessages> = {
     cleanupFoundPrunable: (count: number) => `🧹 ${count}개의 prunable worktree를 발견했습니다.`,
     cleanupRemoving: (path: string) => `🗑️ ${path}를 제거 중...`,
     cleanupRemoved: (count: number) => `✅ ${count}개의 worktree를 제거했습니다!`,
+    // Issue type messages
+    fetchingIssueTypes: '🔍 이슈 타입 목록 가져오는 중...',
+    noIssueTypes: '이 저장소에서 사용 가능한 이슈 타입을 찾을 수 없습니다',
+    issueTypeNotFound: (typeName: string) => `이슈 타입 '${typeName}'을(를) 찾을 수 없습니다`,
+    availableTypes: '\n사용 가능한 타입:',
+    creatingIssue: '📝 이슈 생성 중...',
+    issueCreated: (issueNumber: number, typeName?: string) =>
+      typeName
+        ? `✅ 이슈 #${issueNumber}가 생성되었습니다 (타입: ${typeName})`
+        : `✅ 이슈 #${issueNumber}가 생성되었습니다`,
+    settingIssueType: (issueNumber: number, typeName: string) => `🔖 이슈 #${issueNumber}의 타입을 '${typeName}'(으)로 설정 중...`,
+    issueTypeSet: '✅ 이슈 타입이 설정되었습니다!',
+    removingIssueType: (issueNumber: number) => `🔓 이슈 #${issueNumber}의 타입 제거 중...`,
+    issueTypeRemoved: '✅ 이슈 타입이 제거되었습니다!',
+    typeRequired: '❌ 오류: --type 또는 --type-id가 필요합니다',
   },
   en: {
     gettingParentIssue: (parentNumber: number) => `🔍 Getting parent issue #${parentNumber}...`,
@@ -177,6 +204,21 @@ export const issueMessages: Record<Language, IssueMessages> = {
     cleanupFoundPrunable: (count: number) => `🧹 Found ${count} prunable worktree(s).`,
     cleanupRemoving: (path: string) => `🗑️ Removing ${path}...`,
     cleanupRemoved: (count: number) => `✅ Removed ${count} worktree(s)!`,
+    // Issue type messages
+    fetchingIssueTypes: '🔍 Fetching issue types...',
+    noIssueTypes: 'No issue types available for this repository',
+    issueTypeNotFound: (typeName: string) => `Issue type '${typeName}' not found`,
+    availableTypes: '\nAvailable types:',
+    creatingIssue: '📝 Creating issue...',
+    issueCreated: (issueNumber: number, typeName?: string) =>
+      typeName
+        ? `✅ Issue #${issueNumber} created (type: ${typeName})`
+        : `✅ Issue #${issueNumber} created`,
+    settingIssueType: (issueNumber: number, typeName: string) => `🔖 Setting issue #${issueNumber} type to '${typeName}'...`,
+    issueTypeSet: '✅ Issue type set successfully!',
+    removingIssueType: (issueNumber: number) => `🔓 Removing type from issue #${issueNumber}...`,
+    issueTypeRemoved: '✅ Issue type removed successfully!',
+    typeRequired: '❌ Error: --type or --type-id is required',
   },
 }
 
