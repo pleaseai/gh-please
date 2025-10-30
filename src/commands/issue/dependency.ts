@@ -1,3 +1,4 @@
+import type { OutputFormat } from '../../lib/json-output'
 import { Command } from 'commander'
 import { getRepoInfo } from '../../lib/github-api'
 import {
@@ -7,7 +8,7 @@ import {
   removeBlockedBy,
 } from '../../lib/github-graphql'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
-import { filterFields, outputJson, parseFields } from '../../lib/json-output'
+import { outputData, parseFields } from '../../lib/json-output'
 
 /**
  * Creates a command to manage issue dependencies (blocked_by relationships)
@@ -112,7 +113,8 @@ export function createDependencyCommand(): Command {
     .argument('<issue>', 'Issue number')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
     .option('--json [fields]', 'Output in JSON format with optional field selection (number,title,state,nodeId,url)')
-    .action(async (issueStr: string, options: { repo?: string, json?: string | boolean }) => {
+    .option('--format <format>', 'Output format: json or toon (default: json)', 'json')
+    .action(async (issueStr: string, options: { repo?: string, json?: string | boolean, format?: OutputFormat }) => {
       const lang = detectSystemLanguage()
       const msg = getIssueMessages(lang)
 
@@ -124,15 +126,19 @@ export function createDependencyCommand(): Command {
 
         const { owner, repo } = await getRepoInfo(options.repo)
 
-        // Fetch data (no progress messages in JSON mode)
-        if (options.json === undefined) {
+        // Determine output format
+        const format: OutputFormat = options.format || 'json'
+        const isStructuredOutput = options.json !== undefined || format === 'toon'
+
+        // Fetch data (no progress messages in structured output mode)
+        if (!isStructuredOutput) {
           console.log(msg.fetchingBlockers(issueNumber))
         }
         const issueNodeId = await getIssueNodeId(owner, repo, issueNumber)
         const blockers = await listBlockedBy(issueNodeId)
 
-        // JSON output mode
-        if (options.json !== undefined) {
+        // Structured output mode (JSON or TOON)
+        if (isStructuredOutput) {
           const fields = parseFields(options.json)
           const data = blockers.map(blocker => ({
             number: blocker.number,
@@ -141,8 +147,7 @@ export function createDependencyCommand(): Command {
             nodeId: blocker.nodeId,
             url: `https://github.com/${owner}/${repo}/issues/${blocker.number}`,
           }))
-          const output = filterFields(data, fields)
-          outputJson(output)
+          outputData(data, format, fields)
           return
         }
 

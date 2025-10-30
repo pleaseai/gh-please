@@ -1,3 +1,4 @@
+import type { OutputFormat } from '../../lib/json-output'
 import { Command } from 'commander'
 import { getRepoInfo } from '../../lib/github-api'
 import {
@@ -7,7 +8,7 @@ import {
   removeSubIssue,
 } from '../../lib/github-graphql'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
-import { filterFields, outputJson, parseFields } from '../../lib/json-output'
+import { outputData, parseFields } from '../../lib/json-output'
 
 /**
  * Creates a command to manage issue sub-issue relationships
@@ -189,7 +190,8 @@ export function createSubIssueCommand(): Command {
     .argument('<parent-issue>', 'Parent issue number')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
     .option('--json [fields]', 'Output in JSON format with optional field selection (number,title,state,nodeId,url)')
-    .action(async (parentStr: string, options: { repo?: string, json?: string | boolean }) => {
+    .option('--format <format>', 'Output format: json or toon (default: json)', 'json')
+    .action(async (parentStr: string, options: { repo?: string, json?: string | boolean, format?: OutputFormat }) => {
       const lang = detectSystemLanguage()
       const msg = getIssueMessages(lang)
 
@@ -201,15 +203,19 @@ export function createSubIssueCommand(): Command {
 
         const { owner, repo } = await getRepoInfo(options.repo)
 
-        // Fetch data (no progress messages in JSON mode)
-        if (options.json === undefined) {
+        // Determine output format
+        const format: OutputFormat = options.format || 'json'
+        const isStructuredOutput = options.json !== undefined || format === 'toon'
+
+        // Fetch data (no progress messages in structured output mode)
+        if (!isStructuredOutput) {
           console.log(msg.fetchingSubIssues(parentNumber))
         }
         const parentNodeId = await getIssueNodeId(owner, repo, parentNumber)
         const subIssues = await listSubIssues(parentNodeId)
 
-        // JSON output mode
-        if (options.json !== undefined) {
+        // Structured output mode (JSON or TOON)
+        if (isStructuredOutput) {
           const fields = parseFields(options.json)
           const data = subIssues.map(issue => ({
             number: issue.number,
@@ -218,8 +224,7 @@ export function createSubIssueCommand(): Command {
             nodeId: issue.nodeId,
             url: `https://github.com/${owner}/${repo}/issues/${issue.number}`,
           }))
-          const output = filterFields(data, fields)
-          outputJson(output)
+          outputData(data, format, fields)
           return
         }
 
