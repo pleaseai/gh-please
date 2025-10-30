@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.19.1](https://github.com/pleaseai/gh-please/compare/github-v0.19.0...github-v0.19.1) (2025-10-30)
+
+
+### Documentation
+
+* fix broken links in gh-cli-passthrough documentation ([#98](https://github.com/pleaseai/gh-please/issues/98)) ([9d97d42](https://github.com/pleaseai/gh-please/commit/9d97d42bb223b4f7a6d673d232f2792b9c59c97f))
+
 ## [0.19.0](https://github.com/pleaseai/gh-please/compare/github-v0.18.0...github-v0.19.0) (2025-10-30)
 
 
