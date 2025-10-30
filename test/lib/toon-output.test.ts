@@ -162,6 +162,7 @@ describe('toon-output', () => {
   describe('outputToon', () => {
     test('should output TOON to stdout', () => {
       const spy = vi.spyOn(console, 'log')
+      spy.mockClear() // Clear any previous calls
       const data = [{ a: 1, b: 2 }]
 
       outputToon(data)
