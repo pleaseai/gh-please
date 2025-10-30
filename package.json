@@ -75,6 +75,7 @@
     "test:manual": "./scripts/manual-test.sh"
   },
   "dependencies": {
+    "@byjohann/toon": "^0.4.1",
     "@clack/prompts": "^0.11.0",
     "commander": "^12.1.0",
     "es-toolkit": "^1.41.0",
