@@ -1,3 +1,4 @@
+import type { OutputFormat } from '../../lib/json-output'
 import { Command } from 'commander'
 import { getRepoInfo } from '../../lib/github-api'
 import {
@@ -6,7 +7,7 @@ import {
   updateIssueType,
 } from '../../lib/github-graphql'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
-import { filterFields, outputJson, parseFields } from '../../lib/json-output'
+import { isStructuredOutput, outputData, parseFields } from '../../lib/json-output'
 
 /**
  * Creates a command group for issue type management
@@ -22,35 +23,43 @@ export function createIssueTypeCommand(): Command {
     .description('List all issue types for a repository')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
     .option('--json [fields]', 'Output as JSON with optional field selection (id, name, description, color, isEnabled)')
-    .action(async (options: { repo?: string, json?: string | boolean }) => {
+    .option('--format <format>', 'Output format: json or toon')
+    .action(async (options: { repo?: string, json?: string | boolean, format?: OutputFormat }) => {
       const lang = detectSystemLanguage()
       const msg = getIssueMessages(lang)
 
       try {
         const { owner, repo } = await getRepoInfo(options.repo)
 
-        if (!options.json) {
+        // Determine output mode
+        const shouldUseStructuredOutput = isStructuredOutput(options)
+
+        // Show progress messages only for human-readable output
+        if (!shouldUseStructuredOutput) {
           console.log(msg.fetchingIssueTypes)
         }
 
+        // Fetch issue types
         const types = await listIssueTypes(owner, repo)
 
+        // Handle empty results
         if (types.length === 0) {
-          if (!options.json) {
-            console.log(msg.noIssueTypes)
+          if (shouldUseStructuredOutput) {
+            outputData([], options.format || 'json')
           }
           else {
-            outputJson([])
+            console.log(msg.noIssueTypes)
           }
           return
         }
 
-        if (options.json) {
-          const fields = typeof options.json === 'string' ? parseFields(options.json) : undefined
-          const filtered = fields ? filterFields(types, fields) : types
-          outputJson(filtered)
+        // Handle structured output (JSON or TOON)
+        if (shouldUseStructuredOutput) {
+          const fields = parseFields(options.json)
+          outputData(types, options.format || 'json', fields)
         }
         else {
+          // Human-readable output
           console.log(`\n📋 Available issue types (${types.length}):\n`)
           for (const type of types) {
             const enabled = type.isEnabled ? '✓' : '✗'
@@ -81,8 +90,7 @@ export function createIssueTypeCommand(): Command {
       try {
         const issueNumber = Number.parseInt(issueStr, 10)
         if (Number.isNaN(issueNumber) || issueNumber <= 0) {
-          console.error(`${msg.errorPrefix}: ${msg.issueNumberInvalid}`)
-          process.exit(1)
+          throw new TypeError(msg.issueNumberInvalid)
         }
 
         const { owner, repo } = await getRepoInfo(options.repo)
@@ -93,34 +101,41 @@ export function createIssueTypeCommand(): Command {
           process.exit(1)
         }
 
-        // Always fetch types to validate and get friendly names
-        console.log(msg.fetchingIssueTypes)
-        const types = await listIssueTypes(owner, repo)
+        let issueTypeId: string
+        let issueTypeName: string
 
-        if (types.length === 0) {
-          console.error(`❌ ${msg.noIssueTypes}`)
-          process.exit(1)
+        if (options.typeId) {
+          // Direct Node ID provided
+          issueTypeId = options.typeId
+          issueTypeName = options.typeId // Fallback to ID if name unknown
         }
+        else {
+          // Type name provided - need to look it up
+          console.log(msg.fetchingIssueTypes)
 
-        // Find matching type by either Node ID or name
-        const matchingType = options.typeId
-          ? types.find(t => t.id === options.typeId)
-          : types.find(t => t.name.toLowerCase() === options.type!.toLowerCase())
+          const types = await listIssueTypes(owner, repo)
 
-        if (!matchingType) {
-          const identifier = options.typeId || options.type!
-          console.error(`❌ ${msg.issueTypeNotFound(identifier)}`)
-          if (options.type) {
-            console.error(msg.availableTypes)
+          if (types.length === 0) {
+            console.error(`❌ ${msg.noIssueTypes}`)
+            process.exit(1)
+          }
+
+          const matchingType = types.find(
+            t => t.name.toLowerCase() === options.type!.toLowerCase(),
+          )
+
+          if (!matchingType) {
+            console.error(`❌ ${msg.issueTypeNotFound(options.type!)}`)
+            console.error(`\nAvailable types:`)
             for (const t of types) {
               console.error(`  - ${t.name}`)
             }
+            process.exit(1)
           }
-          process.exit(1)
-        }
 
-        const issueTypeId = matchingType.id
-        const issueTypeName = matchingType.name
+          issueTypeId = matchingType.id
+          issueTypeName = matchingType.name
+        }
 
         // Get issue Node ID
         const issueNodeId = await getIssueNodeId(owner, repo, issueNumber)
@@ -151,8 +166,7 @@ export function createIssueTypeCommand(): Command {
       try {
         const issueNumber = Number.parseInt(issueStr, 10)
         if (Number.isNaN(issueNumber) || issueNumber <= 0) {
-          console.error(`${msg.errorPrefix}: ${msg.issueNumberInvalid}`)
-          process.exit(1)
+          throw new TypeError(msg.issueNumberInvalid)
         }
 
         const { owner, repo } = await getRepoInfo(options.repo)

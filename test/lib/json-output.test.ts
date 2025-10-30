@@ -1,5 +1,6 @@
+import { decode } from '@byjohann/toon'
 import { describe, expect, test, vi } from 'bun:test'
-import { filterFields, outputJson, parseFields } from '../../src/lib/json-output'
+import { filterFields, outputData, outputJson, parseFields } from '../../src/lib/json-output'
 
 describe('json-output', () => {
   describe('parseFields', () => {
@@ -124,6 +125,97 @@ describe('json-output', () => {
     })
   })
 
+  describe('outputData', () => {
+    test('should output JSON format by default', () => {
+      const spy = vi.spyOn(console, 'log')
+      const data = { foo: 'bar' }
+
+      outputData(data)
+
+      expect(spy).toHaveBeenCalledWith('{\n  "foo": "bar"\n}')
+      spy.mockRestore()
+    })
+
+    test('should output JSON format when explicitly specified', () => {
+      const spy = vi.spyOn(console, 'log')
+      const data = [{ number: 123 }]
+
+      outputData(data, 'json')
+
+      expect(spy).toHaveBeenCalledWith('[\n  {\n    "number": 123\n  }\n]')
+      spy.mockRestore()
+    })
+
+    test('should output TOON format when specified', () => {
+      const spy = vi.spyOn(console, 'log')
+      const data = [{ number: 123, title: 'Test' }]
+
+      outputData(data, 'toon')
+
+      const output = spy.mock.calls[0][0]
+      expect(output).toContain('[1\t]')
+      expect(output).toContain('{number\ttitle}')
+      expect(output).toContain('123\tTest')
+      spy.mockRestore()
+    })
+
+    test('should apply field filtering with JSON format', () => {
+      const spy = vi.spyOn(console, 'log')
+      const data = [{ number: 123, title: 'Test', state: 'OPEN', extra: 'data' }]
+
+      outputData(data, 'json', ['number', 'title'])
+
+      const output = spy.mock.calls[0][0]
+      expect(output).toContain('"number": 123')
+      expect(output).toContain('"title": "Test"')
+      expect(output).not.toContain('state')
+      expect(output).not.toContain('extra')
+      spy.mockRestore()
+    })
+
+    test('should apply field filtering with TOON format', () => {
+      const spy = vi.spyOn(console, 'log')
+      const data = [{ number: 123, title: 'Test', state: 'OPEN', extra: 'data' }]
+
+      outputData(data, 'toon', ['number', 'title'])
+
+      const output = spy.mock.calls[0][0]
+      expect(output).toContain('{number\ttitle}')
+      expect(output).not.toContain('state')
+      expect(output).not.toContain('extra')
+
+      // Verify decoding works
+      const decoded = decode(output)
+      expect(decoded).toEqual([{ number: 123, title: 'Test' }])
+      spy.mockRestore()
+    })
+
+    test('should handle empty arrays in both formats', () => {
+      const jsonSpy = vi.spyOn(console, 'log')
+      outputData([], 'json')
+      expect(jsonSpy).toHaveBeenCalledWith('[]')
+      jsonSpy.mockRestore()
+
+      const toonSpy = vi.spyOn(console, 'log')
+      outputData([], 'toon')
+      expect(toonSpy).toHaveBeenCalledWith('[0\t]:')
+      toonSpy.mockRestore()
+    })
+
+    test('should handle null fields (no filtering)', () => {
+      const spy = vi.spyOn(console, 'log')
+      const data = [{ a: 1, b: 2, c: 3 }]
+
+      outputData(data, 'json', null)
+
+      const output = spy.mock.calls[0][0]
+      expect(output).toContain('"a": 1')
+      expect(output).toContain('"b": 2')
+      expect(output).toContain('"c": 3')
+      spy.mockRestore()
+    })
+  })
+
   describe('integration: parseFields + filterFields + outputJson', () => {
     test('should work together for typical use case', () => {
       const spy = vi.spyOn(console, 'log')
@@ -165,6 +257,33 @@ describe('json-output', () => {
       expect(spy).toHaveBeenCalledWith(expect.stringContaining('"number": 1'))
       expect(spy).toHaveBeenCalledWith(expect.stringContaining('"title": "Test"'))
       expect(spy).toHaveBeenCalledWith(expect.stringContaining('"state": "OPEN"'))
+      spy.mockRestore()
+    })
+
+    test('should work with new outputData function', () => {
+      const spy = vi.spyOn(console, 'log')
+
+      const data = [
+        { number: 124, title: 'Test 1', state: 'OPEN' },
+        { number: 125, title: 'Test 2', state: 'CLOSED' },
+      ]
+
+      // User specifies: --format toon --json number,title
+      const fields = parseFields('number,title')
+      outputData(data, 'toon', fields)
+
+      const output = spy.mock.calls[0][0]
+      expect(output).toContain('[2\t]')
+      expect(output).toContain('{number\ttitle}')
+      expect(output).not.toContain('state')
+
+      // Verify round-trip works
+      const decoded = decode(output)
+      expect(decoded).toEqual([
+        { number: 124, title: 'Test 1' },
+        { number: 125, title: 'Test 2' },
+      ])
+
       spy.mockRestore()
     })
   })

@@ -1,8 +1,9 @@
+import type { OutputFormat } from '../../../lib/json-output'
 import { Command } from 'commander'
 import { getRepoInfo } from '../../../lib/github-api'
 import { getPrNodeId, listReviewThreads } from '../../../lib/github-graphql'
 import { detectSystemLanguage, getPrMessages } from '../../../lib/i18n'
-import { filterFields, outputJson, parseFields } from '../../../lib/json-output'
+import { isStructuredOutput, outputData, parseFields } from '../../../lib/json-output'
 
 /**
  * Creates a command to list review threads on pull requests
@@ -17,10 +18,11 @@ export function createThreadListCommand(): Command {
     .option('--unresolved-only', 'Show only unresolved threads')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
     .option('--json [fields]', 'Output in JSON format with optional field selection (nodeId,isResolved,path,line,resolvedBy,firstCommentBody,url)')
+    .option('--format <format>', 'Output format: json or toon')
     .action(
       async (
         prNumberStr: string,
-        options: { unresolvedOnly?: boolean, repo?: string, json?: string | boolean },
+        options: { unresolvedOnly?: boolean, repo?: string, json?: string | boolean, format?: OutputFormat },
       ) => {
         const lang = detectSystemLanguage()
         const msg = getPrMessages(lang)
@@ -34,17 +36,21 @@ export function createThreadListCommand(): Command {
           const { owner, repo } = await getRepoInfo(options.repo)
           const prNodeId = await getPrNodeId(owner, repo, prNumber)
 
-          // Fetch data (no progress messages in JSON mode)
-          if (options.json === undefined) {
+          // Determine output mode
+          const shouldUseStructuredOutput = isStructuredOutput(options)
+
+          // Show progress messages only for human-readable output
+          if (!shouldUseStructuredOutput) {
             console.log(msg.listingThreads(prNumber))
           }
-          const threads = await listReviewThreads(prNodeId)
 
+          // Fetch review threads
+          const threads = await listReviewThreads(prNodeId)
           const unresolvedThreads = threads.filter(t => !t.isResolved)
           const resolvedThreads = threads.filter(t => t.isResolved)
 
-          // JSON output mode
-          if (options.json !== undefined) {
+          // Handle structured output (JSON or TOON)
+          if (shouldUseStructuredOutput) {
             const fields = parseFields(options.json)
             // Filter threads based on --unresolved-only flag
             const threadsToOutput = options.unresolvedOnly ? unresolvedThreads : threads
@@ -57,8 +63,7 @@ export function createThreadListCommand(): Command {
               firstCommentBody: thread.firstCommentBody || null,
               url: `https://github.com/${owner}/${repo}/pull/${prNumber}#discussion_r${thread.firstCommentDatabaseId}`,
             }))
-            const output = filterFields(data, fields)
-            outputJson(output)
+            outputData(data, options.format || 'json', fields)
             return
           }
 

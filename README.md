@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/github/pleaseai/gh-please/graph/badge.svg?token=BQKO959X1M)](https://codecov.io/github/pleaseai/gh-please)
 [![code style](https://antfu.me/badge-code-style.svg)](https://github.com/antfu/eslint-config)
 
-GitHub CLI extension for **PleaseAI** - AI-powered code review and issue management automation
+GitHub CLI extension - GitHub tools for LLMs
 
 English | [한국어](./README.ko.md)
 
@@ -16,7 +16,7 @@ English | [한국어](./README.ko.md)
 ### Core Features (Built-in)
 - **Issue Management**: Issue types, sub-issues, dependencies, and worktree-based development workflow
 - **PR Management**: Review comment replies, thread resolution, comment editing
-- **LLM-Friendly Output**: JSON, Markdown, and XML format support
+- **LLM-Friendly Output**: JSON, TOON (58.9% token reduction) format support
 - **Multilingual**: Automatic Korean/English detection
 - **Plugin System**: Extensible architecture
 
@@ -24,7 +24,7 @@ English | [한국어](./README.ko.md)
 - ✨ **ID Converter Utility** - Support both Database ID and Node ID for comment operations
 - ✨ **PR Review Thread List** - Display review threads with Node IDs and copy-ready resolve commands
 - ✨ **E2E Testing** - Comprehensive end-to-end test coverage (26 tests, 100% pass rate)
-- ✨ **LLM-Friendly Output Formats** - JSON, Markdown, XML support (Phase 1-3 complete)
+- ✨ **LLM-Friendly Output Formats** - JSON, TOON (58.9% token reduction) support
 - ✨ **Comment Management** - List and edit Issue/PR comments with flexible ID formats
 - ✨ **Worktree Location** - Unified management at `~/.please/worktrees/`
 - ✨ **PR Review Commands** - Consistent command structure

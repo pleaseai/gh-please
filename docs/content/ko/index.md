@@ -74,7 +74,7 @@ AI 기반 자동화를 통한 향상된 이슈 및 PR 관리를 위한 GitHub CL
   LLM 친화적 출력
 
   #description
-  AI 처리 및 자동화 워크플로우에 최적화된 JSON, Markdown, XML 형식 지원.
+  AI 처리 및 자동화 워크플로우에 최적화된 JSON, TOON (58.9% 토큰 절감) 형식 지원.
   :::
 
   :::u-page-feature

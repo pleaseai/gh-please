@@ -4,8 +4,9 @@
  * Provides commands for listing, installing, and managing plugins
  */
 
+import type { OutputFormat } from '../lib/json-output'
 import { Command } from 'commander'
-import { filterFields, outputJson, parseFields } from '../lib/json-output'
+import { isStructuredOutput, outputData, parseFields } from '../lib/json-output'
 import { installPlugin, uninstallPlugin } from '../plugins/plugin-installer'
 import { PluginRegistry } from '../plugins/plugin-registry'
 
@@ -24,14 +25,18 @@ export function createPluginCommand(): Command {
     .command('list')
     .description('List installed plugins')
     .option('--json [fields]', 'Output in JSON format with optional field selection (name,version,type,description,author,premium)')
-    .action(async (options: { json?: string | boolean }) => {
+    .option('--format <format>', 'Output format: json or toon')
+    .action(async (options: { json?: string | boolean, format?: OutputFormat }) => {
       const registry = new PluginRegistry()
       await registry.loadPlugins()
 
       const plugins = registry.listAll()
 
-      // JSON output mode
-      if (options.json !== undefined) {
+      // Determine output mode
+      const shouldUseStructuredOutput = isStructuredOutput(options)
+
+      // Handle structured output (JSON or TOON)
+      if (shouldUseStructuredOutput) {
         const fields = parseFields(options.json)
         const data = plugins.map(plugin => ({
           name: plugin.name,
@@ -41,8 +46,7 @@ export function createPluginCommand(): Command {
           author: plugin.author || null,
           premium: plugin.premium || false,
         }))
-        const output = filterFields(data, fields)
-        outputJson(output)
+        outputData(data, options.format || 'json', fields)
         return
       }
 
@@ -84,7 +88,8 @@ export function createPluginCommand(): Command {
     .description('Search for available plugins')
     .argument('[query]', 'Search query (optional)')
     .option('--json [fields]', 'Output in JSON format with optional field selection (name,description,author,premium,package)')
-    .action(async (query: string | undefined, options: { json?: string | boolean }) => {
+    .option('--format <format>', 'Output format: json or toon')
+    .action(async (query: string | undefined, options: { json?: string | boolean, format?: OutputFormat }) => {
       // Hardcoded list for now - in production this would query a registry
       const availablePlugins = [
         {
@@ -124,8 +129,11 @@ export function createPluginCommand(): Command {
           )
         : availablePlugins
 
-      // JSON output mode
-      if (options.json !== undefined) {
+      // Determine output mode
+      const shouldUseStructuredOutput = isStructuredOutput(options)
+
+      // Handle structured output (JSON or TOON)
+      if (shouldUseStructuredOutput) {
         const fields = parseFields(options.json)
         const data = filtered.map(plugin => ({
           name: plugin.name,
@@ -134,8 +142,7 @@ export function createPluginCommand(): Command {
           premium: plugin.premium,
           package: plugin.package,
         }))
-        const output = filterFields(data, fields)
-        outputJson(output)
+        outputData(data, options.format || 'json', fields)
         return
       }
 

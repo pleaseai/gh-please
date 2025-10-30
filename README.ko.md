@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/github/pleaseai/gh-please/graph/badge.svg?token=BQKO959X1M)](https://codecov.io/github/pleaseai/gh-please)
 [![code style](https://antfu.me/badge-code-style.svg)](https://github.com/antfu/eslint-config)
 
-**PleaseAI**를 위한 GitHub CLI 확장 프로그램 - AI 기반 코드 리뷰 및 이슈 관리 자동화
+GitHub CLI 확장 프로그램 - LLM을 위한 GitHub 도구
 
 한국어 | [English](./README.md)
 
@@ -16,14 +16,14 @@
 ### 핵심 기능 (내장)
 - **이슈 관리**: 이슈 타입, Sub-issue 및 의존성 관계, 워크트리 기반 개발 워크플로우
 - **PR 관리**: 리뷰 코멘트 답변, 스레드 해결, 코멘트 편집
-- **LLM 친화적 출력**: JSON, Markdown, XML 형식 지원
+- **LLM 친화적 출력**: JSON, TOON (58.9% 토큰 절감) 형식 지원
 - **다국어 지원**: 한글/영문 자동 감지
 - **플러그인 시스템**: 확장 가능한 아키텍처
 
 ### 최신 업데이트 (v0.11.0)
 - ✨ **PR 리뷰 스레드 목록** - Node ID와 복사 가능한 resolve 명령어 표시
 - ✨ **E2E 테스팅** - 포괄적인 종단간 테스트 커버리지 (26개 테스트, 100% 통과율)
-- ✨ **LLM 친화적 출력 형식** - JSON, Markdown, XML 지원 (Phase 1-3 완료)
+- ✨ **LLM 친화적 출력 형식** - JSON, TOON (토큰 58.9% 절감) 지원
 - ✨ **코멘트 관리** - Issue/PR 코멘트 리스트 조회 및 편집
 - ✨ **워크트리 위치 변경** - `~/.please/worktrees/`로 통합 관리
 - ✨ **PR 리뷰 명령어 개선** - 일관된 명령어 구조
