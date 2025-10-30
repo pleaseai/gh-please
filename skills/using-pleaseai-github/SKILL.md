@@ -1,10 +1,12 @@
 ---
-name: Using PleaseAI GitHub Extension
-description: Automate GitHub workflows with gh-please CLI extension - create issues with types, manage sub-issues and dependencies, trigger PleaseAI automation (triage, investigate, fix, review, apply), reply to PR reviews, manage review threads, edit comments, and configure .please/config.yml. Use when user mentions gh please, /please, PleaseAI, issue types, create issue, create sub-issue, link sub-issue, add dependency, blocked-by, review-reply, review threads, comment management, worktree workflow, or extension commands.
+name: using-github-please-extension
+version: 1.1.0
+lastUpdated: 2025-10-30
+description: Automate GitHub workflows with gh-please CLI extension - manage issues, sub-issues, dependencies, PR reviews, and worktrees with LLM-friendly output formats (TOON 58.9% token reduction, JSON, XML, Markdown). Access all 100+ gh CLI commands with automatic format conversion. Use when user mentions gh please, gh CLI commands, TOON format, issue types, sub-issues, dependencies, blocked-by, PR reviews, review threads, comment management, worktree workflow, or GitHub automation.
 allowed-tools: Read, Bash, Grep, Glob, Edit, WebFetch
 ---
 
-# Using PleaseAI GitHub Extension
+# Using GitHub Please Extension
 
 Quick reference for automating GitHub workflows with the `gh-please` CLI extension.
 
@@ -20,27 +22,57 @@ gh extension list  # Should show gh-please
 
 ## Quick Reference
 
-### AI Workflows
+### gh CLI Passthrough
 
-Trigger PleaseAI automation on issues and PRs via `/please` comments:
+gh-please automatically supports **all** GitHub CLI commands through passthrough functionality. When a command is not explicitly registered (issue, pr, plugin), it forwards to the native gh CLI with optional format conversion.
 
-| Command | Description | Example |
-|---------|-------------|---------|
-| `ai triage <issue>` | Auto-categorize issue, add labels | `gh please ai triage 123` |
-| `ai investigate <issue>` | Deep bug analysis, log inspection | `gh please ai investigate 123` |
-| `ai fix <issue>` | Automated fix attempt, create PR | `gh please ai fix 123` |
-| `ai review <pr>` | Code review with security checks | `gh please ai review 456` |
-| `ai apply <pr>` | Apply bot suggestions to PR | `gh please ai apply 456` |
+**Key Benefits:**
+- ✅ Access all 100+ gh CLI commands through gh-please
+- ✅ Automatic format conversion (TOON, JSON, Markdown, XML)
+- ✅ No manual updates needed - new gh CLI features work immediately
 
-**All commands support `--repo owner/repo` for cross-repository operations.**
+**Usage:**
 
 ```bash
-# Current repo
-gh please ai triage 123
+# Use any gh command through gh-please (preserves original output)
+gh please repo view
+gh please workflow list
+gh please release view v1.0.0
 
-# Different repo
-gh please ai triage 123 --repo pleaseai/another-repo
-gh please ai triage 123 -R owner/repo  # Short form
+# Convert to TOON format (58.9% token reduction for LLMs)
+gh please issue list --format toon
+gh please pr list --state open --format toon
+gh please repo view --format toon
+
+# Convert to JSON for automation
+gh please workflow list --format json
+gh please pr checks 123 --format json
+
+# Other formats
+gh please issue list --format markdown  # Markdown tables
+gh please issue list --format xml       # XML output
+```
+
+**How it works:**
+1. Unknown commands automatically forward to `gh` CLI
+2. `--format toon/json/markdown/xml` triggers format conversion
+3. Requires command support for `--json` flag
+4. Registered gh-please commands (issue, pr) take priority
+
+**Examples:**
+
+```bash
+# Repository operations
+gh please repo view --format toon
+
+# Workflow management
+gh please workflow list --format json
+
+# Release management
+gh please release list --format toon
+
+# Any gh command works!
+gh please api repos/:owner/:repo --format json
 ```
 
 ### Issue Management
@@ -221,69 +253,79 @@ gh please issue comment edit IC_kwDOABC123 --body "Corrected"                 # 
 - **Database ID**: Requires `--pr <number>` or `--issue <number>` for conversion to Node ID
 - **Node ID**: Can be used directly without additional options
 
-### Configuration
-
-Initialize and manage `.please/config.yml`:
-
-```bash
-# Interactive setup (recommended for first time)
-gh please init
-
-# Non-interactive with defaults
-gh please init --yes
-
-# Overwrite existing config
-gh please init --force
-```
-
-**Configuration sections:**
-- `code_review`: Auto-review settings, severity thresholds
-- `issue_workflow`: Triage, investigate, fix automation
-- `code_workspace`: Workspace features
-- `language`: Output language (ko/en - auto-detected)
-
 ## Output Formats
 
-All list commands support LLM-friendly output formats:
+All list commands support LLM-friendly output formats optimized for different use cases.
+
+### TOON Format (Recommended for LLMs)
+
+**TOON (Tree Object Outline Notation)** is a hierarchical text format optimized for LLM token efficiency:
+
+- **58.9% token reduction** compared to JSON
+- Hierarchical structure using indentation
+- Human-readable and machine-parseable
+- Ideal for AI/LLM context windows
+
+**Example:**
 
 ```bash
-# Human-readable (default)
-gh please issue sub-issue list 123
-
-# JSON for scripts and automation
-gh please issue sub-issue list 123 --format json
-
-# Markdown for documentation
-gh please issue sub-issue list 123 --format markdown
-
-# XML for LLM processing
-gh please issue sub-issue list 123 --format xml
+gh please issue sub-issue list 123 --format toon
 ```
 
-**Supported commands:**
+**Output:**
+```
+Issue
+  number: 123
+  title: "Epic: User Authentication"
+  state: OPEN
+  sub_issues
+    Issue
+      number: 124
+      title: "Add OAuth"
+      state: OPEN
+    Issue
+      number: 125
+      title: "Session management"
+      state: CLOSED
+```
+
+### Other Formats
+
+```bash
+# JSON - For scripts and automation
+gh please issue sub-issue list 123 --format json
+
+# Markdown - For documentation
+gh please issue sub-issue list 123 --format markdown
+
+# XML - For XML-based processing
+gh please issue sub-issue list 123 --format xml
+
+# Default (human-readable tables)
+gh please issue sub-issue list 123
+```
+
+### Format Comparison
+
+| Format | Token Efficiency | Use Case | Machine-Readable |
+|--------|-----------------|----------|------------------|
+| **TOON** | ⭐⭐⭐⭐⭐ (58.9% reduction) | LLM context, AI automation | ✅ |
+| **JSON** | ⭐⭐⭐ (baseline) | Scripts, APIs, data exchange | ✅ |
+| **Markdown** | ⭐⭐⭐⭐ | Documentation, human reading | Partial |
+| **XML** | ⭐⭐ (verbose) | XML-based systems | ✅ |
+| **Default** | ⭐⭐⭐⭐ | Terminal, human interaction | ❌ |
+
+### Supported Commands
+
+All list commands support format conversion:
 - `issue sub-issue list`
 - `issue dependency list`
 - `issue comment list`
+- `issue type list`
 - `pr review thread list`
+- All gh CLI commands with `--json` support (via passthrough)
 
 ## Common Patterns
-
-### Bug Fix Workflow
-
-```bash
-# 1. Triage new bug report
-gh please ai triage 123
-
-# 2. Investigate root cause
-gh please ai investigate 123
-
-# 3. Automated fix attempt
-gh please ai fix 123
-# Creates PR with fix + tests
-
-# 4. Review the PR
-gh please ai review 456
-```
 
 ### Issue Development Workflow
 
@@ -340,30 +382,6 @@ gh pr ready 456
 gh pr comment 456 --body "All feedback addressed, ready for re-review"
 ```
 
-## Language Support
-
-Commands detect system language automatically:
-
-```bash
-# Korean system (LANG=ko_KR.UTF-8)
-gh please ai triage 123
-# Output: 🤖 이슈 #123에 대한 PleaseAI 분류 트리거 중...
-
-# English system (LANG=en_US.UTF-8)
-gh please ai triage 123
-# Output: 🤖 Triggering PleaseAI triage for issue #123...
-```
-
-**Language detection sources (in order):**
-1. `LANG` environment variable
-2. `LANGUAGE` environment variable
-3. `LC_ALL` environment variable
-
-Override temporarily:
-```bash
-LANG=en_US.UTF-8 gh please ai triage 123  # Force English
-```
-
 ## Advanced Topics
 
 For detailed information, see the reference documentation:
@@ -385,7 +403,7 @@ gh extension install pleaseai/gh-please
 cd /path/to/your/repo
 
 # Or use --repo flag
-gh please ai triage 123 --repo owner/repo
+gh please issue sub-issue list 123 --repo owner/repo
 ```
 
 **"GraphQL error: sub_issues feature required"**
@@ -440,7 +458,6 @@ All comment operations now support both Database ID and Node ID:
 ## Tips
 
 - Use `--repo` flag to manage issues across multiple repositories
-- Combine AI workflows sequentially (triage → investigate → fix)
 - Use `issue develop` to create isolated worktrees for each issue
 - Create sub-issues before starting work to track progress
 - Reply to review comments as you address them (better UX for reviewers)
@@ -450,5 +467,5 @@ All comment operations now support both Database ID and Node ID:
 
 ---
 
-**Extension Version:** 0.11.0
-**Last Updated:** 2025-10-24
+**Extension Version:** 0.18.0
+**Last Updated:** 2025-10-30
