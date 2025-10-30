@@ -297,5 +297,5 @@ done
 
 - [GitHub CLI Manual](https://cli.github.com/manual/) - Complete gh CLI documentation
 - [Output Formatting](https://cli.github.com/manual/gh_help_formatting) - gh CLI format options
-- [TOON Format](./toon-format.md) - Learn about TOON format benefits
-- [JSON Output](./json-output.md) - JSON output in gh-please
+- [TOON Format ADR](../../docs-dev/adr/0006-toon-output-format.md) - TOON format specification and benefits
+- [JSON Output ADR](../../docs-dev/adr/0003-json-output-implementation.md) - JSON output implementation details

@@ -297,5 +297,5 @@ done
 
 - [GitHub CLI 매뉴얼](https://cli.github.com/manual/) - 전체 gh CLI 문서
 - [출력 포맷팅](https://cli.github.com/manual/gh_help_formatting) - gh CLI 형식 옵션
-- [TOON 형식](./toon-format.md) - TOON 형식의 이점 알아보기
-- [JSON 출력](./json-output.md) - gh-please의 JSON 출력
+- [TOON 형식 ADR](../../docs-dev/adr/0006-toon-output-format.md) - TOON 형식 명세 및 이점
+- [JSON 출력 ADR](../../docs-dev/adr/0003-json-output-implementation.md) - JSON 출력 구현 세부사항
