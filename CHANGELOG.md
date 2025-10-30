@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.20.0](https://github.com/pleaseai/gh-please/compare/github-v0.19.1...github-v0.20.0) (2025-10-30)
+
+
+### Features
+
+* add SessionStart hook for GitHub Please extension with updated docs ([19130cc](https://github.com/pleaseai/gh-please/commit/19130ccb2c608c67f4c6cd0563613882c9de3dd8))
+
+
+### Documentation
+
+* reorganize CLAUDE.md by extracting sections to separate files ([b46b515](https://github.com/pleaseai/gh-please/commit/b46b515e7a75938c038b033bd0bae37e616a91ed))
+* update README for gh CLI passthrough and TOON format documentation ([b65da9c](https://github.com/pleaseai/gh-please/commit/b65da9ce636e9517a7e3f6d9d16d972e4a36f038))
+
 ## [0.19.1](https://github.com/pleaseai/gh-please/compare/github-v0.19.0...github-v0.19.1) (2025-10-30)
 
 
