@@ -1,5 +1,6 @@
-import { describe, expect, test } from 'bun:test'
-import { executeGhCommand, injectJsonFlag, shouldConvertToStructuredFormat } from '../../src/lib/gh-passthrough'
+import { afterEach, beforeEach, describe, expect, spyOn, test } from 'bun:test'
+import * as ghPassthrough from '../../src/lib/gh-passthrough'
+import { executeGhCommand, injectJsonFlag, passThroughCommand, shouldConvertToStructuredFormat } from '../../src/lib/gh-passthrough'
 
 describe('gh-passthrough', () => {
   describe('executeGhCommand', () => {
@@ -173,6 +174,181 @@ describe('gh-passthrough', () => {
 
       // Assert
       expect(result).toEqual(['--json'])
+    })
+  })
+
+  describe('passThroughCommand', () => {
+    let executeGhCommandSpy: ReturnType<typeof spyOn>
+    let consoleErrorSpy: ReturnType<typeof spyOn>
+    let processExitSpy: ReturnType<typeof spyOn>
+    let processStdoutWriteSpy: ReturnType<typeof spyOn>
+
+    beforeEach(() => {
+      // Mock console.error to suppress error output during tests
+      consoleErrorSpy = spyOn(console, 'error').mockImplementation(() => {})
+      // Mock process.exit to prevent test termination
+      processExitSpy = spyOn(process, 'exit').mockImplementation((() => {}) as any)
+      // Mock process.stdout.write to capture output
+      processStdoutWriteSpy = spyOn(process.stdout, 'write').mockImplementation(() => true)
+    })
+
+    afterEach(() => {
+      executeGhCommandSpy?.mockRestore()
+      consoleErrorSpy.mockRestore()
+      processExitSpy.mockRestore()
+      processStdoutWriteSpy.mockRestore()
+    })
+
+    test('should convert to TOON format when --format toon flag present', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify([
+        { number: 1, title: 'Issue 1', state: 'OPEN' },
+        { number: 2, title: 'Issue 2', state: 'CLOSED' },
+      ])
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['issue', 'list', '--format', 'toon']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      expect(executeGhCommandSpy).toHaveBeenCalledWith(['issue', 'list', '--json'])
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should convert to JSON format when --format json flag present', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify({ name: 'test-repo', owner: 'test-owner' })
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['repo', 'view', '--format', 'json']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      expect(executeGhCommandSpy).toHaveBeenCalledWith(['repo', 'view', '--json'])
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should preserve original output when no format flag present', async () => {
+      // Arrange
+      const mockOutput = 'Repository: test-owner/test-repo\nStars: 100'
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['repo', 'view']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      expect(executeGhCommandSpy).toHaveBeenCalledWith(['repo', 'view'])
+      expect(processStdoutWriteSpy).toHaveBeenCalledWith(mockOutput)
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should handle JSON parse failures with helpful error message', async () => {
+      // Arrange
+      const invalidJson = 'not valid json output'
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: invalidJson,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['issue', 'list', '--format', 'toon']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      expect(consoleErrorSpy).toHaveBeenCalled()
+      // Check for JSON parse error message
+      expect(consoleErrorSpy.mock.calls.some((call: any[]) =>
+        call.some((arg: any) => typeof arg === 'string' && arg.includes('JSON')),
+      )).toBe(true)
+      expect(processExitSpy).toHaveBeenCalledWith(1)
+    })
+
+    test('should handle --json not supported error with helpful message', async () => {
+      // Arrange
+      const errorMessage = 'unknown flag: --json'
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: '',
+        stderr: errorMessage,
+        exitCode: 1,
+      })
+
+      const args = ['workflow', 'run', 'test', '--format', 'toon']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      expect(consoleErrorSpy).toHaveBeenCalled()
+      // Check for --json not supported message
+      expect(consoleErrorSpy.mock.calls.some((call: any[]) =>
+        call.some((arg: any) =>
+          typeof arg === 'string'
+          && (arg.includes('not support') || arg.includes('지원하지 않습니다')),
+        ),
+      )).toBe(true)
+      expect(processExitSpy).toHaveBeenCalledWith(1)
+    })
+
+    test('should pass through gh CLI errors when format not requested', async () => {
+      // Arrange
+      const errorMessage = 'API error: resource not found'
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: '',
+        stderr: errorMessage,
+        exitCode: 1,
+      })
+
+      const processStderrWriteSpy = spyOn(process.stderr, 'write').mockImplementation(() => true)
+      const args = ['api', 'nonexistent-endpoint']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      expect(processStderrWriteSpy).toHaveBeenCalledWith(errorMessage)
+      expect(processExitSpy).toHaveBeenCalledWith(1)
+
+      processStderrWriteSpy.mockRestore()
+    })
+
+    test('should handle empty JSON output gracefully', async () => {
+      // Arrange
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: '',
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['issue', 'list', '--format', 'toon']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      expect(executeGhCommandSpy).toHaveBeenCalledWith(['issue', 'list', '--json'])
+      expect(processExitSpy).not.toHaveBeenCalled()
+      // Empty output should not cause parse error
+      expect(consoleErrorSpy).not.toHaveBeenCalled()
     })
   })
 })
