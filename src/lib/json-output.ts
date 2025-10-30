@@ -1,13 +1,15 @@
 /**
  * JSON output utilities for machine-readable CLI output
  *
- * Provides utilities for formatting command output as JSON, following GitHub CLI patterns.
- * Supports field selection to output only specified fields.
+ * Provides utilities for formatting command output as JSON or TOON format.
+ * Follows GitHub CLI patterns and supports field selection.
  *
  * @module json-output
  */
 
+import type { OutputFormat } from './toon-output'
 import { pick } from 'es-toolkit'
+import { outputToon } from './toon-output'
 
 /**
  * Parse comma-separated field list from --json argument
@@ -91,3 +93,53 @@ export function filterFields<T extends Record<string, any>>(
 export function outputJson(data: any): void {
   console.log(JSON.stringify(data, null, 2))
 }
+
+/**
+ * Output data in specified format (JSON or TOON) to stdout
+ *
+ * Unified output function that supports multiple formats with optional field filtering.
+ * This is the preferred method for commands that support both JSON and TOON output.
+ *
+ * @param data - Data to serialize and output
+ * @param format - Output format ('json' | 'toon'), defaults to 'json'
+ * @param fields - Optional field filtering (null = all fields)
+ *
+ * @example
+ * ```typescript
+ * const issues = [{ number: 123, title: 'Test', state: 'OPEN', extra: 'data' }]
+ *
+ * // JSON output with all fields
+ * outputData(issues, 'json')
+ *
+ * // TOON output with all fields (58.9% token savings)
+ * outputData(issues, 'toon')
+ *
+ * // JSON output with field filtering
+ * outputData(issues, 'json', ['number', 'title'])
+ * // [{ "number": 123, "title": "Test" }]
+ *
+ * // TOON output with field filtering
+ * outputData(issues, 'toon', ['number', 'title'])
+ * // [1<TAB>]{number<TAB>title}:
+ * //   123<TAB>Test
+ * ```
+ */
+export function outputData(
+  data: any,
+  format: OutputFormat = 'json',
+  fields?: string[] | null,
+): void {
+  // Apply field filtering if specified
+  const filteredData = fields ? filterFields(data, fields) : data
+
+  // Output in requested format
+  if (format === 'toon') {
+    outputToon(filteredData)
+  }
+  else {
+    outputJson(filteredData)
+  }
+}
+
+// Re-export OutputFormat type for convenience
+export type { OutputFormat }
