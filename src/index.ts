@@ -5,6 +5,7 @@ import packageJson from '../package.json' with { type: 'json' }
 import { createIssueCommand } from './commands/issue'
 import { createPluginCommand } from './commands/plugin'
 import { createPrCommand } from './commands/pr'
+import { passThroughCommand } from './lib/gh-passthrough'
 import { PluginRegistry } from './plugins/plugin-registry'
 
 const program = new Command()
@@ -76,6 +77,16 @@ async function main() {
   if (process.argv.length <= 2) {
     program.help()
   }
+
+  // Fallback handler for unknown commands (passthrough to gh CLI)
+  // This allows any unregistered gh command to be passed through
+  program
+    .allowUnknownOption()
+    .action(async () => {
+      // Get args after 'gh please' prefix
+      const args = process.argv.slice(2)
+      await passThroughCommand(args)
+    })
 
   program.parse()
 }

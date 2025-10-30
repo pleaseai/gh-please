@@ -49,9 +49,9 @@ gh please repo view --format toon
 
 **예시 출력**:
 ```
-number	title	state	author
-123	TOON 지원 추가	OPEN	monalisa
-124	버그 수정	CLOSED	octocat
+number  title          state   author
+123     TOON 지원 추가 OPEN    monalisa
+124     버그 수정      CLOSED  octocat
 ```
 
 ### JSON 형식

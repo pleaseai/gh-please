@@ -49,9 +49,9 @@ gh please repo view --format toon
 
 **Example Output**:
 ```
-number	title	state	author
-123	Add TOON support	OPEN	monalisa
-124	Fix bug	CLOSED	octocat
+number  title            state   author
+123     Add TOON support OPEN    monalisa
+124     Fix bug          CLOSED  octocat
 ```
 
 ### JSON Format
