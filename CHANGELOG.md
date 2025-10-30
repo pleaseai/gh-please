@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.17.0](https://github.com/pleaseai/gh-please/compare/github-v0.16.0...github-v0.17.0) (2025-10-30)
+
+
+### Features
+
+* add TOON output format for LLM token optimization ([#87](https://github.com/pleaseai/gh-please/issues/87)) ([19c0f3d](https://github.com/pleaseai/gh-please/commit/19c0f3dc490e5b05b0c18bcfb31df9de65d7a73b))
+
 ## [0.16.0](https://github.com/pleaseai/gh-please/compare/github-v0.15.0...github-v0.16.0) (2025-10-28)
 
 
