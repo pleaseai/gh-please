@@ -25,10 +25,14 @@ docs-dev/
 ├── AVAILABLE_PLUGINS.md      # Plugin catalog
 ├── CI-CD.md                  # CI/CD setup
 ├── commit-convention.md      # Commit message convention
+├── GH_CLI_PASSTHROUGH.md     # gh CLI passthrough
+├── GITHUB_ID_SYSTEMS.md      # GitHub ID systems guide
+├── ISSUE_WORKFLOW.md         # Issue development workflow
 ├── MIGRATION_v0.3.md         # Migration guide
 ├── PLUGIN_DEVELOPMENT.md     # Plugin development guide
 ├── plugin.md                 # Plugin system docs
 ├── PREMIUM_PLUGIN_INSTALLATION.md  # Premium plugin setup
+├── PR_REVIEW_WORKFLOW.md     # PR review workflow
 ├── RELEASE.md                # Release process
 ├── STANDARDS.md              # Coding standards
 ├── TDD.md                    # TDD workflow
@@ -42,6 +46,12 @@ docs-dev/
 - **[TDD.md](./TDD.md)** - Test-Driven Development workflow
 - **[TESTING.md](./TESTING.md)** - Testing guidelines and best practices
 - **[commit-convention.md](./commit-convention.md)** - Conventional Commits
+
+### Workflows & Guides
+- **[ISSUE_WORKFLOW.md](./ISSUE_WORKFLOW.md)** - Issue development workflow
+- **[PR_REVIEW_WORKFLOW.md](./PR_REVIEW_WORKFLOW.md)** - PR review workflow
+- **[GITHUB_ID_SYSTEMS.md](./GITHUB_ID_SYSTEMS.md)** - GitHub ID systems guide
+- **[GH_CLI_PASSTHROUGH.md](./GH_CLI_PASSTHROUGH.md)** - gh CLI passthrough implementation
 
 ### Architecture
 - **[adr/](./adr/)** - Architecture Decision Records
