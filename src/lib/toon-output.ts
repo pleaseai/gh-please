@@ -9,7 +9,14 @@ export type OutputFormat = 'json' | 'toon'
  * Encode data to TOON format with tab delimiters
  *
  * TOON (Token-Oriented Object Notation) is optimized for LLM token efficiency.
- * Using tab delimiters provides the best tokenization (58.9% reduction vs JSON).
+ * We explicitly override TOON's default delimiter (comma) to use tabs for maximum
+ * token reduction in AI workflows.
+ *
+ * Why tab instead of TOON's comma default?
+ * - Tab: 58.9% token reduction vs JSON
+ * - Comma: 49.1% token reduction vs JSON
+ * - Tab is single-token in most LLM tokenizers (GPT, Claude)
+ * - AI-only consumption (not displayed to humans)
  *
  * @param data - Data to encode (arrays, objects, primitives)
  * @returns TOON-formatted string
@@ -27,7 +34,7 @@ export type OutputFormat = 'json' | 'toon'
  */
 export function encodeToon(data: unknown): string {
   return encode(data, {
-    delimiter: '\t', // Tab provides best tokenization (58.9% savings)
+    delimiter: '\t', // Override TOON default (comma) for best tokenization (58.9% savings)
     indent: 2, // Standard 2-space indentation
   })
 }

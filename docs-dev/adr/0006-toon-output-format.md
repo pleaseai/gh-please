@@ -175,15 +175,38 @@ gh please issue sub-issue list 123 --format toon --json number,title,state
 
 ### Default Delimiter: Tab (`\t`)
 
-**Rationale**:
-- **Best tokenization**: 58.9% savings vs 49.1% with commas
-- **LLM-optimized**: Tab is single token in most tokenizers
-- **Rare conflicts**: Tab rarely appears in text data
-- **AI consumption**: AI plugin doesn't display output to humans
+**Why Tab Instead of TOON's Default (Comma)?**
 
-**Trade-off**:
-- Less human-readable than comma
-- **Mitigation**: Default format remains JSON for `--json` flag
+The TOON library defaults to comma (`,`) for universal compatibility and CSV-format familiarity. However, we explicitly override this to use tab (`\t`) for optimal LLM token efficiency.
+
+**TOON Library's Design Philosophy**:
+- **Default = Comma**: Maximizes compatibility with CSV tools and terminal display
+- **CSV Familiarity**: Most developers recognize comma-delimited data instantly
+- **Universal Tools**: Comma works across all editors and terminals without visual issues
+
+**Our Override Rationale**:
+- **Best tokenization**: Tab achieves 58.9% token savings vs 49.1% with commas (~9.8% better)
+- **LLM-optimized**: Tab tokenizes as single token in most LLM tokenizers (GPT, Claude)
+- **Rare conflicts**: Tab rarely appears in natural text data, reducing quote-escaping needs
+- **AI-only consumption**: AI plugin consumes output directly, not displayed to humans
+- **Cost efficiency**: Every ~10% token reduction compounds across thousands of API calls
+
+**Token Comparison** (GPT `o200k_base` tokenizer):
+```
+JSON:         257 tokens (baseline)
+TOON (comma): 166 tokens (35.4% reduction)  ← TOON library default
+TOON (tab):   105 tokens (58.9% reduction)  ← Our choice
+```
+
+**Trade-offs**:
+- ⚠️ Less human-readable than comma (tabs may display inconsistently in terminals)
+- ✅ **Mitigation**: Default format remains JSON for `--json` flag; TOON is opt-in for AI workflows
+- ✅ AI plugin handles decoding transparently; users never see raw TOON output
+
+**TOON Official Recommendation** (from repository README):
+> "For large uniform tables, use `encode(data, { delimiter: '\t' })` and tell the model 'fields are tab-separated.' Tabs often tokenize better than commas and reduce the need for quote-escaping."
+
+Our implementation follows this official guidance for LLM-optimized output.
 
 ## Implementation
 

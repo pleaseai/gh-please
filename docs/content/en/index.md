@@ -74,7 +74,7 @@ What's included
   LLM-Friendly Output
 
   #description
-  JSON, Markdown, and XML formats optimized for AI processing and automation workflows.
+  JSON and TOON (58.9% token reduction) formats optimized for AI processing and automation workflows.
   :::
 
   :::u-page-feature
