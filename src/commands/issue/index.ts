@@ -1,4 +1,5 @@
 import { Command } from 'commander'
+import { passThroughCommand } from '../../lib/gh-passthrough'
 import { createCleanupCommand } from './cleanup'
 import { createIssueCommentEditCommand } from './comment-edit'
 import { createIssueCommentListCommand } from './comment-list'
@@ -26,6 +27,13 @@ export function createIssueCommand(): Command {
   commentCommand.addCommand(createIssueCommentEditCommand())
   commentCommand.addCommand(createIssueCommentListCommand())
   command.addCommand(commentCommand)
+
+  // Enable passthrough for unknown subcommands
+  command.allowUnknownOption()
+  command.on('command:*', async (_operands) => {
+    const subArgs = command.args.length > 0 ? command.args : process.argv.slice(3)
+    await passThroughCommand(['issue', ...subArgs])
+  })
 
   return command
 }

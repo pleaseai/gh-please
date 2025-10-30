@@ -106,7 +106,7 @@ describe('Comment Management - E2E', () => {
     })
 
     test('should edit issue comment', async () => {
-      if (!helper || !commentId) {
+      if (!helper || !commentId || !testIssueNumber) {
         console.log('⊘ Skipping (E2E not enabled or no comment created)')
         return
       }
@@ -121,6 +121,8 @@ describe('Comment Management - E2E', () => {
         String(commentId),
         '--body',
         newBody,
+        '--issue',
+        String(testIssueNumber),
       ], config)
 
       expect(result.exitCode).toBe(0)

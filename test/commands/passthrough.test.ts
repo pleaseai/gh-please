@@ -83,6 +83,84 @@ describe('passthrough E2E', () => {
     })
   })
 
+  describe('nested subcommand passthrough', () => {
+    test('should passthrough unknown issue subcommand (issue view)', async () => {
+      // Arrange
+      const program = await createProgram()
+      const args = ['issue', 'view', '123']
+
+      // Act
+      await program.parseAsync(args, { from: 'user' })
+
+      // Assert - passthrough SHOULD be called for unknown issue subcommands
+      expect(passThroughCommandSpy).toHaveBeenCalledTimes(1)
+      expect(passThroughCommandSpy.mock.calls[0][0]).toEqual(['issue', 'view', '123'])
+    })
+
+    test('should passthrough unknown issue subcommand with flags (issue list)', async () => {
+      // Arrange
+      const program = await createProgram()
+      const args = ['issue', 'list', '--state', 'open', '--format', 'toon']
+
+      // Act
+      await program.parseAsync(args, { from: 'user' })
+
+      // Assert - passthrough SHOULD be called with all args
+      expect(passThroughCommandSpy).toHaveBeenCalledTimes(1)
+      expect(passThroughCommandSpy.mock.calls[0][0]).toEqual(['issue', 'list', '--state', 'open', '--format', 'toon'])
+    })
+
+    test('should passthrough unknown pr subcommand (pr checks)', async () => {
+      // Arrange
+      const program = await createProgram()
+      const args = ['pr', 'checks', '456']
+
+      // Act
+      await program.parseAsync(args, { from: 'user' })
+
+      // Assert - passthrough SHOULD be called for unknown pr subcommands
+      expect(passThroughCommandSpy).toHaveBeenCalledTimes(1)
+      expect(passThroughCommandSpy.mock.calls[0][0]).toEqual(['pr', 'checks', '456'])
+    })
+
+    test('should passthrough unknown pr subcommand with format (pr view)', async () => {
+      // Arrange
+      const program = await createProgram()
+      const args = ['pr', 'view', '789', '--format', 'json']
+
+      // Act
+      await program.parseAsync(args, { from: 'user' })
+
+      // Assert - passthrough SHOULD be called with all args
+      expect(passThroughCommandSpy).toHaveBeenCalledTimes(1)
+      expect(passThroughCommandSpy.mock.calls[0][0]).toEqual(['pr', 'view', '789', '--format', 'json'])
+    })
+
+    test('should NOT passthrough registered issue subcommand (issue create)', async () => {
+      // Arrange
+      const program = await createProgram()
+      const args = ['issue', 'create', '--title', 'Test']
+
+      // Act
+      await program.parseAsync(args, { from: 'user' })
+
+      // Assert - passthrough should NOT be called for registered commands
+      expect(passThroughCommandSpy).not.toHaveBeenCalled()
+    })
+
+    test('should NOT passthrough registered pr subcommand (pr review reply)', async () => {
+      // Arrange
+      const program = await createProgram()
+      const args = ['pr', 'review', 'reply', '123', '-b', 'LGTM']
+
+      // Act
+      await program.parseAsync(args, { from: 'user' })
+
+      // Assert - passthrough should NOT be called for registered commands
+      expect(passThroughCommandSpy).not.toHaveBeenCalled()
+    })
+  })
+
   describe('exit code preservation', () => {
     test('should preserve exit code 0 for successful commands', async () => {
       // Arrange

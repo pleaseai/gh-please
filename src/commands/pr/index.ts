@@ -1,4 +1,5 @@
 import { Command } from 'commander'
+import { passThroughCommand } from '../../lib/gh-passthrough'
 import { createReviewCommand } from './review'
 import { createReviewCommentEditCommand } from './review-comment-edit'
 
@@ -94,6 +95,13 @@ export function createPrCommand(): Command {
 
   deprecatedReviewComment.addCommand(deprecatedEdit)
   command.addCommand(deprecatedReviewComment)
+
+  // Enable passthrough for unknown subcommands
+  command.allowUnknownOption()
+  command.on('command:*', async (_operands) => {
+    const subArgs = command.args.length > 0 ? command.args : process.argv.slice(3)
+    await passThroughCommand(['pr', ...subArgs])
+  })
 
   return command
 }
