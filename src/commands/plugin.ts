@@ -27,6 +27,13 @@ export function createPluginCommand(): Command {
     .option('--json [fields]', 'Output in JSON format with optional field selection (name,version,type,description,author,premium)')
     .option('--format <format>', 'Output format: json or toon')
     .action(async (options: { json?: string | boolean, format?: OutputFormat }) => {
+      // Determine output format
+      const outputFormat: OutputFormat = options.format
+        ? options.format
+        : options.json !== undefined
+          ? 'json'
+          : 'toon'
+
       const registry = new PluginRegistry()
       await registry.loadPlugins()
 
@@ -46,7 +53,7 @@ export function createPluginCommand(): Command {
           author: plugin.author || null,
           premium: plugin.premium || false,
         }))
-        outputData(data, options.format || 'json', fields)
+        outputData(data, outputFormat, fields)
         return
       }
 
@@ -90,6 +97,13 @@ export function createPluginCommand(): Command {
     .option('--json [fields]', 'Output in JSON format with optional field selection (name,description,author,premium,package)')
     .option('--format <format>', 'Output format: json or toon')
     .action(async (query: string | undefined, options: { json?: string | boolean, format?: OutputFormat }) => {
+      // Determine output format
+      const outputFormat: OutputFormat = options.format
+        ? options.format
+        : options.json !== undefined
+          ? 'json'
+          : 'toon'
+
       // Hardcoded list for now - in production this would query a registry
       const availablePlugins = [
         {
@@ -142,7 +156,7 @@ export function createPluginCommand(): Command {
           premium: plugin.premium,
           package: plugin.package,
         }))
-        outputData(data, options.format || 'json', fields)
+        outputData(data, outputFormat, fields)
         return
       }
 

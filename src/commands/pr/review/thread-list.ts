@@ -24,6 +24,13 @@ export function createThreadListCommand(): Command {
         prNumberStr: string,
         options: { unresolvedOnly?: boolean, repo?: string, json?: string | boolean, format?: OutputFormat },
       ) => {
+        // Determine output format
+        const outputFormat: OutputFormat = options.format
+          ? options.format
+          : options.json !== undefined
+            ? 'json'
+            : 'toon'
+
         const lang = detectSystemLanguage()
         const msg = getPrMessages(lang)
 
@@ -63,7 +70,7 @@ export function createThreadListCommand(): Command {
               firstCommentBody: thread.firstCommentBody || null,
               url: `https://github.com/${owner}/${repo}/pull/${prNumber}#discussion_r${thread.firstCommentDatabaseId}`,
             }))
-            outputData(data, options.format || 'json', fields)
+            outputData(data, outputFormat, fields)
             return
           }
 

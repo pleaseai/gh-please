@@ -115,6 +115,13 @@ export function createDependencyCommand(): Command {
     .option('--json [fields]', 'Output in JSON format with optional field selection (number,title,state,nodeId,url)')
     .option('--format <format>', 'Output format: json or toon')
     .action(async (issueStr: string, options: { repo?: string, json?: string | boolean, format?: OutputFormat }) => {
+      // Determine output format
+      const outputFormat: OutputFormat = options.format
+        ? options.format
+        : options.json !== undefined
+          ? 'json'
+          : 'toon'
+
       const lang = detectSystemLanguage()
       const msg = getIssueMessages(lang)
 
@@ -148,7 +155,7 @@ export function createDependencyCommand(): Command {
             nodeId: blocker.nodeId,
             url: `https://github.com/${owner}/${repo}/issues/${blocker.number}`,
           }))
-          outputData(data, options.format || 'json', fields)
+          outputData(data, outputFormat, fields)
           return
         }
 

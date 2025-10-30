@@ -192,6 +192,13 @@ export function createSubIssueCommand(): Command {
     .option('--json [fields]', 'Output in JSON format with optional field selection (number,title,state,nodeId,url)')
     .option('--format <format>', 'Output format: json or toon')
     .action(async (parentStr: string, options: { repo?: string, json?: string | boolean, format?: OutputFormat }) => {
+      // Determine output format
+      const outputFormat: OutputFormat = options.format
+        ? options.format
+        : options.json !== undefined
+          ? 'json'
+          : 'toon'
+
       const lang = detectSystemLanguage()
       const msg = getIssueMessages(lang)
 
@@ -225,7 +232,7 @@ export function createSubIssueCommand(): Command {
             nodeId: issue.nodeId,
             url: `https://github.com/${owner}/${repo}/issues/${issue.number}`,
           }))
-          outputData(data, options.format || 'json', fields)
+          outputData(data, outputFormat, fields)
           return
         }
 

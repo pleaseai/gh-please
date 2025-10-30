@@ -25,6 +25,13 @@ export function createIssueTypeCommand(): Command {
     .option('--json [fields]', 'Output as JSON with optional field selection (id, name, description, color, isEnabled)')
     .option('--format <format>', 'Output format: json or toon')
     .action(async (options: { repo?: string, json?: string | boolean, format?: OutputFormat }) => {
+      // Determine output format
+      const outputFormat: OutputFormat = options.format
+        ? options.format
+        : options.json !== undefined
+          ? 'json'
+          : 'toon'
+
       const lang = detectSystemLanguage()
       const msg = getIssueMessages(lang)
 
@@ -45,7 +52,7 @@ export function createIssueTypeCommand(): Command {
         // Handle empty results
         if (types.length === 0) {
           if (shouldUseStructuredOutput) {
-            outputData([], options.format || 'json')
+            outputData([], outputFormat)
           }
           else {
             console.log(msg.noIssueTypes)
@@ -56,7 +63,7 @@ export function createIssueTypeCommand(): Command {
         // Handle structured output (JSON or TOON)
         if (shouldUseStructuredOutput) {
           const fields = parseFields(options.json)
-          outputData(types, options.format || 'json', fields)
+          outputData(types, outputFormat, fields)
         }
         else {
           // Human-readable output

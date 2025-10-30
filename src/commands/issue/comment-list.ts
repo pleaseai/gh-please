@@ -46,6 +46,13 @@ export function createIssueCommentListCommand(): Command {
     .option('--json [fields]', 'Output in JSON format with optional field selection (id,body,author,createdAt,updatedAt,url)')
     .option('--format <format>', 'Output format: json or toon')
     .action(async (issueNumberStr: string, options: { repo?: string, json?: string | boolean, format?: OutputFormat }) => {
+      // Determine output format
+      const outputFormat: OutputFormat = options.format
+        ? options.format
+        : options.json !== undefined
+          ? 'json'
+          : 'toon'
+
       const lang = detectSystemLanguage()
       const msg = getCommentMessages(lang)
 
@@ -80,7 +87,7 @@ export function createIssueCommentListCommand(): Command {
             updatedAt: comment.updated_at,
             url: comment.html_url,
           }))
-          outputData(data, options.format || 'json', fields)
+          outputData(data, outputFormat, fields)
           return
         }
 
