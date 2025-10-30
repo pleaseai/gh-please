@@ -7,7 +7,7 @@ import {
   updateIssueType,
 } from '../../lib/github-graphql'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
-import { isStructuredOutput, outputData, parseFields, validateFormat } from '../../lib/json-output'
+import { isStructuredOutput, outputData, parseFields } from '../../lib/json-output'
 
 /**
  * Creates a command group for issue type management
@@ -23,17 +23,12 @@ export function createIssueTypeCommand(): Command {
     .description('List all issue types for a repository')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
     .option('--json [fields]', 'Output as JSON with optional field selection (id, name, description, color, isEnabled)')
-    .option('--format <format>', 'Output format: json or toon (default: json)', 'json')
+    .option('--format <format>', 'Output format: json or toon')
     .action(async (options: { repo?: string, json?: string | boolean, format?: OutputFormat }) => {
       const lang = detectSystemLanguage()
       const msg = getIssueMessages(lang)
 
       try {
-        // Validate format option if provided
-        if (options.format) {
-          validateFormat(options.format)
-        }
-
         const { owner, repo } = await getRepoInfo(options.repo)
 
         // Determine output mode
@@ -94,7 +89,7 @@ export function createIssueTypeCommand(): Command {
 
       try {
         const issueNumber = Number.parseInt(issueStr, 10)
-        if (Number.isNaN(issueNumber)) {
+        if (Number.isNaN(issueNumber) || issueNumber <= 0) {
           throw new TypeError(msg.issueNumberInvalid)
         }
 
@@ -170,7 +165,7 @@ export function createIssueTypeCommand(): Command {
 
       try {
         const issueNumber = Number.parseInt(issueStr, 10)
-        if (Number.isNaN(issueNumber)) {
+        if (Number.isNaN(issueNumber) || issueNumber <= 0) {
           throw new TypeError(msg.issueNumberInvalid)
         }
 

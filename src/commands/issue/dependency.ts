@@ -8,7 +8,7 @@ import {
   removeBlockedBy,
 } from '../../lib/github-graphql'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
-import { isStructuredOutput, outputData, parseFields, validateFormat } from '../../lib/json-output'
+import { isStructuredOutput, outputData, parseFields } from '../../lib/json-output'
 
 /**
  * Creates a command to manage issue dependencies (blocked_by relationships)
@@ -113,7 +113,7 @@ export function createDependencyCommand(): Command {
     .argument('<issue>', 'Issue number')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
     .option('--json [fields]', 'Output in JSON format with optional field selection (number,title,state,nodeId,url)')
-    .option('--format <format>', 'Output format: json or toon (default: json)', 'json')
+    .option('--format <format>', 'Output format: json or toon')
     .action(async (issueStr: string, options: { repo?: string, json?: string | boolean, format?: OutputFormat }) => {
       const lang = detectSystemLanguage()
       const msg = getIssueMessages(lang)
@@ -122,11 +122,6 @@ export function createDependencyCommand(): Command {
         const issueNumber = Number.parseInt(issueStr, 10)
         if (Number.isNaN(issueNumber)) {
           throw new TypeError(msg.issueNumberInvalid)
-        }
-
-        // Validate format option if provided
-        if (options.format) {
-          validateFormat(options.format)
         }
 
         const { owner, repo } = await getRepoInfo(options.repo)

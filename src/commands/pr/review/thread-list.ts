@@ -3,7 +3,7 @@ import { Command } from 'commander'
 import { getRepoInfo } from '../../../lib/github-api'
 import { getPrNodeId, listReviewThreads } from '../../../lib/github-graphql'
 import { detectSystemLanguage, getPrMessages } from '../../../lib/i18n'
-import { isStructuredOutput, outputData, parseFields, validateFormat } from '../../../lib/json-output'
+import { isStructuredOutput, outputData, parseFields } from '../../../lib/json-output'
 
 /**
  * Creates a command to list review threads on pull requests
@@ -18,7 +18,7 @@ export function createThreadListCommand(): Command {
     .option('--unresolved-only', 'Show only unresolved threads')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
     .option('--json [fields]', 'Output in JSON format with optional field selection (nodeId,isResolved,path,line,resolvedBy,firstCommentBody,url)')
-    .option('--format <format>', 'Output format: json or toon (default: json)', 'json')
+    .option('--format <format>', 'Output format: json or toon')
     .action(
       async (
         prNumberStr: string,
@@ -31,11 +31,6 @@ export function createThreadListCommand(): Command {
           const prNumber = Number.parseInt(prNumberStr, 10)
           if (Number.isNaN(prNumber)) {
             throw new TypeError(msg.prNumberInvalid)
-          }
-
-          // Validate format option if provided
-          if (options.format) {
-            validateFormat(options.format)
           }
 
           const { owner, repo } = await getRepoInfo(options.repo)

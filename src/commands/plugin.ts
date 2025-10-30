@@ -6,7 +6,7 @@
 
 import type { OutputFormat } from '../lib/json-output'
 import { Command } from 'commander'
-import { isStructuredOutput, outputData, parseFields, validateFormat } from '../lib/json-output'
+import { isStructuredOutput, outputData, parseFields } from '../lib/json-output'
 import { installPlugin, uninstallPlugin } from '../plugins/plugin-installer'
 import { PluginRegistry } from '../plugins/plugin-registry'
 
@@ -25,13 +25,8 @@ export function createPluginCommand(): Command {
     .command('list')
     .description('List installed plugins')
     .option('--json [fields]', 'Output in JSON format with optional field selection (name,version,type,description,author,premium)')
-    .option('--format <format>', 'Output format: json or toon (default: json)', 'json')
+    .option('--format <format>', 'Output format: json or toon')
     .action(async (options: { json?: string | boolean, format?: OutputFormat }) => {
-      // Validate format option if provided
-      if (options.format) {
-        validateFormat(options.format)
-      }
-
       const registry = new PluginRegistry()
       await registry.loadPlugins()
 
@@ -93,13 +88,8 @@ export function createPluginCommand(): Command {
     .description('Search for available plugins')
     .argument('[query]', 'Search query (optional)')
     .option('--json [fields]', 'Output in JSON format with optional field selection (name,description,author,premium,package)')
-    .option('--format <format>', 'Output format: json or toon (default: json)', 'json')
+    .option('--format <format>', 'Output format: json or toon')
     .action(async (query: string | undefined, options: { json?: string | boolean, format?: OutputFormat }) => {
-      // Validate format option if provided
-      if (options.format) {
-        validateFormat(options.format)
-      }
-
       // Hardcoded list for now - in production this would query a registry
       const availablePlugins = [
         {

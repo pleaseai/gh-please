@@ -216,7 +216,7 @@ export function isStructuredOutput(options: {
   json?: string | boolean
   format?: OutputFormat
 }): boolean {
-  return options.json !== undefined || options.format === 'toon'
+  return options.json !== undefined || options.format !== undefined
 }
 
 // Re-export OutputFormat type for convenience
