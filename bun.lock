@@ -6,7 +6,7 @@
       "dependencies": {
         "@byjohann/toon": "^0.4.1",
         "@clack/prompts": "^0.11.0",
-        "@pleaseai/cli-toolkit": "^0.1.0",
+        "@pleaseai/cli-toolkit": "^0.2.0",
         "commander": "^12.1.0",
         "es-toolkit": "^1.41.0",
         "zod": "^4.1.12",
@@ -106,7 +106,7 @@
 
     "@pkgr/core": ["@pkgr/core@0.1.2", "", {}, "sha512-fdDH1LSGfZdTH2sxdpVMw31BanV28K/Gry0cVFxaNP77neJSkd82mM8ErPNYs9e+0O7SdHBLTDzDgwUuy18RnQ=="],
 
-    "@pleaseai/cli-toolkit": ["@pleaseai/cli-toolkit@0.1.0", "", { "dependencies": { "@byjohann/toon": "^0.3.0", "commander": "^12.1.0", "es-toolkit": "^1.31.0" }, "peerDependencies": { "typescript": "^5" } }, "sha512-JqlQ5nLNtc575SMRNzlGKEgBGScEJ9uNyQzzCyKNdmpwB0bLfJNjBpc+ADd7VZ7tvKHwiSZn5CCF50o50gP66g=="],
+    "@pleaseai/cli-toolkit": ["@pleaseai/cli-toolkit@0.2.0", "", { "dependencies": { "@byjohann/toon": "^0.3.0", "commander": "^12.1.0", "es-toolkit": "^1.31.0" }, "peerDependencies": { "typescript": "^5" } }, "sha512-Axx5g7HHBP3ndwfr5zWVZns9iQzXA9xcZ4RQb04UKddtllGQ4aQH7JFbqQVeBHkQ7PpPPD755+FUb5pPMtMpZg=="],
 
     "@pleaseai/gh-please": ["gh-extension-please@root:", {}],
 
