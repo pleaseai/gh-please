@@ -1,0 +1,140 @@
+name: Update GitHub CLI Field Definitions
+
+on:
+  # Run weekly on Mondays at 9:00 AM UTC
+  schedule:
+    - cron: '0 9 * * 1'
+
+  # Allow manual trigger
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-fields:
+    name: Check and Update gh CLI Fields
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Authenticate GitHub CLI
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+          gh auth status
+
+      - name: Check current gh CLI version
+        id: gh-version
+        run: |
+          GH_VERSION=$(gh version | head -n1 | awk '{print $3}')
+          echo "version=$GH_VERSION" >> $GITHUB_OUTPUT
+          echo "GitHub CLI version: $GH_VERSION"
+
+      - name: Run field update script
+        id: update
+        run: |
+          echo "Running field update script..."
+          bun run update-fields
+
+          # Check if generated file was modified
+          if git diff --quiet src/lib/gh-fields.generated.ts; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No changes detected in field definitions"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Field definitions have been updated"
+          fi
+
+      - name: Display changes
+        if: steps.update.outputs.changed == 'true'
+        run: |
+          echo "=== Field Definition Changes ==="
+          git diff src/lib/gh-fields.generated.ts
+
+      - name: Create Pull Request
+        if: steps.update.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            chore: update gh CLI field definitions
+
+            Auto-updated field definitions from gh CLI ${{ steps.gh-version.outputs.version }}
+          branch: chore/update-gh-fields
+          delete-branch: true
+          title: 'chore: update gh CLI field definitions'
+          body: |
+            ## Summary
+
+            Automated update of GitHub CLI field definitions for TOON/JSON format conversion.
+
+            **Triggered by**: ${{ github.event_name == 'schedule' && 'Weekly scheduled run' || 'Manual workflow dispatch' }}
+            **gh CLI version**: ${{ steps.gh-version.outputs.version }}
+            **Date**: ${{ github.event.head_commit.timestamp }}
+
+            ## Changes
+
+            This PR updates `src/lib/gh-fields.generated.ts` with the latest field definitions from GitHub CLI.
+
+            ### Fields Updated
+
+            The script executed the following commands to extract fields:
+            - `gh issue view <id> --json invalidfield`
+            - `gh pr view <id> --json invalidfield`
+            - `gh repo view <owner/repo> --json invalidfield`
+            - `gh release view <tag> --json invalidfield`
+
+            ### Review Checklist
+
+            - [ ] Verify field additions/removals make sense
+            - [ ] Check for breaking changes in field names
+            - [ ] Run tests: `bun test test/lib/gh-passthrough.test.ts`
+            - [ ] Test manually: `gh please issue view <id> --format toon`
+
+            ## Testing
+
+            ```bash
+            # Test TOON format conversion
+            gh please issue view 3 --format toon
+            gh please pr view 1 --format json
+            gh please repo view owner/repo --format toon
+            ```
+
+            ## Related
+
+            - Documentation: `docs-dev/GH_FIELDS_MAINTENANCE.md`
+            - Issue: #109
+            - Workflow: `.github/workflows/update-gh-fields.yml`
+
+            ---
+
+            🤖 This PR was automatically created by the `update-gh-fields` workflow.
+          labels: |
+            type:chore
+            area:core
+            automated
+          assignees: ${{ github.repository_owner }}
+
+      - name: Summary
+        run: |
+          echo "=== Workflow Summary ==="
+          echo "gh CLI version: ${{ steps.gh-version.outputs.version }}"
+          echo "Fields changed: ${{ steps.update.outputs.changed }}"
+          if [ "${{ steps.update.outputs.changed }}" == "true" ]; then
+            echo "✅ PR created with updated field definitions"
+          else
+            echo "ℹ️ No changes - field definitions are up to date"
+          fi
