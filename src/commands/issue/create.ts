@@ -1,3 +1,4 @@
+import { filterFields, outputJson, parseFields } from '@pleaseai/cli-toolkit/output'
 import { Command } from 'commander'
 import { getRepoInfo } from '../../lib/github-api'
 import {
@@ -5,7 +6,6 @@ import {
   listIssueTypes,
 } from '../../lib/github-graphql'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
-import { filterFields, outputJson, parseFields } from '@pleaseai/cli-toolkit/output'
 
 /**
  * Creates a command to create GitHub issues with optional issue type

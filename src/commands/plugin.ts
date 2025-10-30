@@ -5,8 +5,8 @@
  */
 
 import type { OutputFormat } from '@pleaseai/cli-toolkit/output'
-import { Command } from 'commander'
 import { isStructuredOutput, outputData, parseFields } from '@pleaseai/cli-toolkit/output'
+import { Command } from 'commander'
 import { installPlugin, uninstallPlugin } from '../plugins/plugin-installer'
 import { PluginRegistry } from '../plugins/plugin-registry'
 
