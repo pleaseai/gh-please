@@ -20,7 +20,7 @@ describe('Format Validation Integration', () => {
 
   describe('Invalid format values', () => {
     test('should throw error for xml format', async () => {
-      const { outputData } = await import('../../src/lib/json-output')
+      const { outputData } = await import('@pleaseai/cli-toolkit/output')
 
       expect(() => {
         // @ts-expect-error - intentionally passing invalid format
@@ -29,7 +29,7 @@ describe('Format Validation Integration', () => {
     })
 
     test('should throw error for yaml format', async () => {
-      const { outputData } = await import('../../src/lib/json-output')
+      const { outputData } = await import('@pleaseai/cli-toolkit/output')
 
       expect(() => {
         // @ts-expect-error - intentionally passing invalid format
@@ -38,7 +38,7 @@ describe('Format Validation Integration', () => {
     })
 
     test('should throw error for case mismatch JSON', async () => {
-      const { outputData } = await import('../../src/lib/json-output')
+      const { outputData } = await import('@pleaseai/cli-toolkit/output')
 
       expect(() => {
         // @ts-expect-error - intentionally passing invalid format
@@ -47,7 +47,7 @@ describe('Format Validation Integration', () => {
     })
 
     test('should throw error for case mismatch TOON', async () => {
-      const { outputData } = await import('../../src/lib/json-output')
+      const { outputData } = await import('@pleaseai/cli-toolkit/output')
 
       expect(() => {
         // @ts-expect-error - intentionally passing invalid format
@@ -59,7 +59,7 @@ describe('Format Validation Integration', () => {
   describe('Validation in outputData', () => {
     test('should not validate when format is undefined (uses default)', async () => {
       const spy = vi.spyOn(console, 'log')
-      const { outputData } = await import('../../src/lib/json-output')
+      const { outputData } = await import('@pleaseai/cli-toolkit/output')
 
       // Should use default 'json' format without validation error
       expect(() => {
@@ -75,7 +75,7 @@ describe('Format Validation Integration', () => {
 
     test('should accept valid json format', async () => {
       const spy = vi.spyOn(console, 'log')
-      const { outputData } = await import('../../src/lib/json-output')
+      const { outputData } = await import('@pleaseai/cli-toolkit/output')
 
       expect(() => {
         outputData([{ a: 1 }], 'json')
@@ -89,7 +89,7 @@ describe('Format Validation Integration', () => {
 
     test('should accept valid toon format', async () => {
       const spy = vi.spyOn(console, 'log')
-      const { outputData } = await import('../../src/lib/json-output')
+      const { outputData } = await import('@pleaseai/cli-toolkit/output')
 
       expect(() => {
         outputData([{ a: 1 }], 'toon')
@@ -104,7 +104,7 @@ describe('Format Validation Integration', () => {
 
   describe('Command-level validation', () => {
     test('should validate format in command action handler', async () => {
-      const { validateFormat } = await import('../../src/lib/json-output')
+      const { validateFormat } = await import('@pleaseai/cli-toolkit/output')
 
       // Simulate command receiving invalid format
       const mockOptions = { format: 'xml' as any }
@@ -117,7 +117,7 @@ describe('Format Validation Integration', () => {
     })
 
     test('should not throw when format is valid', async () => {
-      const { validateFormat } = await import('../../src/lib/json-output')
+      const { validateFormat } = await import('@pleaseai/cli-toolkit/output')
 
       const mockOptions = { format: 'json' as any }
 
@@ -129,7 +129,7 @@ describe('Format Validation Integration', () => {
     })
 
     test('should not throw when format is undefined', async () => {
-      const { validateFormat } = await import('../../src/lib/json-output')
+      const { validateFormat } = await import('@pleaseai/cli-toolkit/output')
 
       const mockOptions = {}
 

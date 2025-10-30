@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, test } from 'bun:test'
-import { isValidFormat, validateFormat } from '../../src/lib/json-output'
+import { isValidFormat, validateFormat } from '@pleaseai/cli-toolkit/output'
 
 describe('Format Validation', () => {
   describe('isValidFormat', () => {

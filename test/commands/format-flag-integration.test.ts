@@ -20,7 +20,7 @@ describe('Format Flag Integration Tests', () => {
       ]
 
       // Import the output function to test directly
-      const { outputData } = await import('../../src/lib/json-output')
+      const { outputData } = await import('@pleaseai/cli-toolkit/output')
 
       // Simulate command execution with --format toon
       const data = mockSubIssues.map(issue => ({
@@ -56,7 +56,7 @@ describe('Format Flag Integration Tests', () => {
         { number: 124, title: 'Test', state: 'OPEN', nodeId: 'I_123' },
       ]
 
-      const { outputData } = await import('../../src/lib/json-output')
+      const { outputData } = await import('@pleaseai/cli-toolkit/output')
 
       const data = mockSubIssues.map(issue => ({
         number: issue.number,
@@ -90,7 +90,7 @@ describe('Format Flag Integration Tests', () => {
         { number: 124, title: 'Test', state: 'OPEN', nodeId: 'I_123', url: 'https://...' },
       ]
 
-      const { outputData } = await import('../../src/lib/json-output')
+      const { outputData } = await import('@pleaseai/cli-toolkit/output')
 
       outputData(mockSubIssues, 'toon', ['number', 'title'])
 
@@ -119,7 +119,7 @@ describe('Format Flag Integration Tests', () => {
         { name: 'speckit', version: '0.1.0', type: 'utility', description: 'Spec tools', author: 'Community', premium: false },
       ]
 
-      const { outputData } = await import('../../src/lib/json-output')
+      const { outputData } = await import('@pleaseai/cli-toolkit/output')
 
       outputData(mockPlugins, 'toon')
 
@@ -156,7 +156,7 @@ describe('Format Flag Integration Tests', () => {
         },
       ]
 
-      const { outputData } = await import('../../src/lib/json-output')
+      const { outputData } = await import('@pleaseai/cli-toolkit/output')
 
       outputData(mockThreads, 'toon')
 
@@ -181,7 +181,7 @@ describe('Format Flag Integration Tests', () => {
     test('should default to JSON when no format specified', async () => {
       const spy = vi.spyOn(console, 'log')
 
-      const { outputData } = await import('../../src/lib/json-output')
+      const { outputData } = await import('@pleaseai/cli-toolkit/output')
 
       outputData([{ a: 1 }]) // No format parameter
 
@@ -198,7 +198,7 @@ describe('Format Flag Integration Tests', () => {
 
     test('should handle empty arrays in both formats', async () => {
       const jsonSpy = vi.spyOn(console, 'log')
-      const { outputData } = await import('../../src/lib/json-output')
+      const { outputData } = await import('@pleaseai/cli-toolkit/output')
 
       // JSON empty array
       outputData([], 'json')
@@ -217,7 +217,7 @@ describe('Format Flag Integration Tests', () => {
         { number: 123, title: 'Test', state: 'OPEN', extra: 'data' },
       ]
 
-      const { outputData } = await import('../../src/lib/json-output')
+      const { outputData } = await import('@pleaseai/cli-toolkit/output')
 
       // Test JSON with filtering
       const jsonSpy = vi.spyOn(console, 'log')
@@ -261,7 +261,7 @@ describe('Format Flag Integration Tests', () => {
         },
       ]
 
-      const { outputData } = await import('../../src/lib/json-output')
+      const { outputData } = await import('@pleaseai/cli-toolkit/output')
 
       outputData(realisticData, 'toon')
 
@@ -290,7 +290,7 @@ describe('Format Flag Integration Tests', () => {
         { name: 'linear', version: '1.0.0', type: 'provider', description: 'Linear integration', author: null, premium: false },
       ]
 
-      const { outputData } = await import('../../src/lib/json-output')
+      const { outputData } = await import('@pleaseai/cli-toolkit/output')
 
       outputData(plugins, 'toon')
 

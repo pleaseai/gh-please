@@ -68,7 +68,6 @@
     "test:unit": "bun test test/lib test/commands",
     "test:integration": "bun test test/integration",
     "test:e2e": "bun test test/e2e",
-
     "test:watch": "bun test --watch",
     "test:coverage": "bun test test/lib test/commands --coverage",
     "test:coverage:text": "bun test --coverage",
@@ -78,6 +77,7 @@
   "dependencies": {
     "@byjohann/toon": "^0.4.1",
     "@clack/prompts": "^0.11.0",
+    "@pleaseai/cli-toolkit": "^0.1.0",
     "commander": "^12.1.0",
     "es-toolkit": "^1.41.0",
     "zod": "^4.1.12"

@@ -1,4 +1,4 @@
-import type { OutputFormat } from '../../lib/json-output'
+import type { OutputFormat } from '@pleaseai/cli-toolkit/output'
 import { Command } from 'commander'
 import { getRepoInfo } from '../../lib/github-api'
 import {
@@ -8,7 +8,7 @@ import {
   removeSubIssue,
 } from '../../lib/github-graphql'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
-import { isStructuredOutput, outputData, parseFields } from '../../lib/json-output'
+import { isStructuredOutput, outputData, parseFields } from '@pleaseai/cli-toolkit/output'
 
 /**
  * Creates a command to manage issue sub-issue relationships

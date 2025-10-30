@@ -3,7 +3,7 @@ import { Command } from 'commander'
 import { listReviewComments } from '../../../lib/comment-api'
 import { getRepoInfo } from '../../../lib/github-api'
 import { detectSystemLanguage, getCommentMessages } from '../../../lib/i18n'
-import { filterFields, outputJson, parseFields } from '../../../lib/json-output'
+import { filterFields, outputJson, parseFields } from '@pleaseai/cli-toolkit/output'
 
 const BODY_PREVIEW_LENGTH = 80
 

@@ -5,7 +5,7 @@ import {
   listIssueTypes,
 } from '../../lib/github-graphql'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
-import { filterFields, outputJson, parseFields } from '../../lib/json-output'
+import { filterFields, outputJson, parseFields } from '@pleaseai/cli-toolkit/output'
 
 /**
  * Creates a command to create GitHub issues with optional issue type

@@ -1,9 +1,9 @@
-import type { OutputFormat } from '../../../lib/json-output'
+import type { OutputFormat } from '@pleaseai/cli-toolkit/output'
 import { Command } from 'commander'
 import { getRepoInfo } from '../../../lib/github-api'
 import { getPrNodeId, listReviewThreads } from '../../../lib/github-graphql'
 import { detectSystemLanguage, getPrMessages } from '../../../lib/i18n'
-import { isStructuredOutput, outputData, parseFields } from '../../../lib/json-output'
+import { isStructuredOutput, outputData, parseFields } from '@pleaseai/cli-toolkit/output'
 
 /**
  * Creates a command to list review threads on pull requests
