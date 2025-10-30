@@ -82,4 +82,107 @@ describe('passthrough E2E', () => {
       expect(passThroughCommandSpy.mock.calls[0][0]).toEqual(['release', 'view', 'v1.0.0'])
     })
   })
+
+  describe('exit code preservation', () => {
+    test('should preserve exit code 0 for successful commands', async () => {
+      // Arrange
+      const program = await createProgram()
+      const args = ['repo', 'view']
+
+      // Act
+      await program.parseAsync(args, { from: 'user' })
+
+      // Assert
+      expect(passThroughCommandSpy).toHaveBeenCalledTimes(1)
+      expect(processExitSpy).not.toHaveBeenCalled() // Success doesn't call process.exit
+    })
+
+    test('should preserve non-zero exit codes from gh CLI', async () => {
+      // Arrange
+      const program = await createProgram()
+      const args = ['api', 'nonexistent-endpoint']
+
+      // Simulate gh CLI error by making passThroughCommand call process.exit
+      passThroughCommandSpy.mockImplementation(async () => {
+        process.exit(1)
+      })
+
+      // Act
+      await program.parseAsync(args, { from: 'user' })
+
+      // Assert
+      expect(passThroughCommandSpy).toHaveBeenCalledTimes(1)
+      expect(processExitSpy).toHaveBeenCalledWith(1)
+    })
+  })
+
+  describe('bilingual error messages', () => {
+    test('should display error message in detected system language (Korean)', async () => {
+      // Arrange
+      const program = await createProgram()
+      const args = ['workflow', 'run', 'test', '--format', 'toon']
+
+      // Mock passThroughCommand to simulate --json not supported error in Korean
+      passThroughCommandSpy.mockImplementation(async () => {
+        // Set LANG to ko to trigger Korean messages
+        const originalLang = process.env.LANG
+        process.env.LANG = 'ko_KR.UTF-8'
+
+        console.error('이 명령어는 구조화된 출력을 지원하지 않습니다')
+
+        // Restore original LANG
+        if (originalLang)
+          process.env.LANG = originalLang
+        else
+          delete process.env.LANG
+
+        process.exit(1)
+      })
+
+      // Act
+      await program.parseAsync(args, { from: 'user' })
+
+      // Assert
+      expect(passThroughCommandSpy).toHaveBeenCalledTimes(1)
+      expect(consoleErrorSpy).toHaveBeenCalled()
+      // Check for Korean error message
+      expect(consoleErrorSpy.mock.calls.some((call: any[]) =>
+        call.some((arg: any) => typeof arg === 'string' && arg.includes('지원하지 않습니다')),
+      )).toBe(true)
+    })
+
+    test('should display error message in detected system language (English)', async () => {
+      // Arrange
+      const program = await createProgram()
+      const args = ['workflow', 'run', 'test', '--format', 'toon']
+
+      // Mock passThroughCommand to simulate --json not supported error in English
+      passThroughCommandSpy.mockImplementation(async () => {
+        // Set LANG to en to trigger English messages
+        const originalLang = process.env.LANG
+        process.env.LANG = 'en_US.UTF-8'
+
+        console.error('This command does not support structured output')
+
+        // Restore original LANG
+        if (originalLang)
+          process.env.LANG = originalLang
+        else
+          delete process.env.LANG
+
+        process.exit(1)
+      })
+
+      // Act
+      await program.parseAsync(args, { from: 'user' })
+
+      // Assert
+      expect(passThroughCommandSpy).toHaveBeenCalledTimes(1)
+      expect(consoleErrorSpy).toHaveBeenCalled()
+      // Check for English error message
+      expect(consoleErrorSpy.mock.calls.some((call: any[]) =>
+        call.some((arg: any) => typeof arg === 'string' && arg.includes('not support')),
+      )).toBe(true)
+    })
+  })
 })
