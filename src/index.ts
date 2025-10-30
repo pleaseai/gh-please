@@ -5,22 +5,68 @@ import packageJson from '../package.json' with { type: 'json' }
 import { createIssueCommand } from './commands/issue'
 import { createPluginCommand } from './commands/plugin'
 import { createPrCommand } from './commands/pr'
+import { passThroughCommand } from './lib/gh-passthrough'
 import { PluginRegistry } from './plugins/plugin-registry'
 
-const program = new Command()
+/**
+ * Create and configure the main program instance
+ * Exported for testing purposes
+ */
+export async function createProgram(): Promise<Command> {
+  const program = new Command()
 
-program
-  .name('gh-please')
-  .description('GitHub CLI extension for managing pull requests and issues')
-  .version(packageJson.version)
+  program
+    .name('gh-please')
+    .description('GitHub CLI extension for managing pull requests and issues')
+    .version(packageJson.version)
 
-// Add core command groups
-program.addCommand(createIssueCommand())
-program.addCommand(createPrCommand())
-program.addCommand(createPluginCommand())
+  // Add core command groups
+  program.addCommand(createIssueCommand())
+  program.addCommand(createPrCommand())
+  program.addCommand(createPluginCommand())
+
+  // Load and register plugins
+  await loadPlugins(program)
+
+  // Deprecated: backward compatibility for review-reply
+  const deprecatedReviewReply = new Command('review-reply')
+    .description('(Deprecated) Use \'gh please pr review-reply\' instead')
+    .argument('<comment-id>', 'ID of the review comment to reply to')
+    .option('-b, --body <text>', 'Reply body text')
+    .action(async (commentIdStr: string, options: { body?: string }) => {
+      console.warn('⚠️  Warning: \'gh please review-reply\' is deprecated.')
+      console.warn('   Please use \'gh please pr review-reply\' instead.')
+      console.warn('')
+
+      const { createReviewReplyCommand } = await import('./commands/pr/review-reply')
+      const cmd = createReviewReplyCommand()
+      // Pass the comment-id and body to the new command
+      const args = [commentIdStr]
+      if (options.body) {
+        args.push('-b', options.body)
+      }
+      await cmd.parseAsync(args, { from: 'user' })
+    })
+
+  program.addCommand(deprecatedReviewReply)
+
+  // Fallback handler for unknown commands (passthrough to gh CLI)
+  // Use the actionHandler on unknown command event instead of .action()
+  // This is the proper way to handle unknown commands in commander.js
+  program.allowUnknownOption()
+
+  // Override the default behavior for unknown commands
+  program.on('command:*', async (_operands) => {
+    // Get all args from process.argv (when run from CLI) or program.args (when run from tests)
+    const args = program.args.length > 0 ? program.args : process.argv.slice(2)
+    await passThroughCommand(args)
+  })
+
+  return program
+}
 
 // Load and register plugins
-async function loadPlugins() {
+async function loadPlugins(program: Command) {
   try {
     const registry = new PluginRegistry()
     await registry.loadPlugins()
@@ -45,32 +91,9 @@ async function loadPlugins() {
   }
 }
 
-// Deprecated: backward compatibility for review-reply
-const deprecatedReviewReply = new Command('review-reply')
-  .description('(Deprecated) Use \'gh please pr review-reply\' instead')
-  .argument('<comment-id>', 'ID of the review comment to reply to')
-  .option('-b, --body <text>', 'Reply body text')
-  .action(async (commentIdStr: string, options: { body?: string }) => {
-    console.warn('⚠️  Warning: \'gh please review-reply\' is deprecated.')
-    console.warn('   Please use \'gh please pr review-reply\' instead.')
-    console.warn('')
-
-    const { createReviewReplyCommand } = await import('./commands/pr/review-reply')
-    const cmd = createReviewReplyCommand()
-    // Pass the comment-id and body to the new command
-    const args = [commentIdStr]
-    if (options.body) {
-      args.push('-b', options.body)
-    }
-    await cmd.parseAsync(args, { from: 'user' })
-  })
-
-program.addCommand(deprecatedReviewReply)
-
 // Main execution
 async function main() {
-  // Load plugins before parsing arguments
-  await loadPlugins()
+  const program = await createProgram()
 
   // If no command provided, show help
   if (process.argv.length <= 2) {

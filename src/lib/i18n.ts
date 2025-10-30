@@ -103,6 +103,11 @@ export interface CommentMessages {
   unknownError: string
 }
 
+export interface PassthroughMessages {
+  jsonParseError: string
+  jsonNotSupported: string
+}
+
 export const issueMessages: Record<Language, IssueMessages> = {
   ko: {
     gettingParentIssue: (parentNumber: number) => `🔍 상위 이슈 #${parentNumber} 가져오는 중...`,
@@ -328,6 +333,21 @@ export const commentMessages: Record<Language, CommentMessages> = {
 
 export function getCommentMessages(language: Language): CommentMessages {
   return commentMessages[language]
+}
+
+export const passthroughMessages: Record<Language, PassthroughMessages> = {
+  ko: {
+    jsonParseError: '❌ JSON 출력을 파싱할 수 없습니다',
+    jsonNotSupported: '❌ 이 명령어는 구조화된 출력을 지원하지 않습니다 (--json 플래그가 없음)',
+  },
+  en: {
+    jsonParseError: '❌ Failed to parse JSON output',
+    jsonNotSupported: '❌ This command does not support structured output (no --json flag available)',
+  },
+}
+
+export function getPassthroughMessages(language: Language): PassthroughMessages {
+  return passthroughMessages[language]
 }
 
 /**
