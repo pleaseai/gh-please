@@ -6,7 +6,7 @@
 
 import type { OutputFormat } from '../lib/json-output'
 import { Command } from 'commander'
-import { outputData, parseFields } from '../lib/json-output'
+import { isStructuredOutput, outputData, parseFields, validateFormat } from '../lib/json-output'
 import { installPlugin, uninstallPlugin } from '../plugins/plugin-installer'
 import { PluginRegistry } from '../plugins/plugin-registry'
 
@@ -27,17 +27,21 @@ export function createPluginCommand(): Command {
     .option('--json [fields]', 'Output in JSON format with optional field selection (name,version,type,description,author,premium)')
     .option('--format <format>', 'Output format: json or toon (default: json)', 'json')
     .action(async (options: { json?: string | boolean, format?: OutputFormat }) => {
+      // Validate format option if provided
+      if (options.format) {
+        validateFormat(options.format)
+      }
+
       const registry = new PluginRegistry()
       await registry.loadPlugins()
 
       const plugins = registry.listAll()
 
-      // Determine output format
-      const format: OutputFormat = options.format || 'json'
-      const isStructuredOutput = options.json !== undefined || format === 'toon'
+      // Determine output mode
+      const shouldUseStructuredOutput = isStructuredOutput(options)
 
-      // Structured output mode (JSON or TOON)
-      if (isStructuredOutput) {
+      // Handle structured output (JSON or TOON)
+      if (shouldUseStructuredOutput) {
         const fields = parseFields(options.json)
         const data = plugins.map(plugin => ({
           name: plugin.name,
@@ -47,7 +51,7 @@ export function createPluginCommand(): Command {
           author: plugin.author || null,
           premium: plugin.premium || false,
         }))
-        outputData(data, format, fields)
+        outputData(data, options.format || 'json', fields)
         return
       }
 
@@ -91,6 +95,11 @@ export function createPluginCommand(): Command {
     .option('--json [fields]', 'Output in JSON format with optional field selection (name,description,author,premium,package)')
     .option('--format <format>', 'Output format: json or toon (default: json)', 'json')
     .action(async (query: string | undefined, options: { json?: string | boolean, format?: OutputFormat }) => {
+      // Validate format option if provided
+      if (options.format) {
+        validateFormat(options.format)
+      }
+
       // Hardcoded list for now - in production this would query a registry
       const availablePlugins = [
         {
@@ -130,12 +139,11 @@ export function createPluginCommand(): Command {
           )
         : availablePlugins
 
-      // Determine output format
-      const format: OutputFormat = options.format || 'json'
-      const isStructuredOutput = options.json !== undefined || format === 'toon'
+      // Determine output mode
+      const shouldUseStructuredOutput = isStructuredOutput(options)
 
-      // Structured output mode (JSON or TOON)
-      if (isStructuredOutput) {
+      // Handle structured output (JSON or TOON)
+      if (shouldUseStructuredOutput) {
         const fields = parseFields(options.json)
         const data = filtered.map(plugin => ({
           name: plugin.name,
@@ -144,7 +152,7 @@ export function createPluginCommand(): Command {
           premium: plugin.premium,
           package: plugin.package,
         }))
-        outputData(data, format, fields)
+        outputData(data, options.format || 'json', fields)
         return
       }
 

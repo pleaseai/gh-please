@@ -8,7 +8,7 @@ import {
   removeSubIssue,
 } from '../../lib/github-graphql'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
-import { outputData, parseFields } from '../../lib/json-output'
+import { isStructuredOutput, outputData, parseFields, validateFormat } from '../../lib/json-output'
 
 /**
  * Creates a command to manage issue sub-issue relationships
@@ -201,21 +201,27 @@ export function createSubIssueCommand(): Command {
           throw new TypeError(msg.issueNumberInvalid)
         }
 
+        // Validate format option if provided
+        if (options.format) {
+          validateFormat(options.format)
+        }
+
         const { owner, repo } = await getRepoInfo(options.repo)
 
-        // Determine output format
-        const format: OutputFormat = options.format || 'json'
-        const isStructuredOutput = options.json !== undefined || format === 'toon'
+        // Determine output mode
+        const shouldUseStructuredOutput = isStructuredOutput(options)
 
-        // Fetch data (no progress messages in structured output mode)
-        if (!isStructuredOutput) {
+        // Show progress messages only for human-readable output
+        if (!shouldUseStructuredOutput) {
           console.log(msg.fetchingSubIssues(parentNumber))
         }
+
+        // Fetch sub-issues
         const parentNodeId = await getIssueNodeId(owner, repo, parentNumber)
         const subIssues = await listSubIssues(parentNodeId)
 
-        // Structured output mode (JSON or TOON)
-        if (isStructuredOutput) {
+        // Handle structured output (JSON or TOON)
+        if (shouldUseStructuredOutput) {
           const fields = parseFields(options.json)
           const data = subIssues.map(issue => ({
             number: issue.number,
@@ -224,7 +230,7 @@ export function createSubIssueCommand(): Command {
             nodeId: issue.nodeId,
             url: `https://github.com/${owner}/${repo}/issues/${issue.number}`,
           }))
-          outputData(data, format, fields)
+          outputData(data, options.format || 'json', fields)
           return
         }
 

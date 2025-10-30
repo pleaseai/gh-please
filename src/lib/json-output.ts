@@ -129,16 +129,94 @@ export function outputData(
   format: OutputFormat = 'json',
   fields?: string[] | null,
 ): void {
+  // Validate format if explicitly provided
+  if (format !== 'json') {
+    validateFormat(format)
+  }
+
   // Apply field filtering if specified
   const filteredData = fields ? filterFields(data, fields) : data
 
   // Output in requested format
-  if (format === 'toon') {
-    outputToon(filteredData)
+  const outputFunction = format === 'toon' ? outputToon : outputJson
+  outputFunction(filteredData)
+}
+
+/**
+ * Valid output format values
+ */
+const VALID_FORMATS: readonly OutputFormat[] = ['json', 'toon'] as const
+
+/**
+ * Check if a string is a valid output format
+ *
+ * @param format - Format string to validate
+ * @returns True if format is valid ('json' or 'toon')
+ *
+ * @example
+ * ```typescript
+ * isValidFormat('json')  // true
+ * isValidFormat('toon')  // true
+ * isValidFormat('xml')   // false
+ * isValidFormat('JSON')  // false (case-sensitive)
+ * ```
+ */
+export function isValidFormat(format: unknown): format is OutputFormat {
+  return typeof format === 'string' && VALID_FORMATS.includes(format as OutputFormat)
+}
+
+/**
+ * Validate output format and throw error if invalid
+ *
+ * @param format - Format string to validate
+ * @returns The validated format
+ * @throws {Error} If format is not valid
+ *
+ * @example
+ * ```typescript
+ * validateFormat('json')  // 'json'
+ * validateFormat('toon')  // 'toon'
+ * validateFormat('xml')   // throws Error
+ * ```
+ */
+export function validateFormat(format: unknown): OutputFormat {
+  if (!isValidFormat(format)) {
+    const formatStr = format === undefined || format === null
+      ? String(format)
+      : `${format}`
+    throw new Error(
+      `Invalid output format: ${formatStr}. Supported formats: ${VALID_FORMATS.join(', ')}`,
+    )
   }
-  else {
-    outputJson(filteredData)
-  }
+  return format
+}
+
+/**
+ * Determine if structured output should be used based on command options
+ *
+ * Helper function to simplify the common pattern across commands for determining
+ * whether to use structured output (JSON/TOON) or human-readable output.
+ *
+ * @param options - Command options object
+ * @param options.json - JSON output flag or field selection string
+ * @param options.format - Output format ('json' or 'toon')
+ * @returns True if structured output should be used
+ *
+ * @example
+ * ```typescript
+ * const shouldUseStructuredOutput = isStructuredOutput(options)
+ * if (shouldUseStructuredOutput) {
+ *   outputData(data, options.format || 'json', parseFields(options.json))
+ * } else {
+ *   // Human-readable output
+ * }
+ * ```
+ */
+export function isStructuredOutput(options: {
+  json?: string | boolean
+  format?: OutputFormat
+}): boolean {
+  return options.json !== undefined || options.format === 'toon'
 }
 
 // Re-export OutputFormat type for convenience

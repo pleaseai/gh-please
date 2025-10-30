@@ -7,7 +7,7 @@ import {
   updateIssueType,
 } from '../../lib/github-graphql'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
-import { outputData, parseFields } from '../../lib/json-output'
+import { isStructuredOutput, outputData, parseFields, validateFormat } from '../../lib/json-output'
 
 /**
  * Creates a command group for issue type management
@@ -29,33 +29,42 @@ export function createIssueTypeCommand(): Command {
       const msg = getIssueMessages(lang)
 
       try {
+        // Validate format option if provided
+        if (options.format) {
+          validateFormat(options.format)
+        }
+
         const { owner, repo } = await getRepoInfo(options.repo)
 
-        // Determine output format
-        const format: OutputFormat = options.format || 'json'
-        const isStructuredOutput = options.json !== undefined || format === 'toon'
+        // Determine output mode
+        const shouldUseStructuredOutput = isStructuredOutput(options)
 
-        if (!isStructuredOutput) {
+        // Show progress messages only for human-readable output
+        if (!shouldUseStructuredOutput) {
           console.log(msg.fetchingIssueTypes)
         }
 
+        // Fetch issue types
         const types = await listIssueTypes(owner, repo)
 
+        // Handle empty results
         if (types.length === 0) {
-          if (!isStructuredOutput) {
-            console.log(msg.noIssueTypes)
+          if (shouldUseStructuredOutput) {
+            outputData([], options.format || 'json')
           }
           else {
-            outputData([], format)
+            console.log(msg.noIssueTypes)
           }
           return
         }
 
-        if (isStructuredOutput) {
+        // Handle structured output (JSON or TOON)
+        if (shouldUseStructuredOutput) {
           const fields = parseFields(options.json)
-          outputData(types, format, fields)
+          outputData(types, options.format || 'json', fields)
         }
         else {
+          // Human-readable output
           console.log(`\n📋 Available issue types (${types.length}):\n`)
           for (const type of types) {
             const enabled = type.isEnabled ? '✓' : '✗'
