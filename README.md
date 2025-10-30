@@ -66,6 +66,32 @@ gh please pr review comment edit 987654321 --body "Updated" --pr 456
 
 ## Key Features
 
+### 🔄 gh CLI Passthrough
+
+gh-please automatically supports **all** GitHub CLI commands through passthrough:
+
+```bash
+# Any gh command works through gh-please
+gh please repo view
+gh please workflow list
+gh please release create v1.0.0
+
+# Convert output to TOON format (58.9% token reduction)
+gh please issue list --format toon
+gh please pr checks 123 --format toon
+
+# Get JSON for automation
+gh please workflow list --format json
+```
+
+**How it works:**
+- Unregistered commands automatically forward to gh CLI
+- `--format toon` converts JSON output to TOON format
+- `--format json` preserves JSON output
+- No format flag → preserve gh CLI's original table output
+
+[Passthrough Documentation →](docs/en/features/gh-cli-passthrough.md)
+
 ### Issue Development Workflow
 
 ```bash
