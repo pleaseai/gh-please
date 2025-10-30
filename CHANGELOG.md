@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.20.1](https://github.com/pleaseai/gh-please/compare/github-v0.20.0...github-v0.20.1) (2025-10-30)
+
+
+### Bug Fixes
+
+* enable passthrough for nested issue/pr subcommands ([#107](https://github.com/pleaseai/gh-please/issues/107)) ([e82a865](https://github.com/pleaseai/gh-please/commit/e82a865f30b5a5ecfbce8bf4825fdc64e1081600)), closes [#102](https://github.com/pleaseai/gh-please/issues/102)
+
 ## [0.20.0](https://github.com/pleaseai/gh-please/compare/github-v0.19.1...github-v0.20.0) (2025-10-30)
 
 
