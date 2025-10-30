@@ -72,7 +72,8 @@
     "test:coverage": "bun test test/lib test/commands --coverage",
     "test:coverage:text": "bun test --coverage",
     "test:all": "bun run test:unit && bun run test:integration",
-    "test:manual": "./scripts/manual-test.sh"
+    "test:manual": "./scripts/manual-test.sh",
+    "update-fields": "bun run scripts/update-gh-fields.ts"
   },
   "dependencies": {
     "@byjohann/toon": "^0.4.1",
