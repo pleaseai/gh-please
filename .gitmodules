@@ -1,3 +1,0 @@
-[submodule "plugins/ai"]
-	path = plugins/ai
-	url = git@github.com:pleaseai/gh-please-ai.git
