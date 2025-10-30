@@ -14,20 +14,21 @@ English | [한국어](./README.ko.md)
 `@pleaseai/gh-please` is a powerful GitHub CLI extension that enhances issue and PR management.
 
 ### Core Features (Built-in)
+- **gh CLI Passthrough**: All GitHub CLI commands available through gh-please with optional TOON/JSON format
 - **Issue Management**: Issue types, sub-issues, dependencies, and worktree-based development workflow
 - **PR Management**: Review comment replies, thread resolution, comment editing
-- **LLM-Friendly Output**: JSON, TOON (58.9% token reduction) format support
+- **LLM-Friendly Output**: JSON, TOON (58.9% token reduction) format support across all commands
 - **Multilingual**: Automatic Korean/English detection
 - **Plugin System**: Extensible architecture
 
-### Latest Updates (v0.11.0)
+### Latest Updates (v0.18.0)
+- 🚀 **gh CLI Passthrough** - Access all 100+ GitHub CLI commands through gh-please
+- ✨ **TOON Format Support** - 58.9% token reduction for LLM-friendly output across all list commands
+- ✨ **Automatic Format Conversion** - Convert any gh command output to TOON or JSON format
 - ✨ **ID Converter Utility** - Support both Database ID and Node ID for comment operations
 - ✨ **PR Review Thread List** - Display review threads with Node IDs and copy-ready resolve commands
 - ✨ **E2E Testing** - Comprehensive end-to-end test coverage (26 tests, 100% pass rate)
-- ✨ **LLM-Friendly Output Formats** - JSON, TOON (58.9% token reduction) support
 - ✨ **Comment Management** - List and edit Issue/PR comments with flexible ID formats
-- ✨ **Worktree Location** - Unified management at `~/.please/worktrees/`
-- ✨ **PR Review Commands** - Consistent command structure
 
 ## Quick Start
 
@@ -79,16 +80,25 @@ gh please release create v1.0.0
 # Convert output to TOON format (58.9% token reduction)
 gh please issue list --format toon
 gh please pr checks 123 --format toon
+gh please workflow list --format toon
 
 # Get JSON for automation
-gh please workflow list --format json
+gh please pr list --format json
+gh please repo view --format json
 ```
 
 **How it works:**
 - Unregistered commands automatically forward to gh CLI
-- `--format toon` converts JSON output to TOON format
+- `--format toon` converts JSON output to TOON format (58.9% token savings)
 - `--format json` preserves JSON output
 - No format flag → preserve gh CLI's original table output
+- Works with all gh commands that support `--json` flag
+
+**Benefits:**
+- ✅ **Complete gh CLI coverage** - Access all 100+ gh commands
+- ✅ **LLM-friendly** - TOON format optimized for AI/automation
+- ✅ **Automatic updates** - New gh CLI features work immediately
+- ✅ **Zero learning curve** - Use familiar gh commands
 
 [Passthrough Documentation →](docs/en/features/gh-cli-passthrough.md)
 
@@ -150,14 +160,20 @@ gh please pr review thread resolve 456 --all
 ### LLM-Friendly Output
 
 ```bash
-# Human-readable format
+# Human-readable format (default)
 gh please issue sub-issue list 123
 
-# JSON for scripts
-gh please issue sub-issue list 123 --format json
+# TOON format for LLM processing (58.9% token reduction)
+gh please issue sub-issue list 123 --format toon
+gh please pr review thread list 456 --format toon
 
-# XML for LLM processing
-gh please issue sub-issue list 123 --format xml
+# JSON for scripts and automation
+gh please issue sub-issue list 123 --format json
+gh please pr list --state open --format json
+
+# Works with passthrough commands too
+gh please workflow list --format toon
+gh please repo view --format json
 ```
 
 ## 📚 Documentation
@@ -167,9 +183,10 @@ gh please issue sub-issue list 123 --format xml
 - [5-Minute Quick Start](docs/content/1.guide/2.quick-start.md)
 
 ### Feature Guides
+- [gh CLI Passthrough](docs/en/features/gh-cli-passthrough.md) - Access all GitHub CLI commands with TOON/JSON format
 - [Issue Management](docs/content/2.features/1.issue-management.md) - Sub-issues, dependencies, development workflow
 - [PR Management](docs/content/2.features/2.pr-management.md) - Review replies, thread resolution
-- [LLM-Friendly Output](docs/content/2.features/3.output-formats.md) - JSON, Markdown, XML
+- [LLM-Friendly Output](docs/content/2.features/3.output-formats.md) - JSON, TOON format for automation
 - [Plugin System](docs/content/2.features/4.plugin-system.md) - Extension capabilities
 
 ### Workflows
@@ -307,7 +324,3 @@ Contributions are welcome! Please refer to the development documentation:
 ## License
 
 MIT
-
----
-
-**Note:** Prior to v0.3.0, AI commands were included in the main codebase. They have been moved to a separate plugin to support the open-source model. See [Migration Guide](./docs/MIGRATION_v0.3.md) for details.
