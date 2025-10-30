@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { executeGhCommand, shouldConvertToStructuredFormat } from '../../src/lib/gh-passthrough'
+import { executeGhCommand, injectJsonFlag, shouldConvertToStructuredFormat } from '../../src/lib/gh-passthrough'
 
 describe('gh-passthrough', () => {
   describe('executeGhCommand', () => {
@@ -100,6 +100,79 @@ describe('gh-passthrough', () => {
       // Assert
       expect(result.format).toBe('toon')
       expect(result.cleanArgs).toEqual(['issue', 'list'])
+    })
+
+    test('should ignore invalid format values', () => {
+      // Arrange
+      const args = ['issue', 'list', '--format', 'xml']
+
+      // Act
+      const result = shouldConvertToStructuredFormat(args)
+
+      // Assert
+      expect(result.format).toBeNull()
+      expect(result.cleanArgs).toEqual(['issue', 'list'])
+    })
+
+    test('should handle --format at end without value', () => {
+      // Arrange
+      const args = ['issue', 'list', '--format']
+
+      // Act
+      const result = shouldConvertToStructuredFormat(args)
+
+      // Assert
+      expect(result.format).toBeNull()
+      expect(result.cleanArgs).toEqual(['issue', 'list'])
+    })
+
+    test('should handle multiple --format flags (last wins)', () => {
+      // Arrange
+      const args = ['issue', 'list', '--format', 'json', '--format', 'toon']
+
+      // Act
+      const result = shouldConvertToStructuredFormat(args)
+
+      // Assert
+      expect(result.format).toBe('toon')
+      expect(result.cleanArgs).toEqual(['issue', 'list'])
+    })
+  })
+
+  describe('injectJsonFlag', () => {
+    test('should inject --json flag at end of args', () => {
+      // Arrange
+      const args = ['issue', 'list', '--state', 'open']
+
+      // Act
+      const result = injectJsonFlag(args)
+
+      // Assert
+      expect(result).toEqual(['issue', 'list', '--state', 'open', '--json'])
+    })
+
+    test('should not mutate original args array', () => {
+      // Arrange
+      const original = ['issue', 'list']
+
+      // Act
+      const result = injectJsonFlag(original)
+
+      // Assert
+      expect(result).toEqual(['issue', 'list', '--json'])
+      expect(original).toEqual(['issue', 'list']) // Original unchanged
+      expect(result).not.toBe(original) // Different array reference
+    })
+
+    test('should handle empty args array', () => {
+      // Arrange
+      const args: string[] = []
+
+      // Act
+      const result = injectJsonFlag(args)
+
+      // Assert
+      expect(result).toEqual(['--json'])
     })
   })
 })

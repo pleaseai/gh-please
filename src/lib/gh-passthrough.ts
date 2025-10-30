@@ -33,16 +33,37 @@ export interface FormatDetection {
  * ```
  */
 export async function executeGhCommand(args: string[]): Promise<PassthroughResult> {
-  const proc = Bun.spawn(['gh', ...args], {
-    stdout: 'pipe',
-    stderr: 'pipe',
-  })
+  try {
+    const proc = Bun.spawn(['gh', ...args], {
+      stdout: 'pipe',
+      stderr: 'pipe',
+    })
 
-  const stdout = await new Response(proc.stdout).text()
-  const stderr = await new Response(proc.stderr).text()
-  const exitCode = await proc.exited
+    const stdout = await new Response(proc.stdout).text()
+    const stderr = await new Response(proc.stderr).text()
+    const exitCode = await proc.exited
 
-  return { stdout, stderr, exitCode }
+    return { stdout, stderr, exitCode }
+  }
+  catch (error) {
+    // Handle spawn failures with helpful error messages
+    if (error instanceof Error) {
+      if (error.message.includes('ENOENT') || error.message.includes('not found')) {
+        throw new Error(
+          'GitHub CLI (gh) not found. Please install it from https://cli.github.com/',
+        )
+      }
+      if (error.message.includes('EACCES') || error.message.includes('permission denied')) {
+        throw new Error(
+          'Permission denied executing gh CLI. Please check file permissions.',
+        )
+      }
+    }
+    // Re-throw with context
+    throw new Error(
+      `Failed to execute gh command: ${error instanceof Error ? error.message : String(error)}`,
+    )
+  }
 }
 
 /**
@@ -85,7 +106,11 @@ export function shouldConvertToStructuredFormat(args: string[]): FormatDetection
       const nextArg = args[i + 1]
       if (nextArg && (nextArg === 'toon' || nextArg === 'json')) {
         format = nextArg
-        i++ // Skip next arg
+        i++ // Skip next arg (the format value)
+      }
+      else if (nextArg) {
+        // Skip invalid format value too
+        i++
       }
       continue
     }
@@ -99,10 +124,18 @@ export function shouldConvertToStructuredFormat(args: string[]): FormatDetection
 /**
  * Inject --json flag to gh command args for format conversion
  *
+ * Note: Creates a new array without mutating the original args.
+ *
  * @param args - Command arguments
- * @returns Args with --json injected
+ * @returns Args with --json injected at the end
+ *
+ * @example
+ * ```typescript
+ * injectJsonFlag(['issue', 'list'])
+ * // Returns: ['issue', 'list', '--json']
+ * ```
  */
-function injectJsonFlag(args: string[]): string[] {
+export function injectJsonFlag(args: string[]): string[] {
   return [...args, '--json']
 }
 
@@ -137,9 +170,14 @@ export async function passThroughCommand(args: string[]): Promise<void> {
 
   // 4. Handle errors
   if (result.exitCode !== 0) {
-    // Detect --json not supported error
-    if (format && (result.stderr.includes('unknown flag') || result.stderr.includes('unknown argument'))) {
+    // Be specific - detect if the error is specifically about --json flag
+    // This prevents miscategorizing other unknown flag errors (e.g., user typos)
+    if (format && result.stderr.includes('--json')) {
       console.error(msg.jsonNotSupported)
+      console.error(`\nCommand attempted: gh ${cleanArgs.join(' ')} --json`)
+      console.error('\nTroubleshooting:')
+      console.error(`  - Verify the command supports --json: gh ${cleanArgs[0]} --help`)
+      console.error(`  - Try without format flag: gh ${cleanArgs.join(' ')}`)
     }
     else {
       // Pass through original error
@@ -155,10 +193,19 @@ export async function passThroughCommand(args: string[]): Promise<void> {
       outputData(data, format)
     }
     catch (error) {
-      // JSON parse error
+      // JSON parse error - provide detailed context
       console.error(msg.jsonParseError)
+      console.error(`Command: gh ${cleanArgs.join(' ')}`)
       if (error instanceof Error) {
-        console.error(error.message)
+        console.error(`Parse Error: ${error.message}`)
+      }
+      console.error('\nTroubleshooting:')
+      console.error(`  - Verify the command supports --json flag: gh ${cleanArgs[0]} --help`)
+      console.error(`  - Try without --format to see raw output: gh ${cleanArgs.join(' ')}`)
+      console.error('  - Report this issue if the command should support JSON')
+      if (result.stdout.length > 0) {
+        console.error(`\nPartial output received (${result.stdout.length} bytes)`)
+        console.error('First 200 chars:', result.stdout.slice(0, 200))
       }
       process.exit(1)
     }
