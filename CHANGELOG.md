@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.18.0](https://github.com/pleaseai/gh-please/compare/github-v0.17.0...github-v0.18.0) (2025-10-30)
+
+
+### Features
+
+* add TOON format support to all list commands ([#91](https://github.com/pleaseai/gh-please/issues/91)) ([110e285](https://github.com/pleaseai/gh-please/commit/110e28523047fe24f6841bd08706e7dc8ba098b8)), closes [#90](https://github.com/pleaseai/gh-please/issues/90)
+
 ## [0.17.0](https://github.com/pleaseai/gh-please/compare/github-v0.16.0...github-v0.17.0) (2025-10-30)
 
 
