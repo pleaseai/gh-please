@@ -1,4 +1,5 @@
 import type { OutputFormat } from '@pleaseai/cli-toolkit/output'
+import { isStructuredOutput, outputData, parseFields } from '@pleaseai/cli-toolkit/output'
 import { Command } from 'commander'
 import { getRepoInfo } from '../../lib/github-api'
 import {
@@ -8,7 +9,6 @@ import {
   removeSubIssue,
 } from '../../lib/github-graphql'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
-import { isStructuredOutput, outputData, parseFields } from '@pleaseai/cli-toolkit/output'
 
 /**
  * Creates a command to manage issue sub-issue relationships
@@ -192,6 +192,13 @@ export function createSubIssueCommand(): Command {
     .option('--json [fields]', 'Output in JSON format with optional field selection (number,title,state,nodeId,url)')
     .option('--format <format>', 'Output format: json or toon')
     .action(async (parentStr: string, options: { repo?: string, json?: string | boolean, format?: OutputFormat }) => {
+      // Determine output format
+      const outputFormat: OutputFormat = options.format
+        ? options.format
+        : options.json !== undefined
+          ? 'json'
+          : 'toon'
+
       const lang = detectSystemLanguage()
       const msg = getIssueMessages(lang)
 
@@ -225,7 +232,7 @@ export function createSubIssueCommand(): Command {
             nodeId: issue.nodeId,
             url: `https://github.com/${owner}/${repo}/issues/${issue.number}`,
           }))
-          outputData(data, options.format || 'json', fields)
+          outputData(data, outputFormat, fields)
           return
         }
 

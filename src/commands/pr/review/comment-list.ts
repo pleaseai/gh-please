@@ -1,9 +1,10 @@
+import type { OutputFormat } from '@pleaseai/cli-toolkit/output'
 import type { ReviewCommentInfo } from '../../../types'
+import { isStructuredOutput, outputData, parseFields } from '@pleaseai/cli-toolkit/output'
 import { Command } from 'commander'
 import { listReviewComments } from '../../../lib/comment-api'
 import { getRepoInfo } from '../../../lib/github-api'
 import { detectSystemLanguage, getCommentMessages } from '../../../lib/i18n'
-import { filterFields, outputJson, parseFields } from '@pleaseai/cli-toolkit/output'
 
 const BODY_PREVIEW_LENGTH = 80
 
@@ -46,7 +47,15 @@ export function createReviewCommentListCommand(): Command {
     .argument('<pr-number>', 'Pull request number')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
     .option('--json [fields]', 'Output in JSON format with optional field selection (id,body,author,path,line,createdAt,updatedAt,url)')
-    .action(async (prNumberStr: string, options: { repo?: string, json?: string | boolean }) => {
+    .option('--format <format>', 'Output format: json or toon')
+    .action(async (prNumberStr: string, options: { repo?: string, json?: string | boolean, format?: OutputFormat }) => {
+      // Determine output format
+      const outputFormat: OutputFormat = options.format
+        ? options.format
+        : options.json !== undefined
+          ? 'json'
+          : 'toon'
+
       const lang = detectSystemLanguage()
       const msg = getCommentMessages(lang)
 
@@ -61,14 +70,17 @@ export function createReviewCommentListCommand(): Command {
         // Get repository info
         const { owner, repo } = await getRepoInfo(options.repo)
 
-        // Fetch review comments (no progress messages in JSON mode)
-        if (options.json === undefined) {
+        // Determine output mode
+        const shouldUseStructuredOutput = isStructuredOutput(options)
+
+        // Fetch review comments (no progress messages in structured output mode)
+        if (!shouldUseStructuredOutput) {
           console.log(msg.listingReviewComments(prNumber))
         }
         const comments = await listReviewComments(owner, repo, prNumber)
 
-        // JSON output mode
-        if (options.json !== undefined) {
+        // Handle structured output (JSON or TOON)
+        if (shouldUseStructuredOutput) {
           const fields = parseFields(options.json)
           const data = comments.map(comment => ({
             id: comment.id,
@@ -80,8 +92,7 @@ export function createReviewCommentListCommand(): Command {
             updatedAt: comment.updated_at,
             url: comment.html_url,
           }))
-          const output = filterFields(data, fields)
-          outputJson(output)
+          outputData(data, outputFormat, fields)
           return
         }
 
