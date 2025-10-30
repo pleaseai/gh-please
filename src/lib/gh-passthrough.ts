@@ -189,6 +189,11 @@ export async function passThroughCommand(args: string[]): Promise<void> {
   // 5. Convert format if requested
   if (format) {
     try {
+      // Handle empty output gracefully (e.g., empty lists)
+      if (result.stdout.trim() === '') {
+        // If stdout is empty, there's nothing to format, so we can exit gracefully.
+        return
+      }
       const data = JSON.parse(result.stdout)
       outputData(data, format)
     }
