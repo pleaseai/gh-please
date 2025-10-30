@@ -1,6 +1,7 @@
 import type { OutputFormat } from '@pleaseai/cli-toolkit/output'
 import type { Language } from '../types'
 import { outputData } from '@pleaseai/cli-toolkit/output'
+import { GH_JSON_FIELDS } from './gh-fields.generated'
 import { detectSystemLanguage, getPassthroughMessages } from './i18n'
 
 /**
@@ -124,18 +125,35 @@ export function shouldConvertToStructuredFormat(args: string[]): FormatDetection
 /**
  * Inject --json flag to gh command args for format conversion
  *
+ * Uses generated field mappings when available for view commands.
+ * Falls back to plain --json for unmapped commands (like list commands).
+ *
  * Note: Creates a new array without mutating the original args.
  *
  * @param args - Command arguments
- * @returns Args with --json injected at the end
+ * @returns Args with --json and optional fields injected at the end
  *
  * @example
  * ```typescript
+ * // View command with field mapping
+ * injectJsonFlag(['issue', 'view', '123'])
+ * // Returns: ['issue', 'view', '123', '--json', 'assignees,author,body,...']
+ *
+ * // List command without field mapping (fallback)
  * injectJsonFlag(['issue', 'list'])
  * // Returns: ['issue', 'list', '--json']
  * ```
  */
 export function injectJsonFlag(args: string[]): string[] {
+  const commandKey = args.slice(0, 2).join(' ') // e.g., "issue view"
+  const fields = GH_JSON_FIELDS[commandKey]
+
+  if (fields) {
+    // Use generated fields for mapped commands (view commands)
+    return [...args, '--json', fields]
+  }
+
+  // Fallback for unmapped commands (list commands work without fields)
   return [...args, '--json']
 }
 
@@ -170,9 +188,19 @@ export async function passThroughCommand(args: string[]): Promise<void> {
 
   // 4. Handle errors
   if (result.exitCode !== 0) {
-    // Be specific - detect if the error is specifically about --json flag
-    // This prevents miscategorizing other unknown flag errors (e.g., user typos)
-    if (format && result.stderr.includes('--json')) {
+    // Distinguish between different types of --json related errors
+    if (format && result.stderr.includes('Specify one or more comma-separated fields')) {
+      // Command needs fields but isn't mapped yet
+      console.error(msg.fieldsRequired)
+      console.error(`\nCommand attempted: gh ${cleanArgs.join(' ')} --json`)
+      console.error('\nAvailable fields:')
+      process.stderr.write(result.stderr)
+      console.error('\nTo add field mapping:')
+      console.error('  1. Run: bun run update-fields')
+      console.error('  2. This will update src/lib/gh-fields.generated.ts')
+    }
+    else if (format && result.stderr.includes('--json')) {
+      // Command doesn't support --json at all
       console.error(msg.jsonNotSupported)
       console.error(`\nCommand attempted: gh ${cleanArgs.join(' ')} --json`)
       console.error('\nTroubleshooting:')

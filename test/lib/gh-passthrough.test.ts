@@ -141,7 +141,7 @@ describe('gh-passthrough', () => {
   })
 
   describe('injectJsonFlag', () => {
-    test('should inject --json flag at end of args', () => {
+    test('should inject --json flag for unmapped commands (list commands)', () => {
       // Arrange
       const args = ['issue', 'list', '--state', 'open']
 
@@ -150,6 +150,23 @@ describe('gh-passthrough', () => {
 
       // Assert
       expect(result).toEqual(['issue', 'list', '--state', 'open', '--json'])
+    })
+
+    test('should inject --json with fields for mapped commands (view commands)', () => {
+      // Arrange
+      const args = ['issue', 'view', '123']
+
+      // Act
+      const result = injectJsonFlag(args)
+
+      // Assert
+      expect(result[0]).toBe('issue')
+      expect(result[1]).toBe('view')
+      expect(result[2]).toBe('123')
+      expect(result[3]).toBe('--json')
+      expect(result[4]).toContain('assignees') // Should contain fields
+      expect(result[4]).toContain('author')
+      expect(result[4]).toContain('title')
     })
 
     test('should not mutate original args array', () => {
@@ -235,8 +252,13 @@ describe('gh-passthrough', () => {
       // Act
       await passThroughCommand(args)
 
-      // Assert
-      expect(executeGhCommandSpy).toHaveBeenCalledWith(['repo', 'view', '--json'])
+      // Assert - repo view should now inject fields from GH_JSON_FIELDS
+      expect(executeGhCommandSpy).toHaveBeenCalledTimes(1)
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs[0]).toBe('repo')
+      expect(callArgs[1]).toBe('view')
+      expect(callArgs[2]).toBe('--json')
+      expect(callArgs[3]).toContain('archivedAt') // Should contain repo view fields
       expect(processExitSpy).not.toHaveBeenCalled()
     })
 
@@ -307,6 +329,74 @@ describe('gh-passthrough', () => {
         ),
       )).toBe(true)
       expect(processExitSpy).toHaveBeenCalledWith(1)
+    })
+
+    test('should handle fields required error when command not mapped', async () => {
+      // Arrange
+      const errorMessage = 'Specify one or more comma-separated fields for `--json`:\nassignees\nauthor\nbody\ncreatedAt'
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: '',
+        stderr: errorMessage,
+        exitCode: 1,
+      })
+
+      const args = ['custom', 'view', '123', '--format', 'toon']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      expect(consoleErrorSpy).toHaveBeenCalled()
+      // Check for fields required message (language-agnostic check)
+      const allErrorOutput = consoleErrorSpy.mock.calls.flat().join(' ')
+      expect(allErrorOutput).toMatch(/field mapping|필드 매핑/)
+      // Should show available fields header
+      expect(allErrorOutput).toContain('Available fields')
+      // Should suggest running update-fields
+      expect(allErrorOutput).toContain('update-fields')
+      expect(processExitSpy).toHaveBeenCalledWith(1)
+    })
+
+    test('should distinguish between fields required and json not supported errors', async () => {
+      // Arrange - Fields required error
+      const fieldsRequiredError = 'Specify one or more comma-separated fields for `--json`:\nfield1\nfield2'
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: '',
+        stderr: fieldsRequiredError,
+        exitCode: 1,
+      })
+
+      const args1 = ['unmapped', 'view', '123', '--format', 'toon']
+
+      // Act
+      await passThroughCommand(args1)
+
+      // Assert - Should show fields required message
+      const fieldsOutput = consoleErrorSpy.mock.calls.flat().join(' ')
+      expect(fieldsOutput).toMatch(/field mapping|필드 매핑/)
+      expect(fieldsOutput).not.toMatch(/not support|지원하지 않습니다/)
+
+      // Reset spies
+      consoleErrorSpy.mockClear()
+      processExitSpy.mockClear()
+
+      // Arrange - JSON not supported error
+      const jsonNotSupportedError = 'unknown flag: --json'
+      executeGhCommandSpy.mockResolvedValue({
+        stdout: '',
+        stderr: jsonNotSupportedError,
+        exitCode: 1,
+      })
+
+      const args2 = ['workflow', 'run', 'test', '--format', 'toon']
+
+      // Act
+      await passThroughCommand(args2)
+
+      // Assert - Should show json not supported message
+      const jsonOutput = consoleErrorSpy.mock.calls.flat().join(' ')
+      expect(jsonOutput).toMatch(/not support|지원하지 않습니다/)
+      expect(jsonOutput).not.toMatch(/field mapping|필드 매핑/)
     })
 
     test('should pass through gh CLI errors when format not requested', async () => {
