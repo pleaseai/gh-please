@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.19.0](https://github.com/pleaseai/gh-please/compare/github-v0.18.0...github-v0.19.0) (2025-10-30)
+
+
+### Features
+
+* implement gh CLI passthrough with TOON format support ([#97](https://github.com/pleaseai/gh-please/issues/97)) ([e65da0c](https://github.com/pleaseai/gh-please/commit/e65da0c7cd1bf43799621cabd502e0e5a3343469))
+
+
+### Documentation
+
+* add gh CLI passthrough with TOON and JSON format support ([b3a07e2](https://github.com/pleaseai/gh-please/commit/b3a07e2e87773e75001492c3bca67b0a065d6b70))
+* Added EN/KR documentation for passthrough, TOON format, and usage ([b3a07e2](https://github.com/pleaseai/gh-please/commit/b3a07e2e87773e75001492c3bca67b0a065d6b70))
+
 ## [0.18.0](https://github.com/pleaseai/gh-please/compare/github-v0.17.0...github-v0.18.0) (2025-10-30)
 
 
