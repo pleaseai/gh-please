@@ -68,6 +68,7 @@
     "test:unit": "bun test test/lib test/commands",
     "test:integration": "bun test test/integration",
     "test:e2e": "bun test test/e2e",
+
     "test:watch": "bun test --watch",
     "test:coverage": "bun test test/lib test/commands --coverage",
     "test:coverage:text": "bun test --coverage",
@@ -87,6 +88,7 @@
     "@types/node": "^22.10.2",
     "eslint": "^9.37.0",
     "eslint-plugin-format": "^1.0.2",
+    "ts-pattern": "^5.9.0",
     "typescript": "^5.7.2"
   }
 }

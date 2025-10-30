@@ -100,6 +100,33 @@ export const mockReviewThread = {
 }
 
 /**
+ * Mock issue type data
+ */
+export const mockIssueTypes = [
+  {
+    id: 'IT_kwDOABCDEF001',
+    name: 'Bug',
+    description: 'Something isn\'t working',
+    color: 'RED',
+    isEnabled: true,
+  },
+  {
+    id: 'IT_kwDOABCDEF002',
+    name: 'Feature',
+    description: 'New feature or request',
+    color: 'GREEN',
+    isEnabled: true,
+  },
+  {
+    id: 'IT_kwDOABCDEF003',
+    name: 'Epic',
+    description: 'Large body of work',
+    color: 'PURPLE',
+    isEnabled: true,
+  },
+]
+
+/**
  * GraphQL Response: Get Issue Node ID
  */
 export function createGetIssueNodeIdResponse(issueNumber: number, nodeId: string) {
@@ -409,6 +436,66 @@ export function createValidationError(field: string, code: string) {
 export const unauthorizedError = {
   message: 'Bad credentials',
   documentation_url: 'https://docs.github.com/rest',
+}
+
+/**
+ * GraphQL Response: List Issue Types
+ */
+export function createListIssueTypesResponse(types: Array<{ id: string, name: string, description?: string, color: string, isEnabled: boolean }>) {
+  return {
+    data: {
+      repository: {
+        issueTypes: {
+          nodes: types,
+        },
+      },
+    },
+  }
+}
+
+/**
+ * GraphQL Response: Update Issue Type
+ */
+export function createUpdateIssueTypeResponse(issueNodeId: string) {
+  return {
+    data: {
+      updateIssueIssueType: {
+        issue: {
+          id: issueNodeId,
+        },
+      },
+    },
+  }
+}
+
+/**
+ * GraphQL Response: Create Issue with Type
+ */
+export function createIssueWithTypeResponse(issueNumber: number, nodeId: string, title: string) {
+  return {
+    data: {
+      createIssue: {
+        issue: {
+          id: nodeId,
+          number: issueNumber,
+          title,
+        },
+      },
+    },
+  }
+}
+
+/**
+ * GraphQL Response: Get Repository Node ID
+ */
+export function createGetRepositoryNodeIdResponse(repositoryId: string) {
+  return {
+    data: {
+      repository: {
+        id: repositoryId,
+      },
+    },
+  }
 }
 
 /**

@@ -17,6 +17,7 @@ function getGhCommand(): string {
  * @param query - GraphQL query/mutation string
  * @param variables - Variables for the query
  * @param features - GraphQL Features header values (e.g., ["sub_issues"])
+ * @param operationName - Optional operation name for better debugging and mocking
  * @returns Parsed GraphQL response data
  * @throws Error if the query fails or returns GraphQL errors
  */
@@ -24,6 +25,7 @@ export async function executeGraphQL(
   query: string,
   variables: Record<string, any> = {},
   features?: string[],
+  operationName?: string,
 ): Promise<any> {
   const args = ['api', 'graphql']
 
@@ -34,6 +36,11 @@ export async function executeGraphQL(
 
   // Add the query
   args.push('-f', `query=${query}`)
+
+  // Add operation name if provided (for better logging and mock matching)
+  if (operationName) {
+    args.push('-F', `operationName=${operationName}`)
+  }
 
   // Add variables
   for (const [key, value] of Object.entries(variables)) {
@@ -81,7 +88,7 @@ export async function getIssueNodeId(
   issueNumber: number,
 ): Promise<string> {
   const query = `
-    query($owner: String!, $repo: String!, $number: Int!) {
+    query GetIssueNodeId($owner: String!, $repo: String!, $number: Int!) {
       repository(owner: $owner, name: $repo) {
         issue(number: $number) {
           id
@@ -90,7 +97,7 @@ export async function getIssueNodeId(
     }
   `
 
-  const data = await executeGraphQL(query, { owner, repo, number: issueNumber })
+  const data = await executeGraphQL(query, { owner, repo, number: issueNumber }, undefined, 'GetIssueNodeId')
 
   if (!data.repository?.issue) {
     throw new Error(`Issue #${issueNumber} not found in ${owner}/${repo}`)
@@ -114,7 +121,7 @@ export async function getPrNodeId(
   prNumber: number,
 ): Promise<string> {
   const query = `
-    query($owner: String!, $repo: String!, $number: Int!) {
+    query GetPrNodeId($owner: String!, $repo: String!, $number: Int!) {
       repository(owner: $owner, name: $repo) {
         pullRequest(number: $number) {
           id
@@ -123,7 +130,7 @@ export async function getPrNodeId(
     }
   `
 
-  const data = await executeGraphQL(query, { owner, repo, number: prNumber })
+  const data = await executeGraphQL(query, { owner, repo, number: prNumber }, undefined, 'GetPrNodeId')
 
   if (!data.repository?.pullRequest) {
     throw new Error(`PR #${prNumber} not found in ${owner}/${repo}`)
@@ -144,7 +151,7 @@ export async function addSubIssue(
   childNodeId: string,
 ): Promise<void> {
   const mutation = `
-    mutation($parentId: ID!, $childId: ID!) {
+    mutation AddSubIssue($parentId: ID!, $childId: ID!) {
       addSubIssue(input: {issueId: $parentId, subIssueId: $childId}) {
         issue {
           id
@@ -163,6 +170,7 @@ export async function addSubIssue(
     mutation,
     { parentId: parentNodeId, childId: childNodeId },
     ['sub_issues'],
+    'AddSubIssue',
   )
 }
 
@@ -178,7 +186,7 @@ export async function removeSubIssue(
   childNodeId: string,
 ): Promise<void> {
   const mutation = `
-    mutation($parentId: ID!, $childId: ID!) {
+    mutation RemoveSubIssue($parentId: ID!, $childId: ID!) {
       removeSubIssue(input: {issueId: $parentId, subIssueId: $childId}) {
         issue {
           id
@@ -192,6 +200,7 @@ export async function removeSubIssue(
     mutation,
     { parentId: parentNodeId, childId: childNodeId },
     ['sub_issues'],
+    'RemoveSubIssue',
   )
 }
 
@@ -212,7 +221,7 @@ export async function listSubIssues(
   }>
 > {
   const query = `
-    query($issueId: ID!) {
+    query ListSubIssues($issueId: ID!) {
       node(id: $issueId) {
         ... on Issue {
           subIssues(first: 100) {
@@ -230,7 +239,7 @@ export async function listSubIssues(
 
   const data = await executeGraphQL(query, { issueId: parentNodeId }, [
     'sub_issues',
-  ])
+  ], 'ListSubIssues')
 
   if (!data.node?.subIssues) {
     return []
@@ -256,7 +265,7 @@ export async function addBlockedBy(
   blockingIssueNodeId: string,
 ): Promise<void> {
   const mutation = `
-    mutation($issueId: ID!, $blockingIssueId: ID!) {
+    mutation AddBlockedBy($issueId: ID!, $blockingIssueId: ID!) {
       addBlockedBy(input: {issueId: $issueId, blockingIssueId: $blockingIssueId}) {
         issue {
           id
@@ -274,7 +283,7 @@ export async function addBlockedBy(
   await executeGraphQL(mutation, {
     issueId: issueNodeId,
     blockingIssueId: blockingIssueNodeId,
-  })
+  }, undefined, 'AddBlockedBy')
 }
 
 /**
@@ -289,7 +298,7 @@ export async function removeBlockedBy(
   blockingIssueNodeId: string,
 ): Promise<void> {
   const mutation = `
-    mutation($issueId: ID!, $blockingIssueId: ID!) {
+    mutation RemoveBlockedBy($issueId: ID!, $blockingIssueId: ID!) {
       removeBlockedBy(input: {issueId: $issueId, blockingIssueId: $blockingIssueId}) {
         issue {
           id
@@ -306,7 +315,7 @@ export async function removeBlockedBy(
   await executeGraphQL(mutation, {
     issueId: issueNodeId,
     blockingIssueId: blockingIssueNodeId,
-  })
+  }, undefined, 'RemoveBlockedBy')
 }
 
 /**
@@ -326,7 +335,7 @@ export async function listBlockedBy(
   }>
 > {
   const query = `
-    query($issueId: ID!) {
+    query ListBlockedBy($issueId: ID!) {
       node(id: $issueId) {
         ... on Issue {
           blockedBy(first: 100) {
@@ -342,7 +351,7 @@ export async function listBlockedBy(
     }
   `
 
-  const data = await executeGraphQL(query, { issueId: issueNodeId })
+  const data = await executeGraphQL(query, { issueId: issueNodeId }, undefined, 'ListBlockedBy')
 
   if (!data.node?.blockedBy) {
     return []
@@ -364,7 +373,7 @@ export async function listBlockedBy(
  */
 export async function resolveReviewThread(threadNodeId: string): Promise<void> {
   const mutation = `
-    mutation($threadId: ID!) {
+    mutation ResolveReviewThread($threadId: ID!) {
       resolveReviewThread(input: {threadId: $threadId}) {
         thread {
           id
@@ -374,7 +383,7 @@ export async function resolveReviewThread(threadNodeId: string): Promise<void> {
     }
   `
 
-  await executeGraphQL(mutation, { threadId: threadNodeId })
+  await executeGraphQL(mutation, { threadId: threadNodeId }, undefined, 'ResolveReviewThread')
 }
 
 /**
@@ -397,7 +406,7 @@ export async function listReviewThreads(
   }>
 > {
   const query = `
-    query($prId: ID!) {
+    query ListReviewThreads($prId: ID!) {
       node(id: $prId) {
         ... on PullRequest {
           reviewThreads(first: 100) {
@@ -422,7 +431,7 @@ export async function listReviewThreads(
     }
   `
 
-  const data = await executeGraphQL(query, { prId: prNodeId })
+  const data = await executeGraphQL(query, { prId: prNodeId }, undefined, 'ListReviewThreads')
 
   if (!data.node?.reviewThreads) {
     return []
@@ -451,7 +460,7 @@ export async function getThreadIdFromComment(
 ): Promise<string> {
   // Step 1: Get PR ID from the comment
   const commentQuery = `
-    query($commentId: ID!) {
+    query GetPrFromComment($commentId: ID!) {
       node(id: $commentId) {
         ... on PullRequestReviewComment {
           pullRequest {
@@ -463,7 +472,7 @@ export async function getThreadIdFromComment(
   `
 
   console.log(`🔍 Looking up pull request for review comment ${commentNodeId}...`)
-  const commentData = await executeGraphQL(commentQuery, { commentId: commentNodeId })
+  const commentData = await executeGraphQL(commentQuery, { commentId: commentNodeId }, undefined, 'GetPrFromComment')
 
   const prId = commentData.node?.pullRequest?.id
   if (!prId) {
@@ -481,7 +490,7 @@ export async function getThreadIdFromComment(
 
   // Step 2: Get all review threads and find the one containing this comment
   const threadsQuery = `
-    query($prId: ID!) {
+    query GetThreadsForComment($prId: ID!) {
       node(id: $prId) {
         ... on PullRequest {
           reviewThreads(first: 100) {
@@ -500,7 +509,7 @@ export async function getThreadIdFromComment(
   `
 
   console.log(`🔍 Fetching review threads for PR...`)
-  const threadsData = await executeGraphQL(threadsQuery, { prId })
+  const threadsData = await executeGraphQL(threadsQuery, { prId }, undefined, 'GetThreadsForComment')
 
   const threads = threadsData.node?.reviewThreads?.nodes
   if (!threads) {
@@ -556,7 +565,7 @@ export async function createReviewCommentReply(
   const threadId = await getThreadIdFromComment(commentNodeId)
 
   const mutation = `
-    mutation($threadId: ID!, $body: String!) {
+    mutation CreateReviewCommentReply($threadId: ID!, $body: String!) {
       addPullRequestReviewThreadReply(input: {
         pullRequestReviewThreadId: $threadId
         body: $body
@@ -573,7 +582,7 @@ export async function createReviewCommentReply(
   const data = await executeGraphQL(mutation, {
     threadId,
     body,
-  })
+  }, undefined, 'CreateReviewCommentReply')
 
   if (!data.addPullRequestReviewThreadReply?.comment) {
     throw new Error('Failed to create review comment reply')
@@ -600,7 +609,7 @@ export async function updateReviewCommentByNodeId(
   body: string,
 ): Promise<void> {
   const mutation = `
-    mutation($commentId: ID!, $body: String!) {
+    mutation UpdateReviewComment($commentId: ID!, $body: String!) {
       updatePullRequestReviewComment(input: {
         pullRequestReviewCommentId: $commentId
         body: $body
@@ -615,7 +624,7 @@ export async function updateReviewCommentByNodeId(
   const data = await executeGraphQL(mutation, {
     commentId: commentNodeId,
     body,
-  })
+  }, undefined, 'UpdateReviewComment')
 
   if (!data.updatePullRequestReviewComment?.pullRequestReviewComment) {
     throw new Error('Failed to update review comment')
@@ -634,7 +643,7 @@ export async function updateIssueCommentByNodeId(
   body: string,
 ): Promise<void> {
   const mutation = `
-    mutation($commentId: ID!, $body: String!) {
+    mutation UpdateIssueComment($commentId: ID!, $body: String!) {
       updateIssueComment(input: {
         id: $commentId
         body: $body
@@ -649,7 +658,7 @@ export async function updateIssueCommentByNodeId(
   const data = await executeGraphQL(mutation, {
     commentId: commentNodeId,
     body,
-  })
+  }, undefined, 'UpdateIssueComment')
 
   if (!data.updateIssueComment?.issueComment) {
     throw new Error('Failed to update issue comment')
@@ -675,7 +684,7 @@ export async function listIssueTypes(
   isEnabled: boolean
 }>> {
   const query = `
-    query($owner: String!, $repo: String!) {
+    query ListIssueTypes($owner: String!, $repo: String!) {
       repository(owner: $owner, name: $repo) {
         issueTypes(first: 100) {
           nodes {
@@ -690,7 +699,7 @@ export async function listIssueTypes(
     }
   `
 
-  const data = await executeGraphQL(query, { owner, repo })
+  const data = await executeGraphQL(query, { owner, repo }, undefined, 'ListIssueTypes')
 
   if (!data.repository) {
     throw new Error(
@@ -722,14 +731,14 @@ export async function getRepositoryNodeId(
   repo: string,
 ): Promise<string> {
   const query = `
-    query($owner: String!, $repo: String!) {
+    query GetRepositoryNodeId($owner: String!, $repo: String!) {
       repository(owner: $owner, name: $repo) {
         id
       }
     }
   `
 
-  const data = await executeGraphQL(query, { owner, repo })
+  const data = await executeGraphQL(query, { owner, repo }, undefined, 'GetRepositoryNodeId')
 
   if (!data.repository?.id) {
     throw new Error(
@@ -766,7 +775,7 @@ export async function createIssueWithType(
   const repositoryId = await getRepositoryNodeId(owner, repo)
 
   const mutation = `
-    mutation($repositoryId: ID!, $title: String!, $body: String, $issueTypeId: ID) {
+    mutation CreateIssueWithType($repositoryId: ID!, $title: String!, $body: String, $issueTypeId: ID) {
       createIssue(input: {
         repositoryId: $repositoryId
         title: $title
@@ -794,7 +803,7 @@ export async function createIssueWithType(
     variables.issueTypeId = issueTypeId
   }
 
-  const data = await executeGraphQL(mutation, variables)
+  const data = await executeGraphQL(mutation, variables, undefined, 'CreateIssueWithType')
 
   if (!data.createIssue?.issue) {
     throw new Error(
@@ -826,7 +835,7 @@ export async function updateIssueType(
   issueTypeId: string | null,
 ): Promise<void> {
   const mutation = `
-    mutation($issueId: ID!, $issueTypeId: ID) {
+    mutation UpdateIssueType($issueId: ID!, $issueTypeId: ID) {
       updateIssueIssueType(input: {
         issueId: $issueId
         issueTypeId: $issueTypeId
@@ -841,7 +850,7 @@ export async function updateIssueType(
   const data = await executeGraphQL(mutation, {
     issueId,
     issueTypeId,
-  })
+  }, undefined, 'UpdateIssueType')
 
   if (!data.updateIssueIssueType?.issue) {
     throw new Error(
