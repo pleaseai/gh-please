@@ -189,23 +189,36 @@ export async function passThroughCommand(args: string[]): Promise<void> {
   // 4. Handle errors
   if (result.exitCode !== 0) {
     // Distinguish between different types of --json related errors
-    if (format && result.stderr.includes('Specify one or more comma-separated fields')) {
-      // Command needs fields but isn't mapped yet
-      console.error(msg.fieldsRequired)
+    if (format) {
+      // Show command attempted for all format-related errors
       console.error(`\nCommand attempted: gh ${cleanArgs.join(' ')} --json`)
-      console.error('\nAvailable fields:')
-      process.stderr.write(result.stderr)
-      console.error('\nTo add field mapping:')
-      console.error('  1. Run: bun run update-fields')
-      console.error('  2. This will update src/lib/gh-fields.generated.ts')
-    }
-    else if (format && result.stderr.includes('--json')) {
-      // Command doesn't support --json at all
-      console.error(msg.jsonNotSupported)
-      console.error(`\nCommand attempted: gh ${cleanArgs.join(' ')} --json`)
-      console.error('\nTroubleshooting:')
-      console.error(`  - Verify the command supports --json: gh ${cleanArgs[0]} --help`)
-      console.error(`  - Try without format flag: gh ${cleanArgs.join(' ')}`)
+
+      if (result.stderr.includes('Specify one or more comma-separated fields')) {
+        // Command needs fields but isn't mapped yet
+        console.error(msg.fieldsRequired)
+        console.error('\nAvailable fields:')
+
+        // Parse and display just the field list, not the preamble
+        const fieldMatch = result.stderr.match(/Specify one or more comma-separated fields[^\n]*:\n([\s\S]+)/)
+        if (fieldMatch && fieldMatch[1]) {
+          console.error(fieldMatch[1].trim())
+        }
+        else {
+          // Fallback to original stderr if parsing fails
+          process.stderr.write(result.stderr)
+        }
+
+        console.error('\nTo add field mapping:')
+        console.error('  1. Run: bun run update-fields')
+        console.error('  2. This will update src/lib/gh-fields.generated.ts')
+      }
+      else if (result.stderr.includes('--json')) {
+        // Command doesn't support --json at all
+        console.error(msg.jsonNotSupported)
+        console.error('\nTroubleshooting:')
+        console.error(`  - Verify the command supports --json: gh ${cleanArgs[0]} --help`)
+        console.error(`  - Try without format flag: gh ${cleanArgs.join(' ')}`)
+      }
     }
     else {
       // Pass through original error
