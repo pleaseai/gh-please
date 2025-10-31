@@ -48,7 +48,7 @@ This is **@pleaseai/gh-please**, a GitHub CLI extension that provides enhanced f
 | `gh repo view` | `gh please repo view --format toon` |
 | `gh workflow list` | `gh please workflow list --format toon` |
 | `gh pr checks 123` | `gh please pr checks 123 --format toon` |
-| `gh issue develop 123` | `gh please issue develop 123` (with worktree support) |
+| `gh issue develop 123` | `gh please issue develop 123` (default: branch only), `--checkout` (branch + checkout), `--worktree` (isolated workspace) |
 
 ### Default Behavior
 
@@ -168,7 +168,10 @@ gh please issue sub-issue list <parent>                   # List all sub-issues
 gh please issue dependency add <issue> --blocked-by <blocker>     # Add blocker
 gh please issue dependency remove <issue> <blocker>               # Remove blocker
 gh please issue dependency list <issue>                           # List blockers
-gh please issue develop <issue-number> [--repo owner/repo] [--worktree] [--base <branch>] [--name <branch>]  # Start developing on issue (alias: dev)
+gh please issue develop <issue-number> [--repo owner/repo] [--checkout] [--worktree] [--base <branch>] [--name <branch>]  # Start developing on issue (alias: dev)
+# Default: Creates branch only (gh issue develop)
+# --checkout: Creates branch and checks out (gh issue develop --checkout)
+# --worktree: Creates isolated worktree workspace (gh-please extension)
 gh please issue cleanup [--repo owner/repo] [--all]       # Clean up unused worktrees
 gh please issue create --title "..." [--body "..."] [--type Bug] [--repo owner/repo]  # Create issue with optional type
 gh please issue type list [--repo owner/repo] [--json [fields]]  # List available issue types

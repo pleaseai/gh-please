@@ -1,11 +1,15 @@
 # Issue Development Workflow
 
-The `gh please issue develop` command streamlines the process of starting work on an issue with automatic worktree creation for isolated development.
+The `gh please issue develop` command streamlines the process of starting work on an issue. It extends the native `gh issue develop` command with an optional worktree mode.
 
-## Default Mode (Worktree)
+## Three Modes
+
+### 1. Default Mode (Branch Only) - **Recommended for LLM workflows**
+
+Creates a branch linked to the issue without checking it out. Non-interactive and LLM-friendly.
 
 ```bash
-# Basic usage - creates isolated workspace in ~/.please/worktrees/{repo}/{branch}
+# Basic usage - creates branch only (passes through to gh issue develop)
 gh please issue develop 123
 
 # With base branch
@@ -16,30 +20,70 @@ gh please issue develop 123 --name my-custom-branch
 
 # From outside git repo
 gh please issue develop 123 --repo owner/repo
-
-# Output shows command to navigate to worktree
-# cd ~/.please/worktrees/gh-please/feat-123-awesome-feature
-
-# If bare repo doesn't exist, interactive prompt will ask to clone
-# Clone happens automatically to ~/.please/repositories/{owner}/{repo}.git
 ```
 
-## Checkout Mode
+**Benefits:**
+- ✅ Non-interactive (no prompts)
+- ✅ LLM-friendly
+- ✅ Fast execution
+- ✅ Standard gh CLI behavior
+
+### 2. Checkout Mode
+
+Creates a branch and checks it out in the current repository.
 
 ```bash
-# Checkout branch in current repo instead of creating worktree
+# Create branch and checkout (passes through to gh issue develop --checkout)
 gh please issue develop 123 --checkout
 
 # This mode requires being in a git repository
-# Useful when you want to work in your existing repo instead of a separate worktree
+# Useful when you want to immediately start working in your existing repo
 ```
+
+**Benefits:**
+- ✅ Non-interactive (no prompts)
+- ✅ LLM-friendly
+- ✅ Immediate access to code
+- ✅ Standard gh CLI behavior with --checkout
+
+### 3. Worktree Mode (gh-please Extension)
+
+Creates an isolated worktree workspace for the issue. This is a gh-please extension that adds worktree support to the native gh CLI.
+
+```bash
+# Create isolated workspace in ~/.please/worktrees/{repo}/{branch}
+gh please issue develop 123 --worktree
+
+# With base branch
+gh please issue develop 123 --worktree --base main
+
+# With custom branch name
+gh please issue develop 123 --worktree --name my-custom-branch
+
+# From outside git repo
+gh please issue develop 123 --worktree --repo owner/repo
+
+# Output shows command to navigate to worktree
+# cd ~/.please/worktrees/gh-please/feat-123-awesome-feature
+```
+
+**Interactive prompts (worktree mode only):**
+- If bare repo doesn't exist: Asks permission to clone
+- If linked branches exist: Offers to use existing or create new branch
+
+**Benefits:**
+- ✅ Isolated workspace per issue
+- ✅ Multiple issues in parallel
+- ✅ Efficient disk usage (shared git objects)
+- ⚠️ Interactive (not ideal for LLM workflows)
 
 ## Using Aliases
 
 ```bash
 # 'dev' is an alias for 'develop'
-gh please issue dev 123          # Creates worktree (default)
-gh please issue dev 123 --checkout  # Checkout branch instead
+gh please issue dev 123              # Branch only (default)
+gh please issue dev 123 --checkout   # Branch + checkout
+gh please issue dev 123 --worktree   # Isolated worktree
 ```
 
 ## Cleanup Worktrees
@@ -57,19 +101,28 @@ gh please issue cleanup --repo owner/repo
 
 ## Architecture & Implementation
 
-The develop workflow uses:
-- **`gh issue develop`**: GitHub CLI command for branch management
-- **Bare repository**: Clone at `~/.please/repositories/{owner}/{repo}.git` for efficient multi-worktree setup
+The develop command supports three modes:
+
+### Default & Checkout Modes (Passthrough)
+- **`gh issue develop`**: Passes through to native GitHub CLI
+- **Branch creation**: Handled by gh CLI
+- **No custom logic**: Pure passthrough to gh command
+
+### Worktree Mode (gh-please Extension)
+- **Bare repository**: Clone at `~/.please/repositories/{owner}/{repo}.git`
 - **Git worktrees**: Isolated workspaces at `~/.please/worktrees/{repo}/{branch}`
-- **Automatic fallback**: If bare repo exists locally, uses it; otherwise, prompts to clone
+- **Interactive prompts**: Bare repo clone confirmation, branch selection
+- **Automatic fallback**: Uses existing bare repo if available
 
 ## Key Features
 
-1. **Works Everywhere**: Can be used inside or outside a git repo via `--repo` flag
-2. **Automatic Bare Clone**: First worktree creation automatically clones repo as bare (once only)
-3. **Efficient Disk Usage**: Multiple worktrees share objects, saving disk space
-4. **Interactive Cleanup**: Manage prunable worktrees interactively or in batch mode
-5. **Bilingual Support**: Full Korean/English support for all messages
+1. **LLM-Friendly Default**: Non-interactive branch creation (default mode)
+2. **Native gh CLI Compatible**: Passthrough for default and checkout modes
+3. **Optional Worktree Support**: Isolated workspaces via `--worktree` flag
+4. **Works Everywhere**: Can be used inside or outside a git repo via `--repo` flag
+5. **Efficient Disk Usage**: Worktree mode shares git objects (saves disk space)
+6. **Interactive Cleanup**: Manage prunable worktrees interactively or in batch mode
+7. **Bilingual Support**: Full Korean/English support for all messages
 
 ## Standard Issue Workflow
 

@@ -8,16 +8,18 @@ import { cloneBareRepo, findBareRepo, resolveRepository } from '../../lib/repo-m
 
 /**
  * Creates a command to start developing on an issue
- * Default mode creates a worktree for isolated development
- * Use --checkout to checkout branch in current repo instead
+ * Default mode: Creates branch only (passes through to gh issue develop)
+ * --checkout: Creates branch and checks out (passes through to gh issue develop --checkout)
+ * --worktree: Creates isolated worktree workspace (gh-please extension)
  */
 export function createDevelopCommand(): Command {
   const command = new Command('develop')
     .alias('dev')
-    .description('Start working on an issue with automatic worktree setup')
+    .description('Start working on an issue (default: creates branch only)')
     .argument('<issue-number>', 'Issue number')
     .option('-R, --repo <owner/repo>', 'Repository (required if outside git repo)')
-    .option('--checkout', 'Checkout branch in current repo instead of creating worktree')
+    .option('--checkout', 'Create branch and checkout (passes through to gh issue develop --checkout)')
+    .option('--worktree', 'Create isolated worktree workspace (gh-please extension)')
     .option('-b, --base <branch>', 'Base branch for developing')
     .option('-n, --name <name>', 'Custom branch name')
     .action(async (issueNumberStr: string, options: DevelopOptions) => {
@@ -32,12 +34,11 @@ export function createDevelopCommand(): Command {
 
         console.log(msg.developStarting(issueNumber))
 
-        // Resolve repository
-        console.log(msg.developCheckingRepo)
-        const repoInfo = await resolveRepository(options.repo)
-
-        // Default: worktree mode. Only use checkout if explicitly requested
-        if (!options.checkout) {
+        // Worktree mode: gh-please extension feature
+        if (options.worktree) {
+          // Resolve repository
+          console.log(msg.developCheckingRepo)
+          const repoInfo = await resolveRepository(options.repo)
           let bareRepoPath = await findBareRepo(repoInfo.owner, repoInfo.repo)
 
           if (!bareRepoPath) {
@@ -122,7 +123,8 @@ export function createDevelopCommand(): Command {
           }
         }
         else {
-          // Default mode: checkout
+          // Default mode (no --worktree): Pass through to gh issue develop
+          // This supports both default (branch only) and --checkout modes
           const branch = await startDevelopWorkflow(issueNumber, options)
           console.log(msg.developBranchReady(branch))
         }
