@@ -8,7 +8,7 @@ import {
   updateIssueType,
 } from '../../lib/github-graphql'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
-import { executeQuery } from '../../lib/jmespath-query'
+import { applyQuery } from '../../lib/jmespath-query'
 
 /**
  * Creates a command group for issue type management
@@ -68,15 +68,7 @@ export function createIssueTypeCommand(): Command {
           let data = types
 
           // Apply JMESPath query if provided
-          if (options.query) {
-            try {
-              data = executeQuery(data, options.query)
-            }
-            catch (error) {
-              console.error(`${msg.errorPrefix}: ${error instanceof Error ? error.message : msg.unknownError}`)
-              process.exit(1)
-            }
-          }
+          data = applyQuery(data, options.query, msg.errorPrefix, msg.unknownError)
 
           outputData(data, outputFormat, fields)
         }

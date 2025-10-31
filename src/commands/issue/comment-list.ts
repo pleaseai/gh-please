@@ -5,7 +5,7 @@ import { Command } from 'commander'
 import { listIssueComments } from '../../lib/comment-api'
 import { getRepoInfo } from '../../lib/github-api'
 import { detectSystemLanguage, getCommentMessages } from '../../lib/i18n'
-import { executeQuery } from '../../lib/jmespath-query'
+import { applyQuery } from '../../lib/jmespath-query'
 
 const BODY_PREVIEW_LENGTH = 80
 
@@ -91,15 +91,7 @@ export function createIssueCommentListCommand(): Command {
           }))
 
           // Apply JMESPath query if provided
-          if (options.query) {
-            try {
-              data = executeQuery(data, options.query)
-            }
-            catch (error) {
-              console.error(`${msg.errorPrefix}: ${error instanceof Error ? error.message : msg.unknownError}`)
-              process.exit(1)
-            }
-          }
+          data = applyQuery(data, options.query, msg.errorPrefix, msg.unknownError)
 
           outputData(data, outputFormat, fields)
           return
