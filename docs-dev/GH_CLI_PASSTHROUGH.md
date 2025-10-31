@@ -40,33 +40,37 @@ gh please pr checks 123 --format json
 - `injectJsonFlag(args)`: Inject --json flag with command-specific fields when available
 - `passThroughCommand(args)`: Main orchestration (format detection → execution → conversion → output)
 
-### Field Injection for View Commands
+### Field Injection for View and List Commands
 
-GitHub CLI's view commands require explicit field specification when using `--json`:
+GitHub CLI's view and list commands require explicit field specification when using `--json`:
 
 ```bash
 # ❌ Fails - no fields specified
 gh issue view 123 --json
+gh issue list --json
+gh pr list --json
 
 # ✅ Works - fields explicitly provided
 gh issue view 123 --json number,title,state,body,author
 ```
 
-gh-please automatically injects fields for common view commands using generated field mappings:
+gh-please automatically injects fields for common view and list commands using generated field mappings:
 
 | Command | Fields Injected |
 |---------|----------------|
-| `issue view` | assignees,author,body,closed,closedAt,... (21 fields) |
+| `issue view` | assignees,author,body,closed,closedAt,... (19 fields) |
+| `issue list` | assignees,author,body,closed,closedAt,... (20 fields) |
 | `pr view` | additions,assignees,author,baseRefName,... (46 fields) |
-| `repo view` | name,owner,description,archivedAt,... (67 fields) |
-| `release view` | name,tagName,author,assets,... (18 fields) |
+| `pr list` | additions,assignees,author,baseRefName,... (46 fields) |
+| `repo view` | name,owner,description,archivedAt,... (66 fields) |
+| `release view` | (empty - no releases in test repo) |
 
 **How it works:**
 
 1. **Field Generation**: `scripts/update-gh-fields.ts` extracts available fields from `gh` CLI
 2. **Field Storage**: Fields stored in `src/lib/gh-fields.generated.ts` as TypeScript constants
 3. **Field Injection**: `injectJsonFlag()` appends `--json <fields>` based on command type
-4. **Fallback**: List commands work with just `--json` (no explicit fields needed)
+4. **Both view and list commands**: Both types require explicit field specification
 
 **Example:**
 
