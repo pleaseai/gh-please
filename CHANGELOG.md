@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.21.0](https://github.com/pleaseai/gh-please/compare/github-v0.20.1...github-v0.21.0) (2025-10-31)
+
+
+### Features
+
+* add gh CLI field extraction script and generated fields ([#116](https://github.com/pleaseai/gh-please/issues/116)) ([4a287ca](https://github.com/pleaseai/gh-please/commit/4a287ca4de3c0a7551570ad5ce73c07d3612192a))
+* integrate generated field mappings with passthrough logic (Phase 2) ([#120](https://github.com/pleaseai/gh-please/issues/120)) ([2f4201c](https://github.com/pleaseai/gh-please/commit/2f4201c52205ae61b053a899484df7987a87087c))
+* make issue develop LLM-friendly with default passthrough mode ([#127](https://github.com/pleaseai/gh-please/issues/127)) ([8eae698](https://github.com/pleaseai/gh-please/commit/8eae698f19c7a3a1326b5006e5811fd0d73e740c)), closes [#125](https://github.com/pleaseai/gh-please/issues/125)
+
+
+### Documentation
+
+* add gh CLI field maintenance documentation and workflow ([#110](https://github.com/pleaseai/gh-please/issues/110)) ([9ebdf7f](https://github.com/pleaseai/gh-please/commit/9ebdf7f801740b228ad93b4414234565536ed719))
+* complete Phase 5 documentation for field update system ([#123](https://github.com/pleaseai/gh-please/issues/123)) ([d52e783](https://github.com/pleaseai/gh-please/commit/d52e7839a5f161f8746cd5438a1cc6cb1cd1f9d9))
+
 ## [0.20.1](https://github.com/pleaseai/gh-please/compare/github-v0.20.0...github-v0.20.1) (2025-10-30)
 
 
