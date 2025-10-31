@@ -98,12 +98,9 @@ export function createSubIssueCommand(): Command {
         await addSubIssue(parentNodeId, childNodeId)
 
         // Show success message with type info if provided
+        console.log(msg.subIssueCreatedLinked(childNumber, parentNumber))
         if (issueTypeName) {
-          console.log(msg.subIssueCreatedLinked(childNumber, parentNumber))
           console.log(`   Type: ${issueTypeName}`)
-        }
-        else {
-          console.log(msg.subIssueCreatedLinked(childNumber, parentNumber))
         }
         console.log(
           `   View: https://github.com/${owner}/${repo}/issues/${childNumber}`,
