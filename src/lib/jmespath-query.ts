@@ -75,3 +75,43 @@ export function executeQuery<T = unknown>(
     )
   }
 }
+
+/**
+ * Apply a JMESPath query to data with error handling and exit on failure
+ *
+ * This is a convenience wrapper around executeQuery that:
+ * 1. Returns data unchanged if no query is provided
+ * 2. Executes the query if provided
+ * 3. Handles errors by logging and exiting with code 1
+ *
+ * @param data - The data to query
+ * @param query - Optional JMESPath query string
+ * @param errorPrefix - Error message prefix for user-facing errors
+ * @param unknownError - Generic error message for unknown errors
+ * @returns The filtered data or original data if no query provided
+ *
+ * @example
+ * ```typescript
+ * const data = [{ name: 'foo', state: 'OPEN' }, { name: 'bar', state: 'CLOSED' }]
+ * const filtered = applyQuery(data, "[?state=='OPEN']", "Query error", "Unknown error")
+ * console.log(filtered) // [{ name: 'foo', state: 'OPEN' }]
+ * ```
+ */
+export function applyQuery<T = unknown>(
+  data: T,
+  query: string | undefined,
+  errorPrefix: string,
+  unknownError: string,
+): T {
+  if (!query) {
+    return data
+  }
+
+  try {
+    return executeQuery<T>(data, query)
+  }
+  catch (error) {
+    console.error(`${errorPrefix}: ${error instanceof Error ? error.message : unknownError}`)
+    process.exit(1)
+  }
+}

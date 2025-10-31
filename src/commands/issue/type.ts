@@ -8,6 +8,7 @@ import {
   updateIssueType,
 } from '../../lib/github-graphql'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
+import { applyQuery } from '../../lib/jmespath-query'
 
 /**
  * Creates a command group for issue type management
@@ -24,7 +25,8 @@ export function createIssueTypeCommand(): Command {
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
     .option('--json [fields]', 'Output as JSON with optional field selection (id, name, description, color, isEnabled)')
     .option('--format <format>', 'Output format: json or toon')
-    .action(async (options: { repo?: string, json?: string | boolean, format?: OutputFormat }) => {
+    .option('--query <jmespath>', 'JMESPath query to filter results (e.g., "[?isEnabled==`true`].{name:name,color:color}")')
+    .action(async (options: { repo?: string, json?: string | boolean, format?: OutputFormat, query?: string }) => {
       // Determine output format
       const outputFormat: OutputFormat = options.format
         ? options.format
@@ -63,7 +65,12 @@ export function createIssueTypeCommand(): Command {
         // Handle structured output (JSON or TOON)
         if (shouldUseStructuredOutput) {
           const fields = parseFields(options.json)
-          outputData(types, outputFormat, fields)
+          let data = types
+
+          // Apply JMESPath query if provided
+          data = applyQuery(data, options.query, msg.errorPrefix, msg.unknownError)
+
+          outputData(data, outputFormat, fields)
         }
         else {
           // Human-readable output
