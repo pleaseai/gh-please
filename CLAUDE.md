@@ -8,6 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 @docs-dev/TDD.md
 @docs-dev/GITHUB_ID_SYSTEMS.md
 @docs-dev/GH_CLI_PASSTHROUGH.md
+@docs-dev/GH_FIELDS_MAINTENANCE.md
 @docs-dev/ISSUE_WORKFLOW.md
 @docs-dev/PR_REVIEW_WORKFLOW.md
 
@@ -531,6 +532,24 @@ Tests follow the **Arrange-Act-Assert** pattern and use Bun's built-in test runn
 6. Build: `bun build src/index.ts --outdir dist --target bun --format esm`
 7. Install locally: `gh extension install .`
 8. Test as extension: `gh please <command> [options]`
+
+### Maintaining Field Definitions
+
+When GitHub CLI is updated or new view commands are added:
+
+1. Run `bun run update-fields` to regenerate field mappings
+2. Review changes in `src/lib/gh-fields.generated.ts`
+3. Test the changes with affected commands
+4. Commit if changes exist
+
+**Field definitions** are used to inject `--json <fields>` for view commands when users request `--format toon` or `--format json`. The update script extracts available fields directly from `gh` CLI error messages.
+
+**Related files:**
+- `scripts/update-gh-fields.ts` - Field extraction script
+- `src/lib/gh-fields.generated.ts` - Generated field mappings
+- `src/lib/gh-passthrough.ts` - Field injection logic
+
+See @docs-dev/GH_FIELDS_MAINTENANCE.md for detailed maintenance instructions.
 
 **Pre-commit checklist:**
 ```bash
