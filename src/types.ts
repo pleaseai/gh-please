@@ -148,3 +148,28 @@ export interface CreateIssueOptions {
   /** Assignees to add to the issue */
   assignees?: string[]
 }
+
+/**
+ * Custom error class for JMESPath query errors
+ * Provides detailed information about query failures
+ */
+export interface QueryErrorInfo {
+  /** The error message */
+  message: string
+  /** The query that caused the error */
+  query: string
+  /** The original error cause (if any) */
+  cause?: Error
+}
+
+/**
+ * Options for executing JMESPath queries with additional configuration
+ */
+export interface QueryOptions {
+  /** The JMESPath query string */
+  query: string
+  /** Whether to throw on null results (default: false) */
+  throwOnNull?: boolean
+  /** Custom error message prefix */
+  errorPrefix?: string
+}
