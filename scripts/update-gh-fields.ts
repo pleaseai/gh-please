@@ -86,16 +86,17 @@ function executeGhCommand(args: string[]): { stdout: string, stderr: string, exi
  * Check if a field list causes GraphQL deprecation errors or failures
  */
 function hasDeprecationError(stderr: string): boolean {
+  const lowerStderr = stderr.toLowerCase()
   const deprecationIndicators = [
     'deprecated',
     'being deprecated',
-    'Projects (classic)',
+    'projects (classic)',
     'sunset',
     'no longer supported',
   ]
 
   return deprecationIndicators.some(indicator =>
-    stderr.toLowerCase().includes(indicator.toLowerCase()),
+    lowerStderr.includes(indicator),
   )
 }
 
@@ -140,7 +141,10 @@ function binarySearchValidFields(
   testId: string,
   depth = 0,
 ): string[] {
-  // Base case: single field
+  // Base cases
+  if (fields.length === 0) {
+    return []
+  }
   if (fields.length === 1) {
     return validateFields(command, subcommand, fields, testId) ? fields : []
   }
@@ -196,7 +200,8 @@ function extractAndValidateFields(
 
   // Step 3: Identify deprecated fields
   const deprecatedFields: DeprecatedFieldInfo[] = []
-  const invalidFields = allFields.filter(f => !validFields.includes(f))
+  const validFieldsSet = new Set(validFields)
+  const invalidFields = allFields.filter(f => !validFieldsSet.has(f))
 
   for (const field of invalidFields) {
     // Test individual field to get specific error
@@ -213,12 +218,20 @@ function extractAndValidateFields(
       // Extract deprecation message
       const lines = fieldResult.stderr.split('\n')
       const deprecationLine = lines.find(line =>
-        line.toLowerCase().includes('deprecat') || line.toLowerCase().includes('sunset'),
+        [
+          'deprecated',
+          'being deprecated',
+          'Projects (classic)',
+          'sunset',
+          'no longer supported',
+        ].some(indicator => line.toLowerCase().includes(indicator.toLowerCase())),
       )
       reason = deprecationLine?.trim() || 'Deprecated'
     }
     else if (fieldResult.exitCode !== 0) {
-      reason = 'GraphQL error'
+      // Try to extract meaningful error from stderr
+      const errorLines = fieldResult.stderr.split('\n').filter(line => line.trim())
+      reason = errorLines[0]?.trim() || 'GraphQL error'
     }
 
     deprecatedFields.push({ field, reason })
