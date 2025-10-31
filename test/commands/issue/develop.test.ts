@@ -13,7 +13,7 @@ describe('develop command', () => {
 
   test('should have correct description', () => {
     const cmd = createDevelopCommand()
-    expect(cmd.description()).toContain('issue')
+    expect(cmd.description()).toContain('branch')
   })
 
   test('should have develop alias "dev"', () => {
@@ -26,6 +26,13 @@ describe('develop command', () => {
     const options = cmd.options
     const checkoutOption = options.find(opt => opt.long === '--checkout')
     expect(checkoutOption).toBeDefined()
+  })
+
+  test('should support --worktree flag', () => {
+    const cmd = createDevelopCommand()
+    const options = cmd.options
+    const worktreeOption = options.find(opt => opt.long === '--worktree')
+    expect(worktreeOption).toBeDefined()
   })
 
   test('should support --repo flag', () => {
