@@ -192,6 +192,124 @@ describe('gh-passthrough', () => {
       // Assert
       expect(result).toEqual(['--json'])
     })
+
+    // Additional tests for field injection (Phase 4)
+    test('should inject fields for mapped view commands (issue view)', () => {
+      // Arrange
+      const args = ['issue', 'view', '123']
+
+      // Act
+      const result = injectJsonFlag(args)
+
+      // Assert
+      expect(result).toContain('--json')
+      expect(result[result.length - 1]).toContain('assignees')
+      expect(result[result.length - 1]).toContain('author')
+      expect(result[result.length - 1]).toContain('body')
+      expect(result[result.length - 1]).not.toContain(' ') // No spaces in field list
+    })
+
+    test('should inject fields for mapped view commands (pr view)', () => {
+      // Arrange
+      const args = ['pr', 'view', '456']
+
+      // Act
+      const result = injectJsonFlag(args)
+
+      // Assert
+      expect(result).toContain('--json')
+      expect(result[result.length - 1]).toContain('additions')
+      expect(result[result.length - 1]).toContain('assignees')
+      expect(result[result.length - 1]).toContain('baseRefName')
+      expect(result[result.length - 1]).not.toContain(' ')
+    })
+
+    test('should inject fields for mapped view commands (repo view)', () => {
+      // Arrange
+      const args = ['repo', 'view', 'owner/repo']
+
+      // Act
+      const result = injectJsonFlag(args)
+
+      // Assert
+      expect(result).toContain('--json')
+      expect(result[result.length - 1]).toContain('name')
+      expect(result[result.length - 1]).toContain('owner')
+      expect(result[result.length - 1]).toContain('description')
+      expect(result[result.length - 1]).not.toContain(' ')
+    })
+
+    test('should inject fields for mapped view commands (release view)', () => {
+      // Arrange
+      const args = ['release', 'view', 'v1.0.0']
+
+      // Act
+      const result = injectJsonFlag(args)
+
+      // Assert
+      expect(result).toContain('--json')
+      expect(result[result.length - 1]).toContain('tagName')
+      expect(result[result.length - 1]).toContain('assets')
+      expect(result[result.length - 1]).not.toContain(' ')
+    })
+
+    test('should fallback to --json only for unmapped commands (workflow list)', () => {
+      // Arrange
+      const args = ['workflow', 'list']
+
+      // Act
+      const result = injectJsonFlag(args)
+
+      // Assert
+      expect(result).toContain('--json')
+      expect(result).toEqual(['workflow', 'list', '--json'])
+      // Should not inject fields for unmapped commands
+      expect(result.length).toBe(3)
+    })
+
+    test('should fallback to --json only for unmapped commands (run list)', () => {
+      // Arrange
+      const args = ['run', 'list']
+
+      // Act
+      const result = injectJsonFlag(args)
+
+      // Assert
+      expect(result).toContain('--json')
+      expect(result).toEqual(['run', 'list', '--json'])
+      // Should not inject fields for unmapped commands
+      expect(result.length).toBe(3)
+    })
+
+    test('should preserve other arguments when injecting fields', () => {
+      // Arrange
+      const args = ['issue', 'view', '123', '--repo', 'owner/repo']
+
+      // Act
+      const result = injectJsonFlag(args)
+
+      // Assert
+      expect(result[0]).toBe('issue')
+      expect(result[1]).toBe('view')
+      expect(result[2]).toBe('123')
+      expect(result[3]).toBe('--repo')
+      expect(result[4]).toBe('owner/repo')
+      expect(result[5]).toBe('--json')
+      expect(result[6]).toBeTruthy() // Fields should be present
+    })
+
+    test('should use comma-separated fields with no spaces', () => {
+      // Arrange
+      const args = ['issue', 'view', '1']
+
+      // Act
+      const result = injectJsonFlag(args)
+
+      // Assert
+      const fields = result[result.length - 1]
+      expect(fields).not.toContain(' ')
+      expect(fields).toMatch(/^[\w,]+$/) // Only word characters and commas
+    })
   })
 
   describe('passThroughCommand', () => {
@@ -439,6 +557,189 @@ describe('gh-passthrough', () => {
       expect(processExitSpy).not.toHaveBeenCalled()
       // Empty output should not cause parse error
       expect(consoleErrorSpy).not.toHaveBeenCalled()
+    })
+
+    // Integration tests for field injection with TOON/JSON conversion (Phase 4)
+    test('should inject fields and convert to TOON for issue view', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify({
+        number: 123,
+        title: 'Test Issue',
+        author: { login: 'testuser' },
+        state: 'OPEN',
+        body: 'Test body',
+      })
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['issue', 'view', '123', '--format', 'toon']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs[0]).toBe('issue')
+      expect(callArgs[1]).toBe('view')
+      expect(callArgs[2]).toBe('123')
+      expect(callArgs[3]).toBe('--json')
+      expect(callArgs[4]).toContain('assignees')
+      expect(callArgs[4]).toContain('author')
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should inject fields and convert to JSON for pr view', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify({
+        number: 456,
+        title: 'Test PR',
+        additions: 10,
+        deletions: 5,
+        state: 'OPEN',
+      })
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['pr', 'view', '456', '--format', 'json']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs[0]).toBe('pr')
+      expect(callArgs[1]).toBe('view')
+      expect(callArgs[2]).toBe('456')
+      expect(callArgs[3]).toBe('--json')
+      expect(callArgs[4]).toContain('additions')
+      expect(callArgs[4]).toContain('deletions')
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should convert list commands to TOON without field injection', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify([
+        { number: 1, title: 'Issue 1' },
+        { number: 2, title: 'Issue 2' },
+      ])
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['issue', 'list', '--format', 'toon']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs).toEqual(['issue', 'list', '--json'])
+      // No fields injected for list commands
+      expect(callArgs.length).toBe(3)
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should detect fields required error for unmapped view commands', async () => {
+      // Arrange
+      const errorMessage = 'Specify one or more comma-separated fields for `--json`:\nfield1\nfield2\nfield3'
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: '',
+        stderr: errorMessage,
+        exitCode: 1,
+      })
+
+      const args = ['label', 'view', 'bug', '--format', 'toon']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      const allErrorOutput = consoleErrorSpy.mock.calls.flat().join(' ')
+      expect(allErrorOutput).toMatch(/field mapping|필드 매핑/)
+      expect(allErrorOutput).toContain('Available fields')
+      expect(allErrorOutput).toContain('update-fields')
+      expect(processExitSpy).toHaveBeenCalledWith(1)
+    })
+
+    test('should detect --json not supported error', async () => {
+      // Arrange
+      const errorMessage = 'unknown flag: --json\nUsage: gh workflow run <name>'
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: '',
+        stderr: errorMessage,
+        exitCode: 1,
+      })
+
+      const args = ['workflow', 'run', 'test', '--format', 'toon']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      const allErrorOutput = consoleErrorSpy.mock.calls.flat().join(' ')
+      expect(allErrorOutput).toMatch(/not support|지원하지 않습니다/)
+      expect(allErrorOutput).toContain('Troubleshooting')
+      expect(processExitSpy).toHaveBeenCalledWith(1)
+    })
+
+    test('should handle TOON conversion with nested objects in injected fields', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify({
+        number: 789,
+        title: 'Complex Issue',
+        author: { login: 'user1', email: 'user1@example.com' },
+        assignees: [
+          { login: 'assignee1' },
+          { login: 'assignee2' },
+        ],
+      })
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['issue', 'view', '789', '--format', 'toon']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs[4]).toContain('assignees')
+      expect(callArgs[4]).toContain('author')
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should handle JSON conversion with array data in injected fields', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify([
+        { number: 1, title: 'Item 1', state: 'OPEN' },
+        { number: 2, title: 'Item 2', state: 'CLOSED' },
+        { number: 3, title: 'Item 3', state: 'OPEN' },
+      ])
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['workflow', 'list', '--format', 'json']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      expect(executeGhCommandSpy).toHaveBeenCalledWith(['workflow', 'list', '--json'])
+      expect(processExitSpy).not.toHaveBeenCalled()
     })
   })
 })
