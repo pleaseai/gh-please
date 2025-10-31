@@ -1,8 +1,8 @@
 ---
 name: using-github-please-extension
-version: 1.1.0
-lastUpdated: 2025-10-30
-description: Automate GitHub workflows with gh-please CLI extension - manage issues, sub-issues, dependencies, PR reviews, and worktrees with LLM-friendly output formats (TOON 58.9% token reduction, JSON, XML, Markdown). Access all 100+ gh CLI commands with automatic format conversion. Use when user mentions gh please, gh CLI commands, TOON format, issue types, sub-issues, dependencies, blocked-by, PR reviews, review threads, comment management, worktree workflow, or GitHub automation.
+version: 1.2.0
+lastUpdated: 2025-10-31
+description: gh-please CLI extension command reference and syntax guide. Enhanced gh CLI replacement providing command syntax, options, and execution examples for sub-issues, dependencies, PR review threads, worktrees, and TOON format output (58.9% token reduction). Use when needing CLI command syntax, 'gh please 명령어', 'gh please 사용법', execution examples, or gh-please specific features. For organizational workflow standards, see your organization's GitHub plugin.
 allowed-tools: Read, Bash, Grep, Glob, Edit, WebFetch
 ---
 
