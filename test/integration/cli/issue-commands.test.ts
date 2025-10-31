@@ -3,7 +3,7 @@
  * Tests sub-issue and dependency management through CLI
  */
 
-/* eslint-disable regexp/prefer-d, regexp/no-super-linear-backtracking, unused-imports/no-unused-imports */
+/* eslint-disable regexp/prefer-d, unused-imports/no-unused-imports */
 
 import type { GhMockRule } from '../../helpers/cli-runner'
 import { afterEach, beforeEach, describe, test } from 'bun:test'
@@ -57,11 +57,34 @@ describe('Issue Commands - CLI Integration', () => {
           exitCode: 0,
         },
       },
-      // Mock gh issue create (used by sub-issue create command)
+      // Mock GetRepositoryNodeId GraphQL query (used by createIssueWithType)
       {
-        args: /issue create -R .*\/.* -t .*/,
+        args: /api graphql -f query=.*GetRepositoryNodeId.*-F operationName=GetRepositoryNodeId -F owner=.*-F repo=/,
         response: {
-          stdout: `https://github.com/test-owner/test-repo/issues/102`,
+          stdout: JSON.stringify({
+            data: {
+              repository: {
+                id: 'R_kwDOTestRepo',
+              },
+            },
+          }),
+          exitCode: 0,
+        },
+      },
+      // Mock CreateIssueWithType GraphQL mutation (used by sub-issue create command)
+      {
+        args: /api graphql -f query=.*CreateIssueWithType.*-F repositoryId=.*-F title=/,
+        response: {
+          stdout: JSON.stringify({
+            data: {
+              createIssue: {
+                issue: {
+                  id: 'I_kwDOABCDEF102000',
+                  number: 102,
+                },
+              },
+            },
+          }),
           exitCode: 0,
         },
       },

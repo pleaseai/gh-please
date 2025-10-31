@@ -43,4 +43,52 @@ describe('sub-issue command', () => {
     const listCmd = commands.find(c => c.name() === 'list')
     expect(listCmd).toBeDefined()
   })
+
+  describe('create subcommand', () => {
+    test('should have title as required option', () => {
+      const cmd = createSubIssueCommand()
+      const commands = cmd.commands || []
+      const createCmd = commands.find(c => c.name() === 'create')
+      const options = createCmd?.options || []
+      const titleOption = options.find(o => o.long === '--title')
+      expect(titleOption).toBeDefined()
+      expect(titleOption?.required).toBe(true)
+    })
+
+    test('should have body option', () => {
+      const cmd = createSubIssueCommand()
+      const commands = cmd.commands || []
+      const createCmd = commands.find(c => c.name() === 'create')
+      const options = createCmd?.options || []
+      const bodyOption = options.find(o => o.long === '--body')
+      expect(bodyOption).toBeDefined()
+    })
+
+    test('should have repo option', () => {
+      const cmd = createSubIssueCommand()
+      const commands = cmd.commands || []
+      const createCmd = commands.find(c => c.name() === 'create')
+      const options = createCmd?.options || []
+      const repoOption = options.find(o => o.long === '--repo')
+      expect(repoOption).toBeDefined()
+    })
+
+    test('should have type option', () => {
+      const cmd = createSubIssueCommand()
+      const commands = cmd.commands || []
+      const createCmd = commands.find(c => c.name() === 'create')
+      const options = createCmd?.options || []
+      const typeOption = options.find(o => o.long === '--type')
+      expect(typeOption).toBeDefined()
+    })
+
+    test('should have type-id option', () => {
+      const cmd = createSubIssueCommand()
+      const commands = cmd.commands || []
+      const createCmd = commands.find(c => c.name() === 'create')
+      const options = createCmd?.options || []
+      const typeIdOption = options.find(o => o.long === '--type-id')
+      expect(typeIdOption).toBeDefined()
+    })
+  })
 })

@@ -4,7 +4,9 @@ import { Command } from 'commander'
 import { getRepoInfo } from '../../lib/github-api'
 import {
   addSubIssue,
+  createIssueWithType,
   getIssueNodeId,
+  listIssueTypes,
   listSubIssues,
   removeSubIssue,
 } from '../../lib/github-graphql'
@@ -26,7 +28,9 @@ export function createSubIssueCommand(): Command {
     .requiredOption('--title <text>', 'Sub-issue title')
     .option('--body <text>', 'Sub-issue body')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
-    .action(async (parentStr: string, options: { title: string, body?: string, repo?: string }) => {
+    .option('--type <name>', 'Issue type name (e.g., "Bug", "Feature")')
+    .option('--type-id <id>', 'Issue type Node ID (direct)')
+    .action(async (parentStr: string, options: { title: string, body?: string, repo?: string, type?: string, typeId?: string }) => {
       const lang = detectSystemLanguage()
       const msg = getIssueMessages(lang)
 
@@ -41,51 +45,66 @@ export function createSubIssueCommand(): Command {
 
         const parentNodeId = await getIssueNodeId(owner, repo, parentNumber)
 
-        console.log(msg.creatingSubIssue)
-        // For now, create issue via gh CLI and then link it
-        // Use getGhCommand to allow test mocking via GH_PATH env var
-        function getGhCommand(): string {
-          return process.env.GH_PATH || 'gh'
+        let issueTypeId: string | undefined
+        let issueTypeName: string | undefined
+
+        // Determine issue type ID (same logic as issue create command)
+        if (options.typeId) {
+          // Direct Node ID provided
+          issueTypeId = options.typeId
+        }
+        else if (options.type) {
+          // Type name provided - need to look it up
+          console.log(msg.fetchingIssueTypes)
+
+          const types = await listIssueTypes(owner, repo)
+
+          if (types.length === 0) {
+            console.error(`❌ ${msg.noIssueTypes}`)
+            process.exit(1)
+          }
+
+          const matchingType = types.find(
+            t => t.name.toLowerCase() === options.type!.toLowerCase(),
+          )
+
+          if (!matchingType) {
+            console.error(`❌ ${msg.issueTypeNotFound(options.type)}`)
+            console.error(msg.availableTypes)
+            for (const t of types) {
+              console.error(`  - ${t.name}`)
+            }
+            process.exit(1)
+          }
+
+          issueTypeId = matchingType.id
+          issueTypeName = matchingType.name
         }
 
-        const proc = Bun.spawn(
-          [
-            getGhCommand(),
-            'issue',
-            'create',
-            '-R',
-            `${owner}/${repo}`,
-            '-t',
-            options.title,
-            ...(options.body ? ['-b', options.body] : []),
-          ],
-          {
-            env: process.env,
-            stdout: 'pipe',
-            stderr: 'pipe',
-          },
+        // Create the sub-issue via GraphQL
+        console.log(msg.creatingSubIssue)
+        const result = await createIssueWithType(
+          owner,
+          repo,
+          options.title,
+          options.body,
+          issueTypeId,
         )
 
-        const output = await new Response(proc.stdout).text()
-        const exitCode = await proc.exited
-
-        if (exitCode !== 0) {
-          const error = await new Response(proc.stderr).text()
-          throw new Error(msg.createFailed(error.trim()))
-        }
-
-        // Parse the issue number from the output URL
-        const urlMatch = output.match(/\/issues\/(\d+)/)
-        if (!urlMatch || !urlMatch[1]) {
-          throw new Error(msg.parseIssueFailed)
-        }
-        const childNumber = Number.parseInt(urlMatch[1], 10)
+        const childNumber = result.number
+        const childNodeId = result.nodeId
 
         // Now link it as a sub-issue
-        const childNodeId = await getIssueNodeId(owner, repo, childNumber)
         await addSubIssue(parentNodeId, childNodeId)
 
-        console.log(msg.subIssueCreatedLinked(childNumber, parentNumber))
+        // Show success message with type info if provided
+        if (issueTypeName) {
+          console.log(msg.subIssueCreatedLinked(childNumber, parentNumber))
+          console.log(`   Type: ${issueTypeName}`)
+        }
+        else {
+          console.log(msg.subIssueCreatedLinked(childNumber, parentNumber))
+        }
         console.log(
           `   View: https://github.com/${owner}/${repo}/issues/${childNumber}`,
         )
