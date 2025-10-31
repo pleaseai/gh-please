@@ -308,7 +308,7 @@ describe('gh-passthrough', () => {
       // Assert
       const fields = result[result.length - 1]
       expect(fields).not.toContain(' ')
-      expect(fields).toMatch(/^[\w,]+$/) // Only word characters and commas
+      expect(fields).toMatch(/^[\w,]+$/) // \w matches uppercase/lowercase letters, digits, and underscores; appropriate for camelCase field names. Only word characters and commas.
     })
   })
 

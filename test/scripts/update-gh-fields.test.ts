@@ -43,6 +43,9 @@ describe('update-gh-fields script', () => {
     if (originalGeneratedFile !== null) {
       writeFileSync(GENERATED_FILE_PATH, originalGeneratedFile, 'utf-8')
     }
+    else if (existsSync(GENERATED_FILE_PATH)) {
+      unlinkSync(GENERATED_FILE_PATH)
+    }
     // Clean up backup
     if (existsSync(BACKUP_FILE_PATH)) {
       unlinkSync(BACKUP_FILE_PATH)
@@ -85,7 +88,7 @@ Use --help for more information.`
       const fields = lines
         .slice(availableFieldsIndex + 1)
         .map(line => line.trim())
-        .filter(line => line && !line.includes(':') && !line.includes('Use'))
+        .filter(line => line && !line.includes(':') && !line.startsWith('Use '))
 
       // Assert
       expect(fields).toContain('additions')
@@ -183,7 +186,7 @@ ${Object.entries(fieldMappings)
       // Assert - Should be valid TypeScript (no syntax errors)
       expect(content).toContain('Record<string, string>')
       expect(content).toMatch(/^export const/)
-      expect(content.trimEnd()).toMatch(/\}$/) // Trim trailing newline
+      expect(content.trimEnd()).toMatch(/\}$/) // Content ends with closing brace and newline
     })
 
     test('should handle multiple command mappings', () => {
