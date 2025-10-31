@@ -106,6 +106,7 @@ export interface CommentMessages {
 export interface PassthroughMessages {
   jsonParseError: string
   jsonNotSupported: string
+  fieldsRequired: string
 }
 
 export const issueMessages: Record<Language, IssueMessages> = {
@@ -339,10 +340,12 @@ export const passthroughMessages: Record<Language, PassthroughMessages> = {
   ko: {
     jsonParseError: '❌ JSON 출력을 파싱할 수 없습니다',
     jsonNotSupported: '❌ 이 명령어는 구조화된 출력을 지원하지 않습니다 (--json 플래그가 없음)',
+    fieldsRequired: '❌ 이 명령어는 필드 지정이 필요하지만 필드 매핑이 아직 생성되지 않았습니다',
   },
   en: {
     jsonParseError: '❌ Failed to parse JSON output',
     jsonNotSupported: '❌ This command does not support structured output (no --json flag available)',
+    fieldsRequired: '❌ This command requires field specification but field mapping is not yet generated',
   },
 }
 

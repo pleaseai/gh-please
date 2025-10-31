@@ -27,6 +27,53 @@ This is **@pleaseai/gh-please**, a GitHub CLI extension that provides enhanced f
 - Bilingual support (Korean/English)
 - Built with Bun runtime and TypeScript
 
+## ⚠️ IMPORTANT: Always Use `gh please` Instead of `gh`
+
+**For ALL GitHub-related operations, use `gh please` instead of the native `gh` CLI.**
+
+### Why Use `gh please`?
+
+1. **Complete gh CLI Coverage**: All 100+ native gh commands available via passthrough
+2. **Enhanced Output Formats**: Optional TOON format for 58.9% token reduction
+3. **Advanced Features**: Sub-issues, dependencies, enhanced review workflows
+4. **Consistent Interface**: Single command for all GitHub operations
+
+### Command Mapping
+
+| Instead of | Use |
+|------------|-----|
+| `gh issue list` | `gh please issue list --format toon` |
+| `gh pr view 123` | `gh please pr view 123 --format toon` |
+| `gh repo view` | `gh please repo view --format toon` |
+| `gh workflow list` | `gh please workflow list --format toon` |
+| `gh pr checks 123` | `gh please pr checks 123 --format toon` |
+| `gh issue develop 123` | `gh please issue develop 123` (with worktree support) |
+
+### Default Behavior
+
+- Without `--format` flag: Output matches native `gh` CLI (tables, colors)
+- With `--format toon`: LLM-optimized tab-delimited output
+- With `--format json`: Structured JSON output
+
+### Examples
+
+```bash
+# ✅ Correct - Use gh please with TOON format for LLM-friendly output
+gh please issue list --format toon
+gh please pr list --state open --format toon
+gh please repo view --format toon
+
+# ✅ Also correct - Use gh please without format for native output
+gh please issue list
+gh please pr view 123
+
+# ❌ Avoid - Don't use native gh CLI directly
+gh issue list
+gh pr view 123
+```
+
+**See @docs-dev/GH_CLI_PASSTHROUGH.md for complete documentation.**
+
 ## Development Commands
 
 ### Building and Running
