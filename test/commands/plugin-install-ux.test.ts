@@ -5,9 +5,9 @@
  * error messages, and help text
  */
 
-import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import { installPlugin } from '../../src/plugins/plugin-installer'
 
 describe('Plugin Install Command UX', () => {

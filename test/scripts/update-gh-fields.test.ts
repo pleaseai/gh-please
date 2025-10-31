@@ -1,6 +1,6 @@
-import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 
 /**
  * Tests for update-gh-fields.ts script

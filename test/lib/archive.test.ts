@@ -1,6 +1,6 @@
-import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import { cleanupArchive, extractTarball, validateTarball } from '../../src/lib/archive'
 
 describe('archive utilities', () => {
