@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.22.0](https://github.com/pleaseai/gh-please/compare/github-v0.21.0...github-v0.22.0) (2025-10-31)
+
+
+### Features
+
+* add issue type support to sub-issue create command ([#131](https://github.com/pleaseai/gh-please/issues/131)) ([bedf6eb](https://github.com/pleaseai/gh-please/commit/bedf6eb38f74e156ac3bb6fb0266a2bc8644317e))
+
 ## [0.21.0](https://github.com/pleaseai/gh-please/compare/github-v0.20.1...github-v0.21.0) (2025-10-31)
 
 
