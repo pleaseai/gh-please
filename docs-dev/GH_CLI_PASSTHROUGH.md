@@ -57,9 +57,9 @@ gh-please automatically injects fields for common view commands using generated 
 | Command | Fields Injected |
 |---------|----------------|
 | `issue view` | assignees,author,body,closed,closedAt,... (21 fields) |
-| `pr view` | additions,assignees,author,baseRefName,... (49 fields) |
-| `repo view` | name,owner,description,archivedAt,... (62 fields) |
-| `release view` | name,tagName,author,assets,... (16 fields) |
+| `pr view` | additions,assignees,author,baseRefName,... (46 fields) |
+| `repo view` | name,owner,description,archivedAt,... (67 fields) |
+| `release view` | name,tagName,author,assets,... (18 fields) |
 
 **How it works:**
 
