@@ -7,6 +7,9 @@
  * and generates a TypeScript file with field mappings for use in
  * TOON/JSON format conversion.
  *
+ * The script now includes runtime validation to detect and filter
+ * deprecated GraphQL fields that cause failures.
+ *
  * Usage:
  *   bun run scripts/update-gh-fields.ts
  *   npm run update-fields
@@ -24,6 +27,11 @@ interface CommandConfig {
   subcommand: string
   testId: string
   description: string
+}
+
+interface DeprecatedFieldInfo {
+  field: string
+  reason: string
 }
 
 // Commands to extract fields from
@@ -75,25 +83,158 @@ function executeGhCommand(args: string[]): { stdout: string, stderr: string, exi
 }
 
 /**
- * Extract available fields from gh CLI error message
+ * Check if a field list causes GraphQL deprecation errors or failures
  */
-function extractFields(command: string, subcommand: string, testId: string): string[] {
-  console.log(`📡 Extracting fields for: gh ${command} ${subcommand}`)
+function hasDeprecationError(stderr: string): boolean {
+  const deprecationIndicators = [
+    'deprecated',
+    'being deprecated',
+    'Projects (classic)',
+    'sunset',
+    'no longer supported',
+  ]
 
-  const result = executeGhCommand([command, subcommand, testId, '--json', 'invalidfield'])
+  return deprecationIndicators.some(indicator =>
+    stderr.toLowerCase().includes(indicator.toLowerCase()),
+  )
+}
 
-  if (result.stderr.includes('Available fields:')) {
-    const fields = result.stderr
-      .split('Available fields:')[1]
-      .split('\n')
-      .map(line => line.trim())
-      .filter(line => line && !line.includes(':') && !line.includes('Unknown'))
+/**
+ * Validate fields by executing actual gh command
+ * Returns true if fields are valid, false if they cause errors
+ */
+function validateFields(
+  command: string,
+  subcommand: string,
+  fields: string[],
+  testId: string,
+): boolean {
+  const result = executeGhCommand([
+    command,
+    subcommand,
+    testId,
+    '--json',
+    fields.join(','),
+  ])
 
-    console.log(`   ✅ Found ${fields.length} fields`)
+  // Check for both exit code and deprecation warnings
+  if (result.exitCode !== 0) {
+    return false
+  }
+
+  if (hasDeprecationError(result.stderr)) {
+    return false
+  }
+
+  return true
+}
+
+/**
+ * Binary search to identify valid fields
+ * Recursively splits the field list to find problematic fields
+ */
+function binarySearchValidFields(
+  command: string,
+  subcommand: string,
+  fields: string[],
+  testId: string,
+  depth = 0,
+): string[] {
+  // Base case: single field
+  if (fields.length === 1) {
+    return validateFields(command, subcommand, fields, testId) ? fields : []
+  }
+
+  // Test all fields first
+  if (validateFields(command, subcommand, fields, testId)) {
     return fields
   }
 
-  throw new Error(`Failed to extract fields for ${command} ${subcommand}\nStderr: ${result.stderr}`)
+  // Split and test each half
+  const mid = Math.floor(fields.length / 2)
+  const leftFields = fields.slice(0, mid)
+  const rightFields = fields.slice(mid)
+
+  const indent = '  '.repeat(depth + 1)
+  console.log(`${indent}🔍 Testing ${leftFields.length} + ${rightFields.length} fields...`)
+
+  const validLeft = binarySearchValidFields(command, subcommand, leftFields, testId, depth + 1)
+  const validRight = binarySearchValidFields(command, subcommand, rightFields, testId, depth + 1)
+
+  return [...validLeft, ...validRight]
+}
+
+/**
+ * Extract available fields from gh CLI error message and validate them
+ */
+function extractAndValidateFields(
+  command: string,
+  subcommand: string,
+  testId: string,
+): { validFields: string[], deprecatedFields: DeprecatedFieldInfo[] } {
+  console.log(`📡 Extracting fields for: gh ${command} ${subcommand}`)
+
+  // Step 1: Extract all available fields from error message
+  const result = executeGhCommand([command, subcommand, testId, '--json', 'invalidfield'])
+
+  if (!result.stderr.includes('Available fields:')) {
+    throw new Error(`Failed to extract fields for ${command} ${subcommand}\nStderr: ${result.stderr}`)
+  }
+
+  const allFields = result.stderr
+    .split('Available fields:')[1]
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line && !line.includes(':') && !line.includes('Unknown'))
+
+  console.log(`   ✅ Found ${allFields.length} fields`)
+
+  // Step 2: Validate fields
+  console.log(`   🔍 Validating fields...`)
+
+  const validFields = binarySearchValidFields(command, subcommand, allFields, testId)
+
+  // Step 3: Identify deprecated fields
+  const deprecatedFields: DeprecatedFieldInfo[] = []
+  const invalidFields = allFields.filter(f => !validFields.includes(f))
+
+  for (const field of invalidFields) {
+    // Test individual field to get specific error
+    const fieldResult = executeGhCommand([
+      command,
+      subcommand,
+      testId,
+      '--json',
+      field,
+    ])
+
+    let reason = 'Unknown error'
+    if (hasDeprecationError(fieldResult.stderr)) {
+      // Extract deprecation message
+      const lines = fieldResult.stderr.split('\n')
+      const deprecationLine = lines.find(line =>
+        line.toLowerCase().includes('deprecat') || line.toLowerCase().includes('sunset'),
+      )
+      reason = deprecationLine?.trim() || 'Deprecated'
+    }
+    else if (fieldResult.exitCode !== 0) {
+      reason = 'GraphQL error'
+    }
+
+    deprecatedFields.push({ field, reason })
+  }
+
+  // Step 4: Report results
+  if (deprecatedFields.length > 0) {
+    console.log(`   ⚠️  Filtered ${deprecatedFields.length} deprecated/invalid fields:`)
+    for (const { field, reason } of deprecatedFields) {
+      console.log(`      - ${field}: ${reason}`)
+    }
+  }
+
+  console.log(`   ✅ Valid fields: ${validFields.length}`)
+
+  return { validFields, deprecatedFields }
 }
 
 /**
@@ -113,9 +254,28 @@ function getGhVersion(): string {
 /**
  * Generate TypeScript file with field mappings
  */
-function generateFieldsFile(fieldMappings: Record<string, string>): void {
+function generateFieldsFile(
+  fieldMappings: Record<string, string>,
+  deprecationLog: Record<string, DeprecatedFieldInfo[]>,
+): void {
   const ghVersion = getGhVersion()
   const timestamp = new Date().toISOString().split('T')[0]
+
+  // Generate deprecation comment section
+  let deprecationComment = ''
+  const hasDeprecations = Object.values(deprecationLog).some(list => list.length > 0)
+
+  if (hasDeprecations) {
+    deprecationComment = '\n * Deprecated/invalid fields filtered during generation:\n'
+    for (const [commandKey, fields] of Object.entries(deprecationLog)) {
+      if (fields.length > 0) {
+        deprecationComment += ` *   ${commandKey}:\n`
+        for (const { field, reason } of fields) {
+          deprecationComment += ` *     - ${field}: ${reason}\n`
+        }
+      }
+    }
+  }
 
   const content = `// Auto-generated by scripts/update-gh-fields.ts
 // DO NOT EDIT MANUALLY - Run: bun run update-fields
@@ -130,8 +290,7 @@ function generateFieldsFile(fieldMappings: Record<string, string>): void {
  * request TOON or JSON format conversion for view commands.
  *
  * View commands (issue view, pr view, etc.) require explicit field specification,
- * while list commands work with just --json flag.
- */
+ * while list commands work with just --json flag.${deprecationComment} */
 export const GH_JSON_FIELDS: Record<string, string> = {
 ${Object.entries(fieldMappings)
   .map(([key, value]) => `  '${key}': '${value}',`)
@@ -161,16 +320,23 @@ async function main(): Promise<void> {
   }
 
   const fieldMappings: Record<string, string> = {}
+  const deprecationLog: Record<string, DeprecatedFieldInfo[]> = {}
 
-  // Extract fields for each command
+  // Extract and validate fields for each command
   for (const config of COMMANDS) {
     try {
-      const fields = extractFields(config.command, config.subcommand, config.testId)
+      const { validFields, deprecatedFields } = extractAndValidateFields(
+        config.command,
+        config.subcommand,
+        config.testId,
+      )
+
       const commandKey = `${config.command} ${config.subcommand}`
-      fieldMappings[commandKey] = fields.join(',')
+      fieldMappings[commandKey] = validFields.join(',')
+      deprecationLog[commandKey] = deprecatedFields
     }
     catch (error: any) {
-      console.error(`❌ Error extracting fields for ${config.command} ${config.subcommand}:`)
+      console.error(`❌ Error processing ${config.command} ${config.subcommand}:`)
       console.error(`   ${error.message}`)
       process.exit(1)
     }
@@ -178,7 +344,7 @@ async function main(): Promise<void> {
 
   // Generate TypeScript file
   try {
-    generateFieldsFile(fieldMappings)
+    generateFieldsFile(fieldMappings, deprecationLog)
     console.log('\n✨ Field definitions updated successfully!')
     console.log('\n💡 Next steps:')
     console.log('   1. Review changes: git diff src/lib/gh-fields.generated.ts')
