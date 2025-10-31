@@ -14,10 +14,15 @@ export interface PassthroughResult {
 }
 
 /**
+ * Extended format type for gh-passthrough (includes 'table' for legacy output)
+ */
+export type ExtendedFormat = OutputFormat | 'table'
+
+/**
  * Format detection result
  */
 export interface FormatDetection {
-  format: OutputFormat | null
+  format: ExtendedFormat | null
   cleanArgs: string[]
 }
 
@@ -71,6 +76,7 @@ export async function executeGhCommand(args: string[]): Promise<PassthroughResul
  * Detect if format conversion is needed and extract format flag
  *
  * Supports both --format toon and --format=toon syntax.
+ * Phase 1.1: Returns 'toon' by default, 'table' for legacy native output
  *
  * @param args - Command arguments
  * @returns Format and cleaned arguments
@@ -80,13 +86,17 @@ export async function executeGhCommand(args: string[]): Promise<PassthroughResul
  * shouldConvertToStructuredFormat(['issue', 'list', '--format', 'toon'])
  * // { format: 'toon', cleanArgs: ['issue', 'list'] }
  *
+ * shouldConvertToStructuredFormat(['issue', 'list', '--format', 'table'])
+ * // { format: 'table', cleanArgs: ['issue', 'list'] }
+ *
  * shouldConvertToStructuredFormat(['issue', 'list'])
- * // { format: null, cleanArgs: ['issue', 'list'] }
+ * // { format: 'toon', cleanArgs: ['issue', 'list'] } (TOON is now default)
  * ```
  */
 export function shouldConvertToStructuredFormat(args: string[]): FormatDetection {
   const cleanArgs: string[] = []
-  let format: OutputFormat | null = null
+  let format: ExtendedFormat | null = null
+  let explicitFormatProvided = false
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]
@@ -97,8 +107,14 @@ export function shouldConvertToStructuredFormat(args: string[]): FormatDetection
     if (arg.startsWith('--format=')) {
       const value = arg.split('=')[1]
       if (value === 'toon' || value === 'json') {
+        explicitFormatProvided = true
         format = value
       }
+      else if (value === 'table') {
+        explicitFormatProvided = true
+        format = 'table'
+      }
+      // Invalid format value - don't mark as explicitly provided
       continue
     }
 
@@ -106,17 +122,29 @@ export function shouldConvertToStructuredFormat(args: string[]): FormatDetection
     if (arg === '--format') {
       const nextArg = args[i + 1]
       if (nextArg && (nextArg === 'toon' || nextArg === 'json')) {
+        explicitFormatProvided = true
         format = nextArg
         i++ // Skip next arg (the format value)
       }
+      else if (nextArg && nextArg === 'table') {
+        explicitFormatProvided = true
+        format = 'table'
+        i++ // Skip next arg (the format value)
+      }
       else if (nextArg) {
-        // Skip invalid format value too
+        // Invalid format value - don't mark as explicit, skip the value
         i++
       }
+      // If no nextArg or invalid value, don't mark as explicitly provided
       continue
     }
 
     cleanArgs.push(arg)
+  }
+
+  // Phase 1.1: Default to TOON format when no explicit format provided
+  if (!explicitFormatProvided) {
+    format = 'toon'
   }
 
   return { format, cleanArgs }
@@ -161,32 +189,53 @@ export function injectJsonFlag(args: string[]): string[] {
  * Main passthrough command orchestration
  *
  * Executes gh CLI command with optional format conversion.
+ * Phase 1.1: TOON is now the default format
  *
  * @param args - Command arguments (without 'gh' prefix)
  *
  * @example
  * ```typescript
- * // Execute without conversion
+ * // Execute with default TOON format (Phase 1.1)
  * await passThroughCommand(['repo', 'view'])
  *
- * // Execute with TOON conversion
+ * // Execute with explicit TOON conversion
  * await passThroughCommand(['issue', 'list', '--format', 'toon'])
+ *
+ * // Execute with legacy table format (deprecated)
+ * await passThroughCommand(['issue', 'list', '--format', 'table'])
  * ```
  */
 export async function passThroughCommand(args: string[]): Promise<void> {
   const lang: Language = detectSystemLanguage()
   const msg = getPassthroughMessages(lang)
 
-  // 1. Detect format requirement
+  // 1. Detect format requirement (defaults to 'toon' in Phase 1.1)
   const { format, cleanArgs } = shouldConvertToStructuredFormat(args)
 
-  // 2. Inject --json if format conversion needed
+  // 2. Handle table format (legacy native output with deprecation warning)
+  if (format === 'table') {
+    console.error(msg.deprecationWarning)
+    console.error('') // Empty line for readability
+
+    // Execute gh CLI without format conversion (preserve native output)
+    const result = await executeGhCommand(cleanArgs)
+
+    if (result.exitCode !== 0) {
+      process.stderr.write(result.stderr)
+      process.exit(result.exitCode)
+    }
+
+    process.stdout.write(result.stdout)
+    return
+  }
+
+  // 3. Inject --json for format conversion (TOON or JSON)
   const ghArgs = format ? injectJsonFlag(cleanArgs) : cleanArgs
 
-  // 3. Execute gh CLI
+  // 4. Execute gh CLI
   const result = await executeGhCommand(ghArgs)
 
-  // 4. Handle errors
+  // 5. Handle errors
   if (result.exitCode !== 0) {
     // Distinguish between different types of --json related errors
     if (format) {
@@ -227,7 +276,7 @@ export async function passThroughCommand(args: string[]): Promise<void> {
     process.exit(result.exitCode)
   }
 
-  // 5. Convert format if requested
+  // 6. Convert format if requested (TOON or JSON)
   if (format) {
     try {
       // Handle empty output gracefully (e.g., empty lists)
@@ -236,7 +285,9 @@ export async function passThroughCommand(args: string[]): Promise<void> {
         return
       }
       const data = JSON.parse(result.stdout)
-      outputData(data, format)
+      // Type assertion: at this point format is OutputFormat ('toon' or 'json')
+      // because 'table' was handled earlier with early return
+      outputData(data, format as OutputFormat)
     }
     catch (error) {
       // JSON parse error - provide detailed context
@@ -247,7 +298,7 @@ export async function passThroughCommand(args: string[]): Promise<void> {
       }
       console.error('\nTroubleshooting:')
       console.error(`  - Verify the command supports --json flag: gh ${cleanArgs[0]} --help`)
-      console.error(`  - Try without --format to see raw output: gh ${cleanArgs.join(' ')}`)
+      console.error(`  - Try with --format table to see native output: gh please ${cleanArgs.join(' ')} --format table`)
       console.error('  - Report this issue if the command should support JSON')
       if (result.stdout.length > 0) {
         console.error(`\nPartial output received (${result.stdout.length} bytes)`)
@@ -255,9 +306,5 @@ export async function passThroughCommand(args: string[]): Promise<void> {
       }
       process.exit(1)
     }
-  }
-  else {
-    // Preserve original output
-    process.stdout.write(result.stdout)
   }
 }

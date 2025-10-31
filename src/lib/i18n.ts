@@ -107,6 +107,7 @@ export interface PassthroughMessages {
   jsonParseError: string
   jsonNotSupported: string
   fieldsRequired: string
+  deprecationWarning: string
 }
 
 export const issueMessages: Record<Language, IssueMessages> = {
@@ -341,11 +342,13 @@ export const passthroughMessages: Record<Language, PassthroughMessages> = {
     jsonParseError: '❌ JSON 출력을 파싱할 수 없습니다',
     jsonNotSupported: '❌ 이 명령어는 구조화된 출력을 지원하지 않습니다 (--json 플래그가 없음)',
     fieldsRequired: '❌ 이 명령어는 필드 지정이 필요하지만 필드 매핑이 아직 생성되지 않았습니다',
+    deprecationWarning: '⚠️  네이티브 테이블 출력은 더 이상 사용되지 않습니다. 레거시 출력을 사용하려면 --format table을 사용하세요.\n   TOON 형식이 곧 기본값이 됩니다 (58.9% 토큰 감소).',
   },
   en: {
     jsonParseError: '❌ Failed to parse JSON output',
     jsonNotSupported: '❌ This command does not support structured output (no --json flag available)',
     fieldsRequired: '❌ This command requires field specification but field mapping is not yet generated',
+    deprecationWarning: '⚠️  Native table output is deprecated. Use --format table for legacy output.\n   TOON format will be default soon (58.9% token reduction).',
   },
 }
 

@@ -65,7 +65,7 @@ describe('gh-passthrough', () => {
       expect(result.cleanArgs).toEqual(['pr', 'list'])
     })
 
-    test('should return null when no format flag present', () => {
+    test('should default to toon when no format flag present (Phase 1.1)', () => {
       // Arrange
       const args = ['repo', 'view']
 
@@ -73,7 +73,7 @@ describe('gh-passthrough', () => {
       const result = shouldConvertToStructuredFormat(args)
 
       // Assert
-      expect(result.format).toBeNull()
+      expect(result.format).toBe('toon')
       expect(result.cleanArgs).toEqual(['repo', 'view'])
     })
 
@@ -103,7 +103,7 @@ describe('gh-passthrough', () => {
       expect(result.cleanArgs).toEqual(['issue', 'list'])
     })
 
-    test('should ignore invalid format values', () => {
+    test('should default to toon for invalid format values (Phase 1.1)', () => {
       // Arrange
       const args = ['issue', 'list', '--format', 'xml']
 
@@ -111,11 +111,11 @@ describe('gh-passthrough', () => {
       const result = shouldConvertToStructuredFormat(args)
 
       // Assert
-      expect(result.format).toBeNull()
+      expect(result.format).toBe('toon')
       expect(result.cleanArgs).toEqual(['issue', 'list'])
     })
 
-    test('should handle --format at end without value', () => {
+    test('should default to toon when --format at end without value (Phase 1.1)', () => {
       // Arrange
       const args = ['issue', 'list', '--format']
 
@@ -123,7 +123,7 @@ describe('gh-passthrough', () => {
       const result = shouldConvertToStructuredFormat(args)
 
       // Assert
-      expect(result.format).toBeNull()
+      expect(result.format).toBe('toon')
       expect(result.cleanArgs).toEqual(['issue', 'list'])
     })
 
@@ -137,6 +137,44 @@ describe('gh-passthrough', () => {
       // Assert
       expect(result.format).toBe('toon')
       expect(result.cleanArgs).toEqual(['issue', 'list'])
+    })
+
+    test('should detect --format table flag (Phase 1.1)', () => {
+      // Arrange
+      const args = ['issue', 'list', '--format', 'table']
+
+      // Act
+      const result = shouldConvertToStructuredFormat(args)
+
+      // Assert
+      expect(result.format).toBe('table')
+      expect(result.cleanArgs).toEqual(['issue', 'list'])
+    })
+
+    test('should handle --format=table syntax (Phase 1.1)', () => {
+      // Arrange
+      const args = ['repo', 'view', '--format=table']
+
+      // Act
+      const result = shouldConvertToStructuredFormat(args)
+
+      // Assert
+      expect(result.format).toBe('table')
+      expect(result.cleanArgs).toEqual(['repo', 'view'])
+    })
+
+    test('should extract and remove --format table from args (Phase 1.1)', () => {
+      // Arrange
+      const args = ['issue', 'list', '--state', 'open', '--format', 'table', '--limit', '10']
+
+      // Act
+      const result = shouldConvertToStructuredFormat(args)
+
+      // Assert
+      expect(result.format).toBe('table')
+      expect(result.cleanArgs).toEqual(['issue', 'list', '--state', 'open', '--limit', '10'])
+      expect(result.cleanArgs).not.toContain('--format')
+      expect(result.cleanArgs).not.toContain('table')
     })
   })
 
@@ -380,11 +418,11 @@ describe('gh-passthrough', () => {
       expect(processExitSpy).not.toHaveBeenCalled()
     })
 
-    test('should preserve original output when no format flag present', async () => {
+    test('should convert to TOON by default when no format flag present (Phase 1.1)', async () => {
       // Arrange
-      const mockOutput = 'Repository: test-owner/test-repo\nStars: 100'
+      const mockJsonOutput = JSON.stringify({ name: 'test-repo', owner: 'test-owner', stars: 100 })
       executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
-        stdout: mockOutput,
+        stdout: mockJsonOutput,
         stderr: '',
         exitCode: 0,
       })
@@ -394,9 +432,33 @@ describe('gh-passthrough', () => {
       // Act
       await passThroughCommand(args)
 
+      // Assert - Should inject fields for repo view
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs[0]).toBe('repo')
+      expect(callArgs[1]).toBe('view')
+      expect(callArgs[2]).toBe('--json')
+      expect(callArgs[3]).toContain('archivedAt') // Should contain repo view fields
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should preserve original output when --format table flag present (Phase 1.1)', async () => {
+      // Arrange
+      const mockOutput = 'Repository: test-owner/test-repo\nStars: 100'
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['repo', 'view', '--format', 'table']
+
+      // Act
+      await passThroughCommand(args)
+
       // Assert
       expect(executeGhCommandSpy).toHaveBeenCalledWith(['repo', 'view'])
       expect(processStdoutWriteSpy).toHaveBeenCalledWith(mockOutput)
+      expect(consoleErrorSpy).toHaveBeenCalled() // Deprecation warning
       expect(processExitSpy).not.toHaveBeenCalled()
     })
 
@@ -517,7 +579,7 @@ describe('gh-passthrough', () => {
       expect(jsonOutput).not.toMatch(/field mapping|필드 매핑/)
     })
 
-    test('should pass through gh CLI errors when format not requested', async () => {
+    test('should pass through gh CLI errors when using --format table (Phase 1.1)', async () => {
       // Arrange
       const errorMessage = 'API error: resource not found'
       executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
@@ -527,12 +589,13 @@ describe('gh-passthrough', () => {
       })
 
       const processStderrWriteSpy = spyOn(process.stderr, 'write').mockImplementation(() => true)
-      const args = ['api', 'nonexistent-endpoint']
+      const args = ['api', 'nonexistent-endpoint', '--format', 'table']
 
       // Act
       await passThroughCommand(args)
 
       // Assert
+      expect(consoleErrorSpy).toHaveBeenCalled() // Deprecation warning
       expect(processStderrWriteSpy).toHaveBeenCalledWith(errorMessage)
       expect(processExitSpy).toHaveBeenCalledWith(1)
 
@@ -740,6 +803,110 @@ describe('gh-passthrough', () => {
       // Assert
       expect(executeGhCommandSpy).toHaveBeenCalledWith(['workflow', 'list', '--json'])
       expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    // Phase 1.1: Deprecation warning tests
+    test('should show deprecation warning when using --format table (Phase 1.1)', async () => {
+      // Arrange
+      const mockOutput = 'Issue #1\nIssue #2'
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['issue', 'list', '--format', 'table']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      expect(consoleErrorSpy).toHaveBeenCalled()
+      const errorCalls = consoleErrorSpy.mock.calls.flat().join(' ')
+      expect(errorCalls).toMatch(/deprecated|더 이상 사용되지 않습니다/)
+      expect(errorCalls).toMatch(/--format table/)
+      expect(processStdoutWriteSpy).toHaveBeenCalledWith(mockOutput)
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should not show deprecation warning for TOON format (Phase 1.1)', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify([{ number: 1, title: 'Issue 1' }])
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['issue', 'list', '--format', 'toon']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      expect(consoleErrorSpy).not.toHaveBeenCalled()
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should not show deprecation warning for JSON format (Phase 1.1)', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify([{ number: 1, title: 'Issue 1' }])
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['issue', 'list', '--format', 'json']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      expect(consoleErrorSpy).not.toHaveBeenCalled()
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should not show deprecation warning for default TOON (Phase 1.1)', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify([{ number: 1, title: 'Issue 1' }])
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['issue', 'list']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      expect(consoleErrorSpy).not.toHaveBeenCalled()
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should handle --format table with errors (Phase 1.1)', async () => {
+      // Arrange
+      const errorMessage = 'API error: resource not found'
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: '',
+        stderr: errorMessage,
+        exitCode: 1,
+      })
+
+      const processStderrWriteSpy = spyOn(process.stderr, 'write').mockImplementation(() => true)
+      const args = ['api', 'nonexistent-endpoint', '--format', 'table']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      expect(consoleErrorSpy).toHaveBeenCalled() // Deprecation warning
+      expect(processStderrWriteSpy).toHaveBeenCalledWith(errorMessage)
+      expect(processExitSpy).toHaveBeenCalledWith(1)
+
+      processStderrWriteSpy.mockRestore()
     })
   })
 })
