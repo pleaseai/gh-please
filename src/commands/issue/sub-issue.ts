@@ -11,6 +11,7 @@ import {
   removeSubIssue,
 } from '../../lib/github-graphql'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
+import { executeQuery } from '../../lib/jmespath-query'
 
 /**
  * Creates a command to manage issue sub-issue relationships
@@ -207,7 +208,8 @@ export function createSubIssueCommand(): Command {
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
     .option('--json [fields]', 'Output in JSON format with optional field selection (number,title,state,nodeId,url)')
     .option('--format <format>', 'Output format: json or toon')
-    .action(async (parentStr: string, options: { repo?: string, json?: string | boolean, format?: OutputFormat }) => {
+    .option('--query <jmespath>', 'JMESPath query to filter results (e.g., "[?state==\'OPEN\'].{number:number,title:title}")')
+    .action(async (parentStr: string, options: { repo?: string, json?: string | boolean, format?: OutputFormat, query?: string }) => {
       // Determine output format
       const outputFormat: OutputFormat = options.format
         ? options.format
@@ -241,13 +243,25 @@ export function createSubIssueCommand(): Command {
         // Handle structured output (JSON or TOON)
         if (shouldUseStructuredOutput) {
           const fields = parseFields(options.json)
-          const data = subIssues.map(issue => ({
+          let data = subIssues.map(issue => ({
             number: issue.number,
             title: issue.title,
             state: issue.state,
             nodeId: issue.nodeId,
             url: `https://github.com/${owner}/${repo}/issues/${issue.number}`,
           }))
+
+          // Apply JMESPath query if provided
+          if (options.query) {
+            try {
+              data = executeQuery(data, options.query)
+            }
+            catch (error) {
+              console.error(`${msg.errorPrefix}: ${error instanceof Error ? error.message : msg.unknownError}`)
+              process.exit(1)
+            }
+          }
+
           outputData(data, outputFormat, fields)
           return
         }

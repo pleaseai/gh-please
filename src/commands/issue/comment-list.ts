@@ -5,6 +5,7 @@ import { Command } from 'commander'
 import { listIssueComments } from '../../lib/comment-api'
 import { getRepoInfo } from '../../lib/github-api'
 import { detectSystemLanguage, getCommentMessages } from '../../lib/i18n'
+import { executeQuery } from '../../lib/jmespath-query'
 
 const BODY_PREVIEW_LENGTH = 80
 
@@ -45,7 +46,8 @@ export function createIssueCommentListCommand(): Command {
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
     .option('--json [fields]', 'Output in JSON format with optional field selection (id,body,author,createdAt,updatedAt,url)')
     .option('--format <format>', 'Output format: json or toon')
-    .action(async (issueNumberStr: string, options: { repo?: string, json?: string | boolean, format?: OutputFormat }) => {
+    .option('--query <jmespath>', 'JMESPath query to filter results (e.g., "[?author==\'username\'].{id:id,body:body}")')
+    .action(async (issueNumberStr: string, options: { repo?: string, json?: string | boolean, format?: OutputFormat, query?: string }) => {
       // Determine output format
       const outputFormat: OutputFormat = options.format
         ? options.format
@@ -79,7 +81,7 @@ export function createIssueCommentListCommand(): Command {
         // Handle structured output (JSON or TOON)
         if (shouldUseStructuredOutput) {
           const fields = parseFields(options.json)
-          const data = comments.map(comment => ({
+          let data = comments.map(comment => ({
             id: comment.id,
             body: comment.body,
             author: comment.user.login,
@@ -87,6 +89,18 @@ export function createIssueCommentListCommand(): Command {
             updatedAt: comment.updated_at,
             url: comment.html_url,
           }))
+
+          // Apply JMESPath query if provided
+          if (options.query) {
+            try {
+              data = executeQuery(data, options.query)
+            }
+            catch (error) {
+              console.error(`${msg.errorPrefix}: ${error instanceof Error ? error.message : msg.unknownError}`)
+              process.exit(1)
+            }
+          }
+
           outputData(data, outputFormat, fields)
           return
         }
