@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.23.0](https://github.com/pleaseai/gh-please/compare/github-v0.22.0...github-v0.23.0) (2025-10-31)
+
+
+### Features
+
+* integrate JMESPath library for query support ([#147](https://github.com/pleaseai/gh-please/issues/147)) ([7ec93df](https://github.com/pleaseai/gh-please/commit/7ec93df1a826b7ccffbc281a9961ca4ea173e1c1)), closes [#134](https://github.com/pleaseai/gh-please/issues/134)
+* **issue:** add JMESPath query support to list commands (Phase 1.2) ([#150](https://github.com/pleaseai/gh-please/issues/150)) ([830a0d6](https://github.com/pleaseai/gh-please/commit/830a0d6462166f37bb247f9c17a84559f6989818))
+* **passthrough:** make TOON default output format (Phase 1.1) ([#146](https://github.com/pleaseai/gh-please/issues/146)) ([31bd2b1](https://github.com/pleaseai/gh-please/commit/31bd2b15fa3c2c19df296b0eb18c025d9ec25d1c)), closes [#135](https://github.com/pleaseai/gh-please/issues/135)
+* **scripts:** add runtime validation to detect and filter deprecated… ([#152](https://github.com/pleaseai/gh-please/issues/152)) ([3cf584f](https://github.com/pleaseai/gh-please/commit/3cf584fad1e2aeeafb2a86df64069cb8af8ddffc))
+
 ## [0.22.0](https://github.com/pleaseai/gh-please/compare/github-v0.21.0...github-v0.22.0) (2025-10-31)
 
 
