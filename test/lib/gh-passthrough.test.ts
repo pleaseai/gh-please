@@ -176,6 +176,86 @@ describe('gh-passthrough', () => {
       expect(result.cleanArgs).not.toContain('--format')
       expect(result.cleanArgs).not.toContain('table')
     })
+
+    // Phase 1.5: JMESPath query extraction tests
+    test('should extract --query flag (Phase 1.5)', () => {
+      // Arrange
+      const args = ['release', 'list', '--query', '[?draft]']
+
+      // Act
+      const result = shouldConvertToStructuredFormat(args)
+
+      // Assert
+      expect(result.format).toBe('toon') // Default TOON format
+      expect(result.query).toBe('[?draft]')
+      expect(result.cleanArgs).toEqual(['release', 'list'])
+      expect(result.cleanArgs).not.toContain('--query')
+    })
+
+    test('should extract --query=value syntax (Phase 1.5)', () => {
+      // Arrange
+      const args = ['release', 'list', '--query=[?prerelease]']
+
+      // Act
+      const result = shouldConvertToStructuredFormat(args)
+
+      // Assert
+      expect(result.format).toBe('toon')
+      expect(result.query).toBe('[?prerelease]')
+      expect(result.cleanArgs).toEqual(['release', 'list'])
+    })
+
+    test('should handle both --format and --query flags (Phase 1.5)', () => {
+      // Arrange
+      const args = ['release', 'list', '--format', 'json', '--query', '[?draft].{name:name,tag:tagName}']
+
+      // Act
+      const result = shouldConvertToStructuredFormat(args)
+
+      // Assert
+      expect(result.format).toBe('json')
+      expect(result.query).toBe('[?draft].{name:name,tag:tagName}')
+      expect(result.cleanArgs).toEqual(['release', 'list'])
+    })
+
+    test('should preserve other args when extracting query (Phase 1.5)', () => {
+      // Arrange
+      const args = ['release', 'list', '--limit', '10', '--query', '[?!draft]', '--repo', 'owner/repo']
+
+      // Act
+      const result = shouldConvertToStructuredFormat(args)
+
+      // Assert
+      expect(result.format).toBe('toon')
+      expect(result.query).toBe('[?!draft]')
+      expect(result.cleanArgs).toEqual(['release', 'list', '--limit', '10', '--repo', 'owner/repo'])
+    })
+
+    test('should handle complex JMESPath queries (Phase 1.5)', () => {
+      // Arrange
+      const complexQuery = '[?state==\'OPEN\' && contains(title, \'bug\')].{number:number,title:title}'
+      const args = ['issue', 'list', '--query', complexQuery]
+
+      // Act
+      const result = shouldConvertToStructuredFormat(args)
+
+      // Assert
+      expect(result.query).toBe(complexQuery)
+      expect(result.cleanArgs).toEqual(['issue', 'list'])
+    })
+
+    test('should return undefined query when no --query flag (Phase 1.5)', () => {
+      // Arrange
+      const args = ['release', 'list']
+
+      // Act
+      const result = shouldConvertToStructuredFormat(args)
+
+      // Assert
+      expect(result.format).toBe('toon')
+      expect(result.query).toBeUndefined()
+      expect(result.cleanArgs).toEqual(['release', 'list'])
+    })
   })
 
   describe('injectJsonFlag', () => {
@@ -907,6 +987,197 @@ describe('gh-passthrough', () => {
       expect(processExitSpy).toHaveBeenCalledWith(1)
 
       processStderrWriteSpy.mockRestore()
+    })
+
+    // Phase 1.5: JMESPath query integration tests
+    test('should apply JMESPath query to filter results (Phase 1.5)', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify([
+        { name: 'v1.0.0', draft: false, prerelease: false },
+        { name: 'v1.1.0-beta', draft: true, prerelease: true },
+        { name: 'v1.2.0', draft: false, prerelease: false },
+      ])
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['release', 'list', '--query', '[?!draft]']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      expect(executeGhCommandSpy).toHaveBeenCalledWith(['release', 'list', '--json'])
+      expect(processExitSpy).not.toHaveBeenCalled()
+      // Query should filter out draft releases
+      // Note: We can't easily verify the filtered output without spying on outputData,
+      // but we can confirm no errors occurred
+    })
+
+    test('should apply complex JMESPath query with projection (Phase 1.5)', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify([
+        { name: 'release-1', tagName: 'v1.0.0', draft: false },
+        { name: 'release-2', tagName: 'v2.0.0', draft: true },
+      ])
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['release', 'list', '--query', '[?!draft].{name:name,tag:tagName}']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      expect(executeGhCommandSpy).toHaveBeenCalledWith(['release', 'list', '--json'])
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should handle query with TOON format conversion (Phase 1.5)', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify([
+        { number: 1, title: 'Bug fix', state: 'OPEN' },
+        { number: 2, title: 'Feature', state: 'CLOSED' },
+        { number: 3, title: 'Another bug', state: 'OPEN' },
+      ])
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['issue', 'list', '--format', 'toon', '--query', '[?state==\'OPEN\']']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      expect(executeGhCommandSpy).toHaveBeenCalledWith(['issue', 'list', '--json'])
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should handle query with JSON format conversion (Phase 1.5)', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify([
+        { name: 'repo-1', private: false, archived: false },
+        { name: 'repo-2', private: true, archived: false },
+        { name: 'repo-3', private: false, archived: true },
+      ])
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['repo', 'list', '--format', 'json', '--query', '[?!private && !archived]']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      expect(executeGhCommandSpy).toHaveBeenCalledWith(['repo', 'list', '--json'])
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should apply query to view command results (Phase 1.5)', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify({
+        name: 'test-release',
+        tagName: 'v1.0.0',
+        assets: [
+          { name: 'asset1.zip', size: 1024 },
+          { name: 'asset2.tar.gz', size: 2048 },
+        ],
+      })
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['release', 'view', 'v1.0.0', '--query', 'assets[*].name']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs[0]).toBe('release')
+      expect(callArgs[1]).toBe('view')
+      expect(callArgs[2]).toBe('v1.0.0')
+      expect(callArgs[3]).toBe('--json')
+      expect(callArgs[4]).toContain('tagName') // Should have injected fields
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should handle empty query result gracefully (Phase 1.5)', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify([
+        { name: 'v1.0.0', draft: true },
+        { name: 'v1.1.0', draft: true },
+      ])
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      // Query that matches nothing
+      const args = ['release', 'list', '--query', '[?!draft && prerelease]']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should handle invalid JMESPath query with error (Phase 1.5)', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify([{ name: 'test' }])
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['release', 'list', '--query', '[invalid query syntax']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      expect(consoleErrorSpy).toHaveBeenCalled()
+      expect(processExitSpy).toHaveBeenCalledWith(1)
+      // Should show JMESPath error message
+      const errorOutput = consoleErrorSpy.mock.calls.flat().join(' ')
+      expect(errorOutput).toMatch(/JMESPath|query/i)
+    })
+
+    test('should not apply query when format is table (Phase 1.5)', async () => {
+      // Arrange
+      const mockOutput = 'Release v1.0.0\nRelease v1.1.0'
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['release', 'list', '--format', 'table', '--query', '[?draft]']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      expect(executeGhCommandSpy).toHaveBeenCalledWith(['release', 'list'])
+      // --query should be removed from cleanArgs, not passed to gh CLI
+      expect(processStdoutWriteSpy).toHaveBeenCalledWith(mockOutput)
+      expect(processExitSpy).not.toHaveBeenCalled()
     })
   })
 })
