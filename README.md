@@ -75,15 +75,19 @@ gh-please automatically supports **all** GitHub CLI commands through passthrough
 # Any gh command works through gh-please
 gh please repo view
 gh please workflow list
-gh please release create v1.0.0
+gh please release view v1.0.0
 
 # Convert output to TOON format (58.9% token reduction)
 gh please issue list --format toon
+gh please issue view 123 --format toon      # View commands supported!
+gh please pr view 456 --format toon
 gh please pr checks 123 --format toon
 gh please workflow list --format toon
+gh please repo view --format toon
 
 # Get JSON for automation
 gh please pr list --format json
+gh please issue view 123 --format json      # Auto-injects required fields
 gh please repo view --format json
 ```
 
@@ -93,10 +97,12 @@ gh please repo view --format json
 - `--format json` preserves JSON output
 - No format flag → preserve gh CLI's original table output
 - Works with all gh commands that support `--json` flag
+- **View commands**: Auto-injects required fields (e.g., `issue view`, `pr view`, `repo view`)
 
 **Benefits:**
 - ✅ **Complete gh CLI coverage** - Access all 100+ gh commands
 - ✅ **LLM-friendly** - TOON format optimized for AI/automation
+- ✅ **Automatic field injection** - View commands work seamlessly
 - ✅ **Automatic updates** - New gh CLI features work immediately
 - ✅ **Zero learning curve** - Use familiar gh commands
 

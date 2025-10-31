@@ -102,14 +102,63 @@ async function passThroughCommand(args: string[]): Promise<void> {
 3. **Error Preservation**: Pass through stderr and exit codes unchanged
 4. **Format Conversion**: Use existing `outputData()` from cli-toolkit
 
-#### 4. Error Handling Strategy
+#### 4. Field Injection Strategy
+
+**Problem**: GitHub CLI's view commands require explicit field specification:
+
+```bash
+# ❌ Fails
+gh issue view 123 --json
+
+# ✅ Works
+gh issue view 123 --json number,title,state,body
+```
+
+**Solution**: Script-generated field mappings (implemented in Phase 1 & 2)
+
+```typescript
+// Generated file: src/lib/gh-fields.generated.ts
+export const GH_JSON_FIELDS: Record<string, string> = {
+  'issue view': 'assignees,author,body,...',
+  'pr view': 'additions,assignees,author,...',
+  // ... more commands
+}
+
+// Injection logic: src/lib/gh-passthrough.ts
+function injectJsonFlag(args: string[]): string[] {
+  const commandKey = args.slice(0, 2).join(' ')
+  const fields = GH_JSON_FIELDS[commandKey]
+
+  if (fields) {
+    return [...args, '--json', fields]  // Use generated fields
+  }
+  return [...args, '--json']  // Fallback for list commands
+}
+```
+
+**Field Generation Process**:
+1. Script (`scripts/update-gh-fields.ts`) executes each command with invalid field
+2. Parse "Available fields:" from gh CLI error message
+3. Generate TypeScript mapping file
+4. Run manually or via weekly automation
+
+**Benefits**:
+- ✅ View commands work seamlessly with `--format toon`
+- ✅ No runtime field discovery overhead
+- ✅ Fields stay in sync with gh CLI updates
+- ✅ Explicit, trackable changes in version control
+
+See `docs-dev/GH_FIELDS_MAINTENANCE.md` for maintenance procedures.
+
+#### 5. Error Handling Strategy
 
 **Principle**: Preserve gh CLI's native error messages
 
 **Special Cases**:
 1. **JSON Parse Failure**: Show i18n message if `--json` output is invalid
 2. **--json Not Supported**: Detect gh CLI error, show i18n guidance
-3. **General Errors**: Pass stderr through unchanged
+3. **Field Required Error**: Detect missing fields, show update-fields instructions
+4. **General Errors**: Pass stderr through unchanged
 
 ```typescript
 // Error handling flow
@@ -224,25 +273,34 @@ Attempt `gh <command> --json` first to check support before execution.
 
 ## Implementation Plan
 
-### Phase 1: Core Passthrough (MVP)
-1. Create `src/lib/gh-passthrough.ts` with basic execution
-2. Add unknown command handler to `src/index.ts`
-3. Unit tests for passthrough logic
+### Phase 1: Core Passthrough & Field Generation (✅ Completed - Issue #111)
+1. ✅ Create field extraction script (`scripts/update-gh-fields.ts`)
+2. ✅ Generate field mappings (`src/lib/gh-fields.generated.ts`)
+3. ✅ Add automated weekly field update workflow
+4. ✅ Comprehensive JSDoc documentation
 
-### Phase 2: Format Conversion
-1. Implement format detection and flag extraction
-2. Add JSON injection and TOON conversion
-3. Error handling for parse failures
+### Phase 2: Format Conversion with Field Injection (✅ Completed - Issue #112)
+1. ✅ Implement format detection and flag extraction
+2. ✅ Add JSON injection with field mapping support
+3. ✅ TOON conversion for view commands
+4. ✅ Error handling for parse failures and field errors
 
-### Phase 3: i18n and Polish
-1. Add bilingual error messages
-2. E2E tests for various scenarios
-3. Documentation
+### Phase 3: i18n and Polish (✅ Completed)
+1. ✅ Add bilingual error messages
+2. ✅ E2E tests for various scenarios
+3. ✅ Documentation (base implementation)
 
-### Phase 4: Edge Cases
-1. Handle --json not supported gracefully
-2. Test with various gh commands
-3. Performance validation
+### Phase 4: Edge Cases (✅ Completed)
+1. ✅ Handle --json not supported gracefully
+2. ✅ Test with various gh commands
+3. ✅ Performance validation
+
+### Phase 5: Documentation Finalization (✅ Completed - Issue #114)
+1. ✅ Update `docs-dev/GH_CLI_PASSTHROUGH.md` with field injection section
+2. ✅ Update `CLAUDE.md` with field maintenance workflow
+3. ✅ Update `README.md` with view command examples
+4. ✅ Add troubleshooting guide for field-related errors
+5. ✅ Document field injection in ADR 0007
 
 ## Testing Strategy
 

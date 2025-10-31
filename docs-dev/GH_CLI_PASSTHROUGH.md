@@ -37,7 +37,56 @@ gh please pr checks 123 --format json
 **Key Functions**:
 - `executeGhCommand(args)`: Execute gh CLI via Bun.spawn, return stdout/stderr/exitCode
 - `shouldConvertToStructuredFormat(args)`: Detect --format flag, extract and inject --json
+- `injectJsonFlag(args)`: Inject --json flag with command-specific fields when available
 - `passThroughCommand(args)`: Main orchestration (format detection → execution → conversion → output)
+
+### Field Injection for View Commands
+
+GitHub CLI's view commands require explicit field specification when using `--json`:
+
+```bash
+# ❌ Fails - no fields specified
+gh issue view 123 --json
+
+# ✅ Works - fields explicitly provided
+gh issue view 123 --json number,title,state,body,author
+```
+
+gh-please automatically injects fields for common view commands using generated field mappings:
+
+| Command | Fields Injected |
+|---------|----------------|
+| `issue view` | assignees,author,body,closed,closedAt,... (21 fields) |
+| `pr view` | additions,assignees,author,baseRefName,... (49 fields) |
+| `repo view` | name,owner,description,archivedAt,... (62 fields) |
+| `release view` | name,tagName,author,assets,... (16 fields) |
+
+**How it works:**
+
+1. **Field Generation**: `scripts/update-gh-fields.ts` extracts available fields from `gh` CLI
+2. **Field Storage**: Fields stored in `src/lib/gh-fields.generated.ts` as TypeScript constants
+3. **Field Injection**: `injectJsonFlag()` appends `--json <fields>` based on command type
+4. **Fallback**: List commands work with just `--json` (no explicit fields needed)
+
+**Example:**
+
+```typescript
+// User input
+['issue', 'view', '123', '--format', 'toon']
+
+// After format detection and field injection
+['issue', 'view', '123', '--json', 'assignees,author,body,...']
+```
+
+**Updating fields:**
+
+When GitHub CLI is updated, run:
+
+```bash
+bun run update-fields
+```
+
+See `docs-dev/GH_FIELDS_MAINTENANCE.md` for detailed maintenance instructions.
 
 ### Integration Point
 
@@ -111,6 +160,70 @@ Don't check --json support before execution:
 - Exit code preservation
 - Bilingual error messages
 
+## Troubleshooting
+
+### Field-Related Errors
+
+**Error: "Specify one or more comma-separated fields"**
+
+```bash
+gh please issue view 123 --format toon
+# Error: Specify one or more comma-separated fields for --json...
+```
+
+**Cause**: Field mapping not found for the command.
+
+**Solution**:
+1. Run `bun run update-fields` to update field definitions
+2. Check if command is in `src/lib/gh-fields.generated.ts`
+3. If command is new, add it to `scripts/update-gh-fields.ts` command list
+
+**Error: "This command does not support structured output"**
+
+```bash
+gh please <command> --format toon
+# Error: This command does not support --json
+```
+
+**Cause**: The gh CLI command doesn't support `--json` flag.
+
+**Solution**:
+- Remove `--format` flag to see original output
+- Check if command supports `--json`: `gh <command> --help`
+- Not all gh commands support JSON output
+
+**Error: "Failed to parse JSON output"**
+
+```bash
+gh please <command> --format toon
+# Error: Failed to parse JSON output
+```
+
+**Cause**: JSON output from gh CLI is malformed or empty.
+
+**Solution**:
+1. Test without format flag: `gh please <command>` (see raw output)
+2. Test with gh directly: `gh <command> --json`
+3. Check for authentication issues: `gh auth status`
+4. Verify the resource exists (issue/PR number, etc.)
+
+### Field Maintenance
+
+**When to update field definitions:**
+- After upgrading GitHub CLI: `gh upgrade`
+- When new commands are added to gh-please
+- Weekly automated workflow detects changes
+
+**How to update:**
+```bash
+bun run update-fields
+git diff src/lib/gh-fields.generated.ts  # Review changes
+git add src/lib/gh-fields.generated.ts
+git commit -m "chore: update gh CLI field definitions"
+```
+
+See `docs-dev/GH_FIELDS_MAINTENANCE.md` for comprehensive maintenance guide.
+
 ## Related Documentation
 
 - **User Docs (EN)**: `docs/en/features/gh-cli-passthrough.md`
@@ -118,3 +231,4 @@ Don't check --json support before execution:
 - **ADR**: `docs-dev/adr/0007-gh-cli-passthrough.md`
 - **TOON Format**: `docs-dev/adr/0006-toon-format.md`
 - **JSON Output**: `docs-dev/adr/0003-json-output.md`
+- **Field Maintenance**: `docs-dev/GH_FIELDS_MAINTENANCE.md`
