@@ -1,6 +1,6 @@
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
-import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import { checkGhAuth, getGitHubToken } from '../../src/lib/gh-cli'
 import { createMockGhScript } from '../fixtures/mock-gh'
 

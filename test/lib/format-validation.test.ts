@@ -5,8 +5,8 @@
  * provide helpful error messages to users.
  */
 
-import { isValidFormat, validateFormat } from '@pleaseai/cli-toolkit/output'
 import { describe, expect, test } from 'bun:test'
+import { isValidFormat, validateFormat } from '@pleaseai/cli-toolkit/output'
 
 describe('Format Validation', () => {
   describe('isValidFormat', () => {

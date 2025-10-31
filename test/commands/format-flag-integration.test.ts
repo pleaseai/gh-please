@@ -5,8 +5,8 @@
  * ensuring proper wiring between CLI options and output functions.
  */
 
-import { decode } from '@byjohann/toon'
 import { describe, expect, test, vi } from 'bun:test'
+import { decode } from '@byjohann/toon'
 
 describe('Format Flag Integration Tests', () => {
   describe('issue sub-issue list command', () => {
