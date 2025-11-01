@@ -148,4 +148,105 @@ describe('JMESPath integration with repo commands', () => {
       expect(result[0].name).toBe('repo1')
     })
   })
+
+  describe('transformed data handling', () => {
+    test('should handle repositories with missing optional fields', () => {
+      // Simulates repos after transformation (stargazerCount defaults to 0, primaryLanguage to '')
+      const reposWithMissing = [
+        {
+          name: 'no-stars-repo',
+          owner: 'user',
+          description: 'Test',
+          url: 'https://github.com/user/no-stars-repo',
+          createdAt: '2024-01-01T00:00:00Z',
+          updatedAt: '2024-01-01T00:00:00Z',
+          isPrivate: false,
+          isFork: false,
+          stargazerCount: 0, // Transformed from undefined
+          primaryLanguage: '', // Transformed from undefined
+        },
+        {
+          name: 'normal-repo',
+          owner: 'user',
+          description: 'Test',
+          url: 'https://github.com/user/normal-repo',
+          createdAt: '2024-01-01T00:00:00Z',
+          updatedAt: '2024-01-01T00:00:00Z',
+          isPrivate: false,
+          isFork: false,
+          stargazerCount: 10,
+          primaryLanguage: 'TypeScript',
+        },
+      ]
+
+      // Should find both when filtering ">= 0"
+      const result = executeQuery(reposWithMissing, '[?stargazerCount >= `0`]')
+      expect(result).toHaveLength(2)
+
+      // Empty string should be filtered out by existence check
+      const langResult = executeQuery(reposWithMissing, '[?primaryLanguage]')
+      expect(langResult).toHaveLength(1)
+      expect(langResult[0].name).toBe('normal-repo')
+    })
+
+    test('should handle repositories with null descriptions', () => {
+      // Simulates repos after transformation (null description becomes empty string)
+      const reposWithNullDesc = [
+        {
+          name: 'no-desc',
+          owner: 'user',
+          description: '', // Transformed from null
+          url: 'https://github.com/user/no-desc',
+          createdAt: '2024-01-01T00:00:00Z',
+          updatedAt: '2024-01-01T00:00:00Z',
+          isPrivate: false,
+          isFork: false,
+          stargazerCount: 0,
+          primaryLanguage: '',
+        },
+        {
+          name: 'with-desc',
+          owner: 'user',
+          description: 'Real description',
+          url: 'https://github.com/user/with-desc',
+          createdAt: '2024-01-01T00:00:00Z',
+          updatedAt: '2024-01-01T00:00:00Z',
+          isPrivate: false,
+          isFork: false,
+          stargazerCount: 5,
+          primaryLanguage: 'Go',
+        },
+      ]
+
+      // Empty string is falsy in JMESPath
+      const result = executeQuery(reposWithNullDesc, '[?description]')
+      expect(result).toHaveLength(1)
+      expect(result[0].name).toBe('with-desc')
+    })
+
+    test('should access flattened owner field', () => {
+      const mockReposFlattened = [
+        {
+          name: 'test-repo',
+          owner: 'testuser', // Flattened from owner.login
+          description: 'Test',
+          url: 'https://github.com/testuser/test-repo',
+          createdAt: '2024-01-01T00:00:00Z',
+          updatedAt: '2024-01-01T00:00:00Z',
+          isPrivate: false,
+          isFork: false,
+          stargazerCount: 100,
+          primaryLanguage: 'TypeScript',
+        },
+      ]
+
+      // After transformation, owner is a string (not object)
+      const result = executeQuery(mockReposFlattened, '[?owner==\'testuser\']')
+      expect(result).toHaveLength(1)
+
+      // Should work in projections
+      const projected = executeQuery(mockReposFlattened, '[].{name:name,owner:owner}')
+      expect(projected[0].owner).toBe('testuser') // String, not object
+    })
+  })
 })
