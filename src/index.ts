@@ -5,6 +5,7 @@ import packageJson from '../package.json' with { type: 'json' }
 import { createIssueCommand } from './commands/issue'
 import { createPluginCommand } from './commands/plugin'
 import { createPrCommand } from './commands/pr'
+import { createRepoCommand } from './commands/repo'
 import { passThroughCommand } from './lib/gh-passthrough'
 import { PluginRegistry } from './plugins/plugin-registry'
 
@@ -23,6 +24,7 @@ export async function createProgram(): Promise<Command> {
   // Add core command groups
   program.addCommand(createIssueCommand())
   program.addCommand(createPrCommand())
+  program.addCommand(createRepoCommand())
   program.addCommand(createPluginCommand())
 
   // Load and register plugins

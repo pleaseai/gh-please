@@ -337,6 +337,36 @@ export function getCommentMessages(language: Language): CommentMessages {
   return commentMessages[language]
 }
 
+export interface RepoMessages {
+  fetchingRepositories: string
+  errorPrefix: string
+  unknownError: string
+}
+
+const repoMessages: Record<Language, RepoMessages> = {
+  ko: {
+    fetchingRepositories: '📋 리포지토리 목록을 가져오는 중...',
+    errorPrefix: '❌ 오류',
+    unknownError: '예상치 못한 오류가 발생했습니다',
+  },
+  en: {
+    fetchingRepositories: '📋 Fetching repositories...',
+    errorPrefix: '❌ Error',
+    unknownError: '❌ An unexpected error occurred',
+  },
+}
+
+export function getRepoMessages(language: Language): RepoMessages {
+  return repoMessages[language]
+}
+
+export interface PassthroughMessages {
+  jsonParseError: string
+  jsonNotSupported: string
+  fieldsRequired: string
+  deprecationWarning: string
+}
+
 export const passthroughMessages: Record<Language, PassthroughMessages> = {
   ko: {
     jsonParseError: '❌ JSON 출력을 파싱할 수 없습니다',
