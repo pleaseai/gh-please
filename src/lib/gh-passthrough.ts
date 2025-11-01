@@ -3,6 +3,7 @@ import type { Language } from '../types'
 import { outputData } from '@pleaseai/cli-toolkit/output'
 import { GH_JSON_FIELDS } from './gh-fields.generated'
 import { detectSystemLanguage, getPassthroughMessages } from './i18n'
+import { applyQuery } from './jmespath-query'
 
 /**
  * Result from executing a gh CLI command
@@ -24,6 +25,7 @@ export type ExtendedFormat = OutputFormat | 'table'
 export interface FormatDetection {
   format: ExtendedFormat | null
   cleanArgs: string[]
+  query?: string
 }
 
 /**
@@ -77,9 +79,10 @@ export async function executeGhCommand(args: string[]): Promise<PassthroughResul
  *
  * Supports both --format toon and --format=toon syntax.
  * Phase 1.1: Returns 'toon' by default, 'table' for legacy native output
+ * Phase 1.5: Extracts --query flag for JMESPath filtering
  *
  * @param args - Command arguments
- * @returns Format and cleaned arguments
+ * @returns Format, query, and cleaned arguments
  *
  * @example
  * ```typescript
@@ -91,12 +94,16 @@ export async function executeGhCommand(args: string[]): Promise<PassthroughResul
  *
  * shouldConvertToStructuredFormat(['issue', 'list'])
  * // { format: 'toon', cleanArgs: ['issue', 'list'] } (TOON is now default)
+ *
+ * shouldConvertToStructuredFormat(['issue', 'list', '--query', '[?state==`OPEN`]'])
+ * // { format: 'toon', query: '[?state==`OPEN`]', cleanArgs: ['issue', 'list'] }
  * ```
  */
 export function shouldConvertToStructuredFormat(args: string[]): FormatDetection {
   const cleanArgs: string[] = []
   let format: ExtendedFormat | null = null
   let explicitFormatProvided = false
+  let query: string | undefined
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]
@@ -139,6 +146,22 @@ export function shouldConvertToStructuredFormat(args: string[]): FormatDetection
       continue
     }
 
+    // Handle --query=value syntax (Phase 1.5)
+    if (arg.startsWith('--query=')) {
+      query = arg.split('=')[1]
+      continue
+    }
+
+    // Handle --query value syntax (Phase 1.5)
+    if (arg === '--query') {
+      const nextArg = args[i + 1]
+      if (nextArg) {
+        query = nextArg
+        i++ // Skip next arg (the query value)
+      }
+      continue
+    }
+
     cleanArgs.push(arg)
   }
 
@@ -147,7 +170,7 @@ export function shouldConvertToStructuredFormat(args: string[]): FormatDetection
     format = 'toon'
   }
 
-  return { format, cleanArgs }
+  return { format, cleanArgs, query }
 }
 
 /**
@@ -209,8 +232,8 @@ export async function passThroughCommand(args: string[]): Promise<void> {
   const lang: Language = detectSystemLanguage()
   const msg = getPassthroughMessages(lang)
 
-  // 1. Detect format requirement (defaults to 'toon' in Phase 1.1)
-  const { format, cleanArgs } = shouldConvertToStructuredFormat(args)
+  // 1. Detect format requirement (defaults to 'toon' in Phase 1.1) and query (Phase 1.5)
+  const { format, cleanArgs, query } = shouldConvertToStructuredFormat(args)
 
   // 2. Handle table format (legacy native output with deprecation warning)
   if (format === 'table') {
@@ -284,7 +307,13 @@ export async function passThroughCommand(args: string[]): Promise<void> {
         // If stdout is empty, there's nothing to format, so we can exit gracefully.
         return
       }
-      const data = JSON.parse(result.stdout)
+      let data = JSON.parse(result.stdout)
+
+      // Phase 1.5: Apply JMESPath query if provided
+      if (query) {
+        data = applyQuery(data, query, msg.errorPrefix, msg.unknownError)
+      }
+
       // Type assertion: at this point format is OutputFormat ('toon' or 'json')
       // because 'table' was handled earlier with early return
       outputData(data, format as OutputFormat)
