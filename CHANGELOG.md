@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.24.0](https://github.com/pleaseai/gh-please/compare/github-v0.23.0...github-v0.24.0) (2025-11-01)
+
+
+### Features
+
+* **passthrough:** add field mappings for issue list and pr list commands (Phase 1.3) ([#154](https://github.com/pleaseai/gh-please/issues/154)) ([2ca2107](https://github.com/pleaseai/gh-please/commit/2ca2107299dd011bbd4057c1170f93fa45e8b463))
+
 ## [0.23.0](https://github.com/pleaseai/gh-please/compare/github-v0.22.0...github-v0.23.0) (2025-10-31)
 
 
