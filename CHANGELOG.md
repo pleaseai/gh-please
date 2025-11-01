@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.26.0](https://github.com/pleaseai/gh-please/compare/github-v0.25.0...github-v0.26.0) (2025-11-01)
+
+
+### Features
+
+* **release:** Phase 1.5 - Release command TOON migration with JMESPath support ([#162](https://github.com/pleaseai/gh-please/issues/162)) ([6eebbd2](https://github.com/pleaseai/gh-please/commit/6eebbd2e9dcd5010a4831e4b0eb7bd1c81401918))
+
 ## [0.25.0](https://github.com/pleaseai/gh-please/compare/github-v0.24.0...github-v0.25.0) (2025-11-01)
 
 
