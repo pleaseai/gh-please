@@ -3,7 +3,7 @@ import type { Language } from '../types'
 import { outputData } from '@pleaseai/cli-toolkit/output'
 import { GH_JSON_FIELDS } from './gh-fields.generated'
 import { detectSystemLanguage, getPassthroughMessages } from './i18n'
-import { applyQuery } from './jmespath-query'
+import { executeQuery, QueryError } from './jmespath-query'
 
 /**
  * Result from executing a gh CLI command
@@ -148,16 +148,25 @@ export function shouldConvertToStructuredFormat(args: string[]): FormatDetection
 
     // Handle --query=value syntax (Phase 1.5)
     if (arg.startsWith('--query=')) {
-      query = arg.split('=')[1]
+      query = arg.substring('--query='.length)
       continue
     }
 
     // Handle --query value syntax (Phase 1.5)
     if (arg === '--query') {
       const nextArg = args[i + 1]
-      if (nextArg) {
+      if (nextArg && !nextArg.startsWith('-')) {
         query = nextArg
         i++ // Skip next arg (the query value)
+      }
+      else if (!nextArg || nextArg.startsWith('-')) {
+        // Explicit error for missing query value
+        const lang: Language = detectSystemLanguage()
+        const msg = getPassthroughMessages(lang)
+        console.error(`${msg.errorPrefix}: --query flag requires a value`)
+        console.error('Usage: gh please <command> --query \'<jmespath-expression>\'')
+        console.error('Example: gh please release list --query \'[?isDraft]\'')
+        process.exit(1)
       }
       continue
     }
@@ -311,7 +320,27 @@ export async function passThroughCommand(args: string[]): Promise<void> {
 
       // Phase 1.5: Apply JMESPath query if provided
       if (query) {
-        data = applyQuery(data, query, msg.errorPrefix, msg.unknownError)
+        try {
+          data = executeQuery(data, query)
+        }
+        catch (queryError) {
+          // Query-specific error handling
+          console.error(`${msg.errorPrefix}: Invalid JMESPath query`)
+          if (queryError instanceof QueryError) {
+            console.error(`Query: ${queryError.query}`)
+            console.error(`Reason: ${queryError.message}`)
+          }
+          else if (queryError instanceof Error) {
+            console.error(`Reason: ${queryError.message}`)
+          }
+          else {
+            console.error(`Reason: ${msg.unknownError}`)
+          }
+          console.error('\nJMESPath Resources:')
+          console.error('  - Tutorial: https://jmespath.org/tutorial.html')
+          console.error('  - Examples: https://jmespath.org/examples.html')
+          process.exit(1)
+        }
       }
 
       // Type assertion: at this point format is OutputFormat ('toon' or 'json')

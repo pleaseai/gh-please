@@ -111,7 +111,14 @@ export function applyQuery<T = unknown>(
     return executeQuery<T>(data, query)
   }
   catch (error) {
-    console.error(`${errorPrefix}: ${error instanceof Error ? error.message : unknownError}`)
+    if (error instanceof Error) {
+      console.error(`${errorPrefix}: ${error.message}`)
+    }
+    else {
+      // Include actual error value for debugging
+      console.error(`${errorPrefix}: ${unknownError}`)
+      console.error(`Details: ${JSON.stringify(error, null, 2)}`)
+    }
     process.exit(1)
   }
 }

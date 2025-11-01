@@ -218,13 +218,13 @@ describe('gh-passthrough', () => {
 
     test('should handle complex JMESPath query (Phase 1.5)', () => {
       // Arrange
-      const args = ['release', 'list', '--query', '[?state==`OPEN`].{number:number,title:title}']
+      const args = ['release', 'list', '--query', '[?state==\'OPEN\'].{number:number,title:title}']
 
       // Act
       const result = shouldConvertToStructuredFormat(args)
 
       // Assert
-      expect(result.query).toBe('[?state==`OPEN`].{number:number,title:title}')
+      expect(result.query).toBe('[?state==\'OPEN\'].{number:number,title:title}')
       expect(result.cleanArgs).toEqual(['release', 'list'])
     })
 
@@ -1044,6 +1044,87 @@ describe('gh-passthrough', () => {
       expect(processExitSpy).toHaveBeenCalledWith(1)
 
       processStderrWriteSpy.mockRestore()
+    })
+  })
+
+  // Phase 1.5: Integration tests for query execution
+  describe('Query Integration Tests (Phase 1.5)', () => {
+    let executeGhCommandSpy: ReturnType<typeof spyOn>
+    let processExitSpy: ReturnType<typeof spyOn>
+    let consoleErrorSpy: ReturnType<typeof spyOn>
+
+    beforeEach(() => {
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand')
+      processExitSpy = spyOn(process, 'exit').mockImplementation((() => {}) as never)
+      consoleErrorSpy = spyOn(console, 'error').mockImplementation(() => {})
+    })
+
+    afterEach(() => {
+      executeGhCommandSpy.mockRestore()
+      processExitSpy.mockRestore()
+      consoleErrorSpy.mockRestore()
+    })
+
+    test('should apply query with equals signs correctly (Phase 1.5)', () => {
+      // Arrange
+      const args = ['release', 'list', '--query=[?state==`OPEN`]']
+
+      // Act
+      const result = shouldConvertToStructuredFormat(args)
+
+      // Assert - Query should preserve all equals signs
+      expect(result.query).toBe('[?state==`OPEN`]')
+      expect(result.cleanArgs).toEqual(['release', 'list'])
+    })
+
+    test('should error when --query has no value', () => {
+      // Arrange
+      const args = ['release', 'list', '--query']
+
+      // Act
+      shouldConvertToStructuredFormat(args)
+
+      // Assert
+      expect(consoleErrorSpy).toHaveBeenCalled()
+      const errorOutput = consoleErrorSpy.mock.calls.flat().join(' ')
+      expect(errorOutput).toContain('--query flag requires a value')
+      expect(processExitSpy).toHaveBeenCalledWith(1)
+    })
+
+    test('should error when --query value is a flag', () => {
+      // Arrange
+      const args = ['release', 'list', '--query', '--limit', '10']
+
+      // Act
+      shouldConvertToStructuredFormat(args)
+
+      // Assert
+      expect(consoleErrorSpy).toHaveBeenCalled()
+      const errorOutput = consoleErrorSpy.mock.calls.flat().join(' ')
+      expect(errorOutput).toContain('--query flag requires a value')
+      expect(processExitSpy).toHaveBeenCalledWith(1)
+    })
+
+    test('should not pass --query flag to gh CLI', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify([{ tagName: 'v1.0.0', isDraft: false }])
+      executeGhCommandSpy.mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['release', 'list', '--query', '[?isDraft]', '--limit', '10']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs).not.toContain('--query')
+      expect(callArgs).not.toContain('[?isDraft]')
+      expect(callArgs).toContain('--limit')
+      expect(callArgs).toContain('10')
     })
   })
 })

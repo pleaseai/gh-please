@@ -319,6 +319,46 @@ gh please some-command --format toon
 Please report this issue with the command you ran.
 ```
 
+### Query Errors (Phase 1.5)
+
+If your JMESPath query is malformed or invalid:
+
+```bash
+gh please release list --query '[?invalidSyntax'
+```
+
+**Output** (English):
+```
+❌ Error: Invalid JMESPath query
+Query: [?invalidSyntax
+Reason: Invalid JMESPath query: <specific error details>
+
+JMESPath Resources:
+  - Tutorial: https://jmespath.org/tutorial.html
+  - Examples: https://jmespath.org/examples.html
+```
+
+**Output** (Korean):
+```
+❌ 오류: Invalid JMESPath query
+Query: [?invalidSyntax
+Reason: Invalid JMESPath query: <specific error details>
+
+JMESPath Resources:
+  - Tutorial: https://jmespath.org/tutorial.html
+  - Examples: https://jmespath.org/examples.html
+```
+
+**Common query errors**:
+- Unclosed brackets: `[?isDraft` (missing `]`)
+- Invalid comparison operators: `[?state='OPEN']` (use `==` not `=`)
+- Wrong quote usage: `[?state=="OPEN"]` (use single quotes: `[?state=='OPEN']`)
+
+**Debugging tips**:
+- Test your query at [JMESPath.org](https://jmespath.org/)
+- Check the [JMESPath Tutorial](https://jmespath.org/tutorial.html) for syntax
+- Start with simple queries and add complexity incrementally
+
 ## Limitations
 
 1. **--json Support Required**: Format conversion only works with commands that support `--json` flag

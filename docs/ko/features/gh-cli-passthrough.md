@@ -319,6 +319,46 @@ gh please some-command --format toon
 실행한 명령어와 함께 이 문제를 보고해 주세요.
 ```
 
+### 쿼리 오류 (Phase 1.5)
+
+JMESPath 쿼리가 잘못되었거나 유효하지 않은 경우:
+
+```bash
+gh please release list --query '[?invalidSyntax'
+```
+
+**출력** (한국어):
+```
+❌ 오류: Invalid JMESPath query
+Query: [?invalidSyntax
+Reason: Invalid JMESPath query: <구체적인 오류 세부정보>
+
+JMESPath Resources:
+  - Tutorial: https://jmespath.org/tutorial.html
+  - Examples: https://jmespath.org/examples.html
+```
+
+**출력** (영어):
+```
+❌ Error: Invalid JMESPath query
+Query: [?invalidSyntax
+Reason: Invalid JMESPath query: <specific error details>
+
+JMESPath Resources:
+  - Tutorial: https://jmespath.org/tutorial.html
+  - Examples: https://jmespath.org/examples.html
+```
+
+**일반적인 쿼리 오류**:
+- 닫히지 않은 대괄호: `[?isDraft` (`]` 누락)
+- 잘못된 비교 연산자: `[?state='OPEN']` (`=`가 아닌 `==` 사용)
+- 잘못된 따옴표 사용: `[?state=="OPEN"]` (작은따옴표 사용: `[?state=='OPEN']`)
+
+**디버깅 팁**:
+- [JMESPath.org](https://jmespath.org/)에서 쿼리 테스트
+- [JMESPath Tutorial](https://jmespath.org/tutorial.html)에서 문법 확인
+- 간단한 쿼리부터 시작하여 점진적으로 복잡도 증가
+
 ## 제한사항
 
 1. **--json 지원 필요**: 형식 변환은 `--json` 플래그를 지원하는 명령어에서만 작동
