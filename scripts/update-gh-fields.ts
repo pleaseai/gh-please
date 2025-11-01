@@ -43,10 +43,22 @@ const COMMANDS: CommandConfig[] = [
     description: 'Issue view command',
   },
   {
+    command: 'issue',
+    subcommand: 'list',
+    testId: '--limit 1', // List commands need --limit flag, not an ID
+    description: 'Issue list command',
+  },
+  {
     command: 'pr',
     subcommand: 'view',
     testId: '1', // Generic test ID
     description: 'Pull request view command',
+  },
+  {
+    command: 'pr',
+    subcommand: 'list',
+    testId: '--limit 1', // List commands need --limit flag, not an ID
+    description: 'Pull request list command',
   },
   {
     command: 'repo',
@@ -297,13 +309,13 @@ function generateFieldsFile(
 // gh CLI version: ${ghVersion}
 
 /**
- * GitHub CLI JSON field mappings for view commands.
+ * GitHub CLI JSON field mappings for view and list commands.
  *
  * These field definitions are used to inject --json <fields> when users
- * request TOON or JSON format conversion for view commands.
+ * request TOON or JSON format conversion.
  *
- * View commands (issue view, pr view, etc.) require explicit field specification,
- * while list commands work with just --json flag.${deprecationComment} */
+ * Both view commands (issue view, pr view) and list commands (issue list, pr list)
+ * require explicit field specification when using --json flag.${deprecationComment} */
 export const GH_JSON_FIELDS: Record<string, string> = {
 ${Object.entries(fieldMappings)
   .map(([key, value]) => `  '${key}': '${value}',`)
