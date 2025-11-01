@@ -23,6 +23,31 @@ interface RepoListItem {
   }
 }
 
+interface RepoListOptions {
+  limit?: string
+  json?: string | boolean
+  format?: OutputFormat
+  query?: string
+  org?: string
+  public?: boolean
+  private?: boolean
+  source?: boolean
+  fork?: boolean
+}
+
+interface TransformedRepo {
+  name: string
+  owner: string
+  description: string
+  url: string
+  createdAt: string
+  updatedAt: string
+  isPrivate: boolean
+  isFork: boolean
+  stargazerCount: number
+  primaryLanguage: string
+}
+
 /**
  * Creates a command to list repositories
  * @returns Command object for repo list
@@ -41,17 +66,7 @@ export function createRepoListCommand(): Command {
     .option('--private', 'List only private repositories')
     .option('--source', 'List only source repositories (exclude forks)')
     .option('--fork', 'List only forked repositories')
-    .action(async (options: {
-      limit?: string
-      json?: string | boolean
-      format?: OutputFormat
-      query?: string
-      org?: string
-      public?: boolean
-      private?: boolean
-      source?: boolean
-      fork?: boolean
-    }) => {
+    .action(async (options: RepoListOptions) => {
       // Determine output format
       const outputFormat: OutputFormat = options.format
         ? options.format
@@ -112,11 +127,23 @@ export function createRepoListCommand(): Command {
 
         // Handle structured output (JSON or TOON)
         if (shouldUseStructuredOutput) {
-          const repos: RepoListItem[] = JSON.parse(result.stdout)
+          let repos: RepoListItem[]
+          try {
+            repos = JSON.parse(result.stdout)
+          }
+          catch (parseError) {
+            console.error(`${msg.errorPrefix}: Failed to parse repository data from GitHub CLI`)
+            console.error(`Parse error: ${parseError instanceof Error ? parseError.message : 'Unknown parse error'}`)
+            console.error('\nTroubleshooting:')
+            console.error('  - Verify gh CLI is up to date: gh version')
+            console.error('  - Try authenticating again: gh auth login')
+            process.exit(1)
+          }
+
           const fields = parseFields(options.json)
 
           // Transform to consistent output format
-          let data = repos.map(repo => ({
+          let data: TransformedRepo[] = repos.map(repo => ({
             name: repo.name,
             owner: repo.owner.login,
             description: repo.description || '',

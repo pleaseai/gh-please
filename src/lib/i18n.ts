@@ -352,7 +352,7 @@ const repoMessages: Record<Language, RepoMessages> = {
   en: {
     fetchingRepositories: '📋 Fetching repositories...',
     errorPrefix: '❌ Error',
-    unknownError: '❌ An unexpected error occurred',
+    unknownError: 'An unexpected error occurred',
   },
 }
 
