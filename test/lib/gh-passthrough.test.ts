@@ -186,15 +186,16 @@ describe('gh-passthrough', () => {
       // Act
       const result = injectJsonFlag(args)
 
-      // Assert - list commands now have field mappings
-      expect(result[0]).toBe('issue')
-      expect(result[1]).toBe('list')
-      expect(result[2]).toBe('--state')
-      expect(result[3]).toBe('open')
-      expect(result[4]).toBe('--json')
-      expect(result[5]).toContain('assignees') // Should contain fields
-      expect(result[5]).toContain('author')
-      expect(result[5]).toContain('title')
+      // Assert - More robust: find --json index and verify structure
+      const jsonIndex = result.indexOf('--json')
+      expect(jsonIndex).not.toBe(-1)
+      expect(result.slice(0, jsonIndex)).toEqual(args) // Original args preserved in order
+      expect(result.length).toBe(args.length + 2) // --json and fields string
+
+      const fields = result[jsonIndex + 1]
+      expect(fields).toContain('assignees')
+      expect(fields).toContain('author')
+      expect(fields).toContain('title')
     })
 
     test('should inject --json with fields for mapped commands (view commands)', () => {
@@ -204,14 +205,16 @@ describe('gh-passthrough', () => {
       // Act
       const result = injectJsonFlag(args)
 
-      // Assert
-      expect(result[0]).toBe('issue')
-      expect(result[1]).toBe('view')
-      expect(result[2]).toBe('123')
-      expect(result[3]).toBe('--json')
-      expect(result[4]).toContain('assignees') // Should contain fields
-      expect(result[4]).toContain('author')
-      expect(result[4]).toContain('title')
+      // Assert - More robust: find --json index and verify structure
+      const jsonIndex = result.indexOf('--json')
+      expect(jsonIndex).not.toBe(-1)
+      expect(result.slice(0, jsonIndex)).toEqual(args) // Original args preserved in order
+      expect(result.length).toBe(args.length + 2) // --json and fields string
+
+      const fields = result[jsonIndex + 1]
+      expect(fields).toContain('assignees')
+      expect(fields).toContain('author')
+      expect(fields).toContain('title')
     })
 
     test('should not mutate original args array', () => {
@@ -221,13 +224,16 @@ describe('gh-passthrough', () => {
       // Act
       const result = injectJsonFlag(original)
 
-      // Assert - list commands now have field mappings
-      expect(result[0]).toBe('issue')
-      expect(result[1]).toBe('list')
-      expect(result[2]).toBe('--json')
-      expect(result[3]).toContain('assignees') // Should contain fields
+      // Assert - More robust: verify no mutation and correct structure
       expect(original).toEqual(['issue', 'list']) // Original unchanged
       expect(result).not.toBe(original) // Different array reference
+
+      const jsonIndex = result.indexOf('--json')
+      expect(jsonIndex).not.toBe(-1)
+      expect(result.slice(0, jsonIndex)).toEqual(original)
+
+      const fields = result[jsonIndex + 1]
+      expect(fields).toContain('assignees')
     })
 
     test('should handle empty args array', () => {

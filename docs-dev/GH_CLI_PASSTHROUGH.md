@@ -56,14 +56,17 @@ gh issue view 123 --json number,title,state,body,author
 
 gh-please automatically injects fields for common view and list commands using generated field mappings:
 
-| Command | Fields Injected |
-|---------|----------------|
-| `issue view` | assignees,author,body,closed,closedAt,... (19 fields) |
+| Command      | Fields Injected                                       |
+|--------------|-------------------------------------------------------|
+| `issue view` | assignees,author,body,closed,closedAt,... (19 fields)¹ |
 | `issue list` | assignees,author,body,closed,closedAt,... (20 fields) |
-| `pr view` | additions,assignees,author,baseRefName,... (46 fields) |
-| `pr list` | additions,assignees,author,baseRefName,... (46 fields) |
-| `repo view` | name,owner,description,archivedAt,... (66 fields) |
-| `release view` | (empty - no releases in test repo) |
+| `pr view`    | additions,assignees,author,baseRefName,... (46 fields) |
+| `pr list`    | additions,assignees,author,baseRefName,... (46 fields) |
+| `repo view`  | name,owner,description,archivedAt,... (66 fields)¹    |
+| `release view` | (empty)²                                              |
+
+¹ Field counts may change as deprecated fields are removed during generation.
+² Field generation for `release view` failed as no releases were found in the test repository, resulting in an empty field list.
 
 **How it works:**
 
