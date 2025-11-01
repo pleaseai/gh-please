@@ -176,6 +176,93 @@ describe('gh-passthrough', () => {
       expect(result.cleanArgs).not.toContain('--format')
       expect(result.cleanArgs).not.toContain('table')
     })
+
+    // Phase 1.5: Query support tests
+    test('should extract --query flag (Phase 1.5)', () => {
+      // Arrange
+      const args = ['release', 'list', '--query', '[?isDraft]']
+
+      // Act
+      const result = shouldConvertToStructuredFormat(args)
+
+      // Assert
+      expect(result.query).toBe('[?isDraft]')
+      expect(result.cleanArgs).toEqual(['release', 'list'])
+      expect(result.cleanArgs).not.toContain('--query')
+    })
+
+    test('should extract --query=value syntax (Phase 1.5)', () => {
+      // Arrange
+      const args = ['release', 'list', '--query=[?isLatest]']
+
+      // Act
+      const result = shouldConvertToStructuredFormat(args)
+
+      // Assert
+      expect(result.query).toBe('[?isLatest]')
+      expect(result.cleanArgs).toEqual(['release', 'list'])
+    })
+
+    test('should handle both --format and --query flags (Phase 1.5)', () => {
+      // Arrange
+      const args = ['release', 'list', '--format', 'toon', '--query', '[?isDraft]']
+
+      // Act
+      const result = shouldConvertToStructuredFormat(args)
+
+      // Assert
+      expect(result.format).toBe('toon')
+      expect(result.query).toBe('[?isDraft]')
+      expect(result.cleanArgs).toEqual(['release', 'list'])
+    })
+
+    test('should handle complex JMESPath query (Phase 1.5)', () => {
+      // Arrange
+      const args = ['release', 'list', '--query', '[?state==\'OPEN\'].{number:number,title:title}']
+
+      // Act
+      const result = shouldConvertToStructuredFormat(args)
+
+      // Assert
+      expect(result.query).toBe('[?state==\'OPEN\'].{number:number,title:title}')
+      expect(result.cleanArgs).toEqual(['release', 'list'])
+    })
+
+    test('should extract query with other flags present (Phase 1.5)', () => {
+      // Arrange
+      const args = ['release', 'list', '--limit', '10', '--query', '[?isDraft]', '--state', 'open']
+
+      // Act
+      const result = shouldConvertToStructuredFormat(args)
+
+      // Assert
+      expect(result.query).toBe('[?isDraft]')
+      expect(result.cleanArgs).toEqual(['release', 'list', '--limit', '10', '--state', 'open'])
+    })
+
+    test('should return undefined query when not provided (Phase 1.5)', () => {
+      // Arrange
+      const args = ['release', 'list', '--format', 'toon']
+
+      // Act
+      const result = shouldConvertToStructuredFormat(args)
+
+      // Assert
+      expect(result.query).toBeUndefined()
+      expect(result.format).toBe('toon')
+    })
+
+    test('should handle multiple --query flags (last wins) (Phase 1.5)', () => {
+      // Arrange
+      const args = ['release', 'list', '--query', '[?isDraft]', '--query', '[?isLatest]']
+
+      // Act
+      const result = shouldConvertToStructuredFormat(args)
+
+      // Assert
+      expect(result.query).toBe('[?isLatest]')
+      expect(result.cleanArgs).toEqual(['release', 'list'])
+    })
   })
 
   describe('injectJsonFlag', () => {
@@ -300,10 +387,35 @@ describe('gh-passthrough', () => {
       // Act
       const result = injectJsonFlag(args)
 
-      // Assert - release view has empty fields (no releases in test repo)
-      // When fields are empty, fallback to --json without fields
-      expect(result).toContain('--json')
-      expect(result[result.length - 1]).toBe('--json') // Falls back to plain --json
+      // Assert - release view now has fields (Phase 1.5)
+      const jsonIndex = result.indexOf('--json')
+      expect(jsonIndex).not.toBe(-1)
+      expect(result.slice(0, jsonIndex)).toEqual(args)
+      expect(result.length).toBe(args.length + 2) // --json and fields string
+
+      const fields = result[jsonIndex + 1]
+      expect(fields).toContain('tagName')
+      expect(fields).toContain('isDraft')
+      expect(fields).toContain('isPrerelease')
+    })
+
+    test('should inject fields for release list (Phase 1.5)', () => {
+      // Arrange
+      const args = ['release', 'list', '--limit', '10']
+
+      // Act
+      const result = injectJsonFlag(args)
+
+      // Assert
+      const jsonIndex = result.indexOf('--json')
+      expect(jsonIndex).not.toBe(-1)
+      expect(result.slice(0, jsonIndex)).toEqual(args)
+      expect(result.length).toBe(args.length + 2) // --json and fields string
+
+      const fields = result[jsonIndex + 1]
+      expect(fields).toContain('tagName')
+      expect(fields).toContain('isDraft')
+      expect(fields).toContain('isLatest')
     })
 
     test('should fallback to --json only for unmapped commands (workflow list)', () => {
@@ -932,6 +1044,87 @@ describe('gh-passthrough', () => {
       expect(processExitSpy).toHaveBeenCalledWith(1)
 
       processStderrWriteSpy.mockRestore()
+    })
+  })
+
+  // Phase 1.5: Integration tests for query execution
+  describe('Query Integration Tests (Phase 1.5)', () => {
+    let executeGhCommandSpy: ReturnType<typeof spyOn>
+    let processExitSpy: ReturnType<typeof spyOn>
+    let consoleErrorSpy: ReturnType<typeof spyOn>
+
+    beforeEach(() => {
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand')
+      processExitSpy = spyOn(process, 'exit').mockImplementation((() => {}) as never)
+      consoleErrorSpy = spyOn(console, 'error').mockImplementation(() => {})
+    })
+
+    afterEach(() => {
+      executeGhCommandSpy.mockRestore()
+      processExitSpy.mockRestore()
+      consoleErrorSpy.mockRestore()
+    })
+
+    test('should apply query with equals signs correctly (Phase 1.5)', () => {
+      // Arrange
+      const args = ['release', 'list', '--query=[?state==`OPEN`]']
+
+      // Act
+      const result = shouldConvertToStructuredFormat(args)
+
+      // Assert - Query should preserve all equals signs
+      expect(result.query).toBe('[?state==`OPEN`]')
+      expect(result.cleanArgs).toEqual(['release', 'list'])
+    })
+
+    test('should error when --query has no value', () => {
+      // Arrange
+      const args = ['release', 'list', '--query']
+
+      // Act
+      shouldConvertToStructuredFormat(args)
+
+      // Assert
+      expect(consoleErrorSpy).toHaveBeenCalled()
+      const errorOutput = consoleErrorSpy.mock.calls.flat().join(' ')
+      expect(errorOutput).toContain('--query flag requires a value')
+      expect(processExitSpy).toHaveBeenCalledWith(1)
+    })
+
+    test('should error when --query value is a flag', () => {
+      // Arrange
+      const args = ['release', 'list', '--query', '--limit', '10']
+
+      // Act
+      shouldConvertToStructuredFormat(args)
+
+      // Assert
+      expect(consoleErrorSpy).toHaveBeenCalled()
+      const errorOutput = consoleErrorSpy.mock.calls.flat().join(' ')
+      expect(errorOutput).toContain('--query flag requires a value')
+      expect(processExitSpy).toHaveBeenCalledWith(1)
+    })
+
+    test('should not pass --query flag to gh CLI', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify([{ tagName: 'v1.0.0', isDraft: false }])
+      executeGhCommandSpy.mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['release', 'list', '--query', '[?isDraft]', '--limit', '10']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs).not.toContain('--query')
+      expect(callArgs).not.toContain('[?isDraft]')
+      expect(callArgs).toContain('--limit')
+      expect(callArgs).toContain('10')
     })
   })
 })

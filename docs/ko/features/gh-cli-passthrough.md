@@ -80,6 +80,68 @@ gh please pr list --state open --json number,title,author
 ]
 ```
 
+### JMESPath 쿼리 지원 (Phase 1.5)
+
+`--query` 플래그를 사용하여 JMESPath 쿼리로 출력을 필터링하고 변환할 수 있습니다:
+
+```bash
+# 드래프트 릴리스 필터링
+gh please release list --query '[?isDraft]'
+
+# 최신 릴리스만 가져오기
+gh please release list --query '[?isLatest]'
+
+# 열린 이슈만 필터링
+gh please issue list --query "[?state=='OPEN']"
+
+# 특정 필드 추출
+gh please release view v1.0.0 --query 'tagName'
+
+# 복잡한 변환
+gh please issue list --query '[?state==`OPEN`].{number:number,title:title}'
+```
+
+**예시 출력** (드래프트 릴리스 필터링):
+```
+[0	]:
+```
+_드래프트 릴리스가 없어서 빈 배열 반환_
+
+**예시 출력** (최신 릴리스):
+```
+[1	]{createdAt	isDraft	isLatest	isPrerelease	name	publishedAt	tagName}:
+  "2025-11-01T10:39:16Z"	false	true	false	"github: v0.25.0"	"2025-11-01T10:39:26Z"	github-v0.25.0
+```
+
+**일반적인 쿼리 패턴**:
+
+```bash
+# 불리언 필드로 필터링
+--query '[?isDraft]'                    # 드래프트 릴리스
+--query '[?!isDraft]'                   # 드래프트가 아닌 릴리스
+
+# 문자열 비교로 필터링
+--query "[?state=='OPEN']"              # 열린 이슈/PR
+--query "[?author.login=='octocat']"    # 작성자로 필터링
+
+# 단일 필드 추출
+--query 'tagName'                       # 릴리스에서 태그 이름 가져오기
+--query 'items[0].number'               # 첫 번째 항목 번호 가져오기
+
+# 특정 필드 투영
+--query '[].{id:number,title:title}'    # 사용자 정의 객체 구조 생성
+--query '[?state==`OPEN`].[number,title]'  # 배열의 배열
+
+# 필터 조합
+--query '[?isDraft && isPrerelease]'    # 드래프트 AND 프리릴리스
+--query '[?isDraft || isPrerelease]'    # 드래프트 OR 프리릴리스
+```
+
+**JMESPath 리소스**:
+- [JMESPath 튜토리얼](https://jmespath.org/tutorial.html)
+- [JMESPath 사양](https://jmespath.org/specification.html)
+- [JMESPath 예제](https://jmespath.org/examples.html)
+
 ## 명령어 우선순위
 
 gh-please의 등록된 명령어가 passthrough보다 우선합니다:
@@ -184,8 +246,20 @@ gh please release list
 # TOON 형식으로 릴리스 목록
 gh please release list --format toon
 
-# 최신 릴리스 보기
-gh please release view --json tag,name,publishedAt
+# JMESPath로 드래프트 릴리스 필터링
+gh please release list --query '[?isDraft]'
+
+# 최신 릴리스만 가져오기
+gh please release list --query '[?isLatest]'
+
+# 특정 릴리스 보기
+gh please release view v1.0.0
+
+# 릴리스 보기 및 태그 이름 추출
+gh please release view v1.0.0 --query 'tagName'
+
+# TOON 형식으로 릴리스 보기
+gh please release view v1.0.0 --format toon
 
 # 릴리스 생성 (형식 변환 불필요)
 gh please release create v1.0.0 --title "v1.0.0"
@@ -244,6 +318,46 @@ gh please some-command --format toon
 ❌ 오류: gh CLI의 JSON 출력을 파싱할 수 없습니다.
 실행한 명령어와 함께 이 문제를 보고해 주세요.
 ```
+
+### 쿼리 오류 (Phase 1.5)
+
+JMESPath 쿼리가 잘못되었거나 유효하지 않은 경우:
+
+```bash
+gh please release list --query '[?invalidSyntax'
+```
+
+**출력** (한국어):
+```
+❌ 오류: Invalid JMESPath query
+Query: [?invalidSyntax
+Reason: Invalid JMESPath query: <구체적인 오류 세부정보>
+
+JMESPath Resources:
+  - Tutorial: https://jmespath.org/tutorial.html
+  - Examples: https://jmespath.org/examples.html
+```
+
+**출력** (영어):
+```
+❌ Error: Invalid JMESPath query
+Query: [?invalidSyntax
+Reason: Invalid JMESPath query: <specific error details>
+
+JMESPath Resources:
+  - Tutorial: https://jmespath.org/tutorial.html
+  - Examples: https://jmespath.org/examples.html
+```
+
+**일반적인 쿼리 오류**:
+- 닫히지 않은 대괄호: `[?isDraft` (`]` 누락)
+- 잘못된 비교 연산자: `[?state='OPEN']` (`=`가 아닌 `==` 사용)
+- 잘못된 따옴표 사용: `[?state=="OPEN"]` (작은따옴표 사용: `[?state=='OPEN']`)
+
+**디버깅 팁**:
+- [JMESPath.org](https://jmespath.org/)에서 쿼리 테스트
+- [JMESPath Tutorial](https://jmespath.org/tutorial.html)에서 문법 확인
+- 간단한 쿼리부터 시작하여 점진적으로 복잡도 증가
 
 ## 제한사항
 

@@ -80,6 +80,68 @@ gh please pr list --state open --json number,title,author
 ]
 ```
 
+### JMESPath Query Support (Phase 1.5)
+
+Filter and transform output using JMESPath queries with the `--query` flag:
+
+```bash
+# Filter draft releases
+gh please release list --query '[?isDraft]'
+
+# Get only the latest release
+gh please release list --query '[?isLatest]'
+
+# Filter open issues
+gh please issue list --query "[?state=='OPEN']"
+
+# Extract specific fields
+gh please release view v1.0.0 --query 'tagName'
+
+# Complex transformations
+gh please issue list --query '[?state==`OPEN`].{number:number,title:title}'
+```
+
+**Example Output** (filtering draft releases):
+```
+[0	]:
+```
+_Empty array because no draft releases exist_
+
+**Example Output** (latest release):
+```
+[1	]{createdAt	isDraft	isLatest	isPrerelease	name	publishedAt	tagName}:
+  "2025-11-01T10:39:16Z"	false	true	false	"github: v0.25.0"	"2025-11-01T10:39:26Z"	github-v0.25.0
+```
+
+**Common Query Patterns**:
+
+```bash
+# Filter by boolean field
+--query '[?isDraft]'                    # Draft releases
+--query '[?!isDraft]'                   # Non-draft releases
+
+# Filter by string comparison
+--query "[?state=='OPEN']"              # Open issues/PRs
+--query "[?author.login=='octocat']"    # By author
+
+# Extract single field
+--query 'tagName'                       # Get tag name from release
+--query 'items[0].number'               # Get first item number
+
+# Project specific fields
+--query '[].{id:number,title:title}'    # Create custom object structure
+--query '[?state==`OPEN`].[number,title]'  # Array of arrays
+
+# Combine filters
+--query '[?isDraft && isPrerelease]'    # Draft AND prerelease
+--query '[?isDraft || isPrerelease]'    # Draft OR prerelease
+```
+
+**JMESPath Resources**:
+- [JMESPath Tutorial](https://jmespath.org/tutorial.html)
+- [JMESPath Specification](https://jmespath.org/specification.html)
+- [JMESPath Examples](https://jmespath.org/examples.html)
+
 ## Command Priority
 
 gh-please's registered commands take priority over passthrough:
@@ -184,8 +246,20 @@ gh please release list
 # List releases in TOON format
 gh please release list --format toon
 
-# View latest release
-gh please release view --json tag,name,publishedAt
+# Filter draft releases with JMESPath
+gh please release list --query '[?isDraft]'
+
+# Get only the latest release
+gh please release list --query '[?isLatest]'
+
+# View specific release
+gh please release view v1.0.0
+
+# View release and extract tag name
+gh please release view v1.0.0 --query 'tagName'
+
+# View release in TOON format
+gh please release view v1.0.0 --format toon
 
 # Create release (no format conversion needed)
 gh please release create v1.0.0 --title "v1.0.0"
@@ -244,6 +318,46 @@ gh please some-command --format toon
 ❌ Error: Failed to parse JSON output from gh CLI.
 Please report this issue with the command you ran.
 ```
+
+### Query Errors (Phase 1.5)
+
+If your JMESPath query is malformed or invalid:
+
+```bash
+gh please release list --query '[?invalidSyntax'
+```
+
+**Output** (English):
+```
+❌ Error: Invalid JMESPath query
+Query: [?invalidSyntax
+Reason: Invalid JMESPath query: <specific error details>
+
+JMESPath Resources:
+  - Tutorial: https://jmespath.org/tutorial.html
+  - Examples: https://jmespath.org/examples.html
+```
+
+**Output** (Korean):
+```
+❌ 오류: Invalid JMESPath query
+Query: [?invalidSyntax
+Reason: Invalid JMESPath query: <specific error details>
+
+JMESPath Resources:
+  - Tutorial: https://jmespath.org/tutorial.html
+  - Examples: https://jmespath.org/examples.html
+```
+
+**Common query errors**:
+- Unclosed brackets: `[?isDraft` (missing `]`)
+- Invalid comparison operators: `[?state='OPEN']` (use `==` not `=`)
+- Wrong quote usage: `[?state=="OPEN"]` (use single quotes: `[?state=='OPEN']`)
+
+**Debugging tips**:
+- Test your query at [JMESPath.org](https://jmespath.org/)
+- Check the [JMESPath Tutorial](https://jmespath.org/tutorial.html) for syntax
+- Start with simple queries and add complexity incrementally
 
 ## Limitations
 

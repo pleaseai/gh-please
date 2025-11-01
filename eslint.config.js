@@ -10,6 +10,7 @@ export default antfu({
     // Ignore documentation markdown files with code blocks
     'CLAUDE.md',
     'docs-dev/**/*.md',
+    'docs/**/*.md',
   ],
 }, {
   rules: {
