@@ -67,6 +67,12 @@ const COMMANDS: CommandConfig[] = [
     description: 'Repository view command',
   },
   {
+    command: 'repo',
+    subcommand: 'list',
+    testId: '--limit 1', // List commands need --limit flag
+    description: 'Repository list command',
+  },
+  {
     command: 'release',
     subcommand: 'view',
     testId: 'latest', // Use 'latest' tag
