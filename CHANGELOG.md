@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.25.0](https://github.com/pleaseai/gh-please/compare/github-v0.24.0...github-v0.25.0) (2025-11-01)
+
+
+### Features
+
+* **repo:** add repo list command with JMESPath query support (Phase 1.4) ([#159](https://github.com/pleaseai/gh-please/issues/159)) ([8bd6814](https://github.com/pleaseai/gh-please/commit/8bd6814d8e11f5e085cca4229104b4828867bc86))
+
+
+### Documentation
+
+* add TOON migration dependency graph documentation ([#156](https://github.com/pleaseai/gh-please/issues/156)) ([416fa61](https://github.com/pleaseai/gh-please/commit/416fa61748efb1bc0902e46cb61b02532f816929))
+
 ## [0.24.0](https://github.com/pleaseai/gh-please/compare/github-v0.23.0...github-v0.24.0) (2025-11-01)
 
 
