@@ -1297,6 +1297,73 @@ describe('gh-passthrough', () => {
       expect(callArgs[3]).toBe('--json')
       expect(processExitSpy).not.toHaveBeenCalled()
     })
+
+    // Phase 2.3 Integration Tests
+    test('should default to TOON for codespace list read command (Phase 2.3)', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify([{
+        name: 'test-codespace',
+        state: 'Available',
+        repository: 'owner/repo',
+      }])
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['codespace', 'list', '--limit', '10']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert - --json injected with fields for codespace list
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs[0]).toBe('codespace')
+      expect(callArgs[1]).toBe('list')
+      expect(callArgs[2]).toBe('--limit')
+      expect(callArgs[3]).toBe('10')
+      expect(callArgs[4]).toBe('--json')
+      const fields = callArgs[5]
+      expect(fields).toContain('createdAt')
+      expect(fields).toContain('displayName')
+      expect(fields).toContain('state')
+      expect(fields).toContain('repository')
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should inject fields for codespace view command (Phase 2.3)', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify({
+        name: 'test-codespace',
+        state: 'Available',
+        displayName: 'Test Codespace',
+        repository: 'owner/repo',
+      })
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['codespace', 'view']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert - --json injected with fields for codespace view
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs[0]).toBe('codespace')
+      expect(callArgs[1]).toBe('view')
+      expect(callArgs[2]).toBe('--json')
+      const fields = callArgs[3]
+      expect(fields).toContain('billableOwner')
+      expect(fields).toContain('createdAt')
+      expect(fields).toContain('displayName')
+      expect(fields).toContain('machineDisplayName')
+      expect(fields).toContain('state')
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
   })
 
   // Phase 1.5: Integration tests for query execution
