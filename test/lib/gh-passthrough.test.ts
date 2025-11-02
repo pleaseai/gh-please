@@ -526,42 +526,34 @@ describe('gh-passthrough', () => {
       expect(result[result.length - 1]).not.toContain(' ')
     })
 
-    test('should inject fields for mapped view commands (release view)', () => {
+    test('should fallback to --json only for release view (empty fields)', () => {
       // Arrange
       const args = ['release', 'view', 'v1.0.0']
 
       // Act
       const result = injectJsonFlag(args)
 
-      // Assert - release view now has fields (Phase 1.5)
+      // Assert - release view has empty field string, so falls back to --json only
       const jsonIndex = result.indexOf('--json')
       expect(jsonIndex).not.toBe(-1)
       expect(result.slice(0, jsonIndex)).toEqual(args)
-      expect(result.length).toBe(args.length + 2) // --json and fields string
-
-      const fields = result[jsonIndex + 1]
-      expect(fields).toContain('tagName')
-      expect(fields).toContain('isDraft')
-      expect(fields).toContain('isPrerelease')
+      expect(result.length).toBe(args.length + 1) // --json only (no fields)
+      expect(result[jsonIndex]).toBe('--json')
     })
 
-    test('should inject fields for release list (Phase 1.5)', () => {
+    test('should fallback to --json only for release list (unmapped command)', () => {
       // Arrange
       const args = ['release', 'list', '--limit', '10']
 
       // Act
       const result = injectJsonFlag(args)
 
-      // Assert
+      // Assert - release list is not mapped, so falls back to --json only
       const jsonIndex = result.indexOf('--json')
       expect(jsonIndex).not.toBe(-1)
       expect(result.slice(0, jsonIndex)).toEqual(args)
-      expect(result.length).toBe(args.length + 2) // --json and fields string
-
-      const fields = result[jsonIndex + 1]
-      expect(fields).toContain('tagName')
-      expect(fields).toContain('isDraft')
-      expect(fields).toContain('isLatest')
+      expect(result.length).toBe(args.length + 1) // --json only (no fields)
+      expect(result[jsonIndex]).toBe('--json')
     })
 
     test('should fallback to --json only for unmapped commands (workflow list)', () => {
