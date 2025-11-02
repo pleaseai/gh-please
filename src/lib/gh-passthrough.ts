@@ -47,6 +47,7 @@ const MUTATION_COMMANDS = new Set([
   'remove-label',
   'add-project',
   'remove-project',
+  'set', // variable set
 ])
 
 /**

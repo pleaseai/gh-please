@@ -51,6 +51,26 @@ describe('gh-passthrough', () => {
       expect(isMutationCommand(['pr', 'comment', '2', '-b', 'text'])).toBe(true)
     })
 
+    test('should detect Phase 2.2 mutation commands', () => {
+      // Arrange & Act & Assert
+      expect(isMutationCommand(['label', 'create', '--name', 'bug'])).toBe(true)
+      expect(isMutationCommand(['label', 'edit', 'bug', '--name', 'enhancement'])).toBe(true)
+      expect(isMutationCommand(['label', 'delete', 'bug'])).toBe(true)
+      expect(isMutationCommand(['variable', 'set', 'KEY', 'value'])).toBe(true)
+      expect(isMutationCommand(['variable', 'delete', 'KEY'])).toBe(true)
+    })
+
+    test('should NOT detect Phase 2.2 read commands as mutations', () => {
+      // Arrange & Act & Assert
+      expect(isMutationCommand(['label', 'list'])).toBe(false)
+      expect(isMutationCommand(['secret', 'list'])).toBe(false)
+      expect(isMutationCommand(['variable', 'list'])).toBe(false)
+      expect(isMutationCommand(['search', 'repos', 'query'])).toBe(false)
+      expect(isMutationCommand(['search', 'issues', 'query'])).toBe(false)
+      expect(isMutationCommand(['search', 'prs', 'query'])).toBe(false)
+      expect(isMutationCommand(['api', '/user'])).toBe(false)
+    })
+
     test('should detect add-* and remove-* mutation commands', () => {
       // Arrange & Act & Assert
       expect(isMutationCommand(['issue', 'edit', '123', '--add-label', 'bug'])).toBe(true)
