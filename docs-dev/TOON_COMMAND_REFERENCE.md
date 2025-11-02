@@ -870,7 +870,7 @@ gh please search issues <query> [flags]
 gh please search issues "is:issue label:bug" --query "[?state=='OPEN']"
 
 # Issues with many comments
-gh please search issues "is:issue" --query "[?commentsCount > `10`]"
+gh please search issues "is:issue" --query "[?commentsCount > 10]"
 
 # Recently updated
 gh please search issues "react" --query "sort_by(@, &updatedAt)[-10:]"
@@ -996,7 +996,7 @@ DATABASE_URL	5	https://api.github.com/orgs/my-org/actions/secrets/DATABASE_URL/r
 gh please secret list --query "sort_by(@, &updatedAt)[-3:]"
 
 # Secrets with selective repository access
-gh please secret list --query "[?numSelectedRepos > `0`]"
+gh please secret list --query "[?numSelectedRepos > 0]"
 
 # Secrets by visibility
 gh please secret list --query "[?visibility=='selected']"
@@ -1048,7 +1048,7 @@ gh please variable list --query "[?starts_with(name, 'DEPLOY_')]"
 gh please variable list --query "sort_by(@, &createdAt)[-5:]"
 
 # Variables with selective repository access
-gh please variable list --query "[?numSelectedRepos > `0`]"
+gh please variable list --query "[?numSelectedRepos > 0]"
 
 # Get specific variable value
 gh please variable list --query "[?name=='NODE_VERSION'].value | [0]"
