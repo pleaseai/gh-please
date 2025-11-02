@@ -732,11 +732,56 @@ Search repositories.
 gh please search repos <query> [flags]
 ```
 
-**TOON Output:**
+**Common Flags:**
+- `-L, --limit <int>`: Maximum number of results
+- `--sort <string>`: Sort by stars, forks, updated, or help-wanted-issues
+- `--order <string>`: Order: asc or desc
+
+**TOON Output** (nested objects shown in YAML format):
 ```
-fullName	description	stargazerCount	language	updatedAt	url
-owner/repo1	Awesome project	1234	TypeScript	2024-01-15	https://github.com/owner/repo1
-owner/repo2	Utility lib	567	JavaScript	2024-01-14	https://github.com/owner/repo2
+[2	]:
+  - createdAt: 2013-07-29T03:24:51Z
+    defaultBranch: main
+    description: This is the repo for Vue 2. For Vue 3, go to https://github.com/vuejs/core
+    forksCount: 33797
+    fullName: vuejs/vue
+    language: TypeScript
+    stargazersCount: 209639
+    updatedAt: 2025-11-02T06:47:17Z
+    url: https://github.com/vuejs/vue
+  - createdAt: 2019-03-28T04:12:19Z
+    defaultBranch: master
+    description: vue source code analysis
+    forksCount: 1865
+    fullName: ygs-code/vue
+    language: JavaScript
+    stargazersCount: 7243
+    updatedAt: 2025-10-31T12:18:46Z
+    url: https://github.com/ygs-code/vue
+```
+
+**Field Mapping** (28 fields):
+- Basic: `name`, `fullName`, `description`, `url`, `homepage`
+- Stats: `stargazersCount`, `watchersCount`, `forksCount`, `openIssuesCount`, `size`
+- Language: `language`, `license` (object with key, name, url)
+- Dates: `createdAt`, `updatedAt`, `pushedAt`
+- Settings: `visibility`, `isPrivate`, `isArchived`, `isFork`, `isDisabled`
+- Features: `hasIssues`, `hasProjects`, `hasWiki`, `hasPages`, `hasDownloads`
+- Metadata: `id`, `owner` (object with id, login, type, url), `defaultBranch`
+
+**JMESPath Examples:**
+```bash
+# Top 5 by stars
+gh please search repos vue --query "sort_by(@, &stargazersCount)[-5:]"
+
+# Only TypeScript repositories
+gh please search repos web --query "[?language=='TypeScript']"
+
+# Active repositories (updated in last 30 days)
+gh please search repos nextjs --query "[?updatedAt >= '2024-10-01']"
+
+# Extract only names and stars
+gh please search repos react --query "[].{name: fullName, stars: stargazersCount}"
 ```
 
 #### search issues
@@ -748,6 +793,31 @@ Search issues and pull requests.
 gh please search issues <query> [flags]
 ```
 
+**Common Flags:**
+- `-L, --limit <int>`: Maximum number of results
+- `--sort <string>`: Sort by comments, created, or updated
+- `--order <string>`: Order: asc or desc
+
+**Field Mapping** (17 fields):
+- Basic: `number`, `title`, `body`, `url`, `state`
+- Author: `author` (object), `authorAssociation`
+- Metadata: `id`, `repository`, `labels` (array), `assignees` (array)
+- Counts: `commentsCount`
+- Dates: `createdAt`, `updatedAt`, `closedAt`
+- Flags: `isLocked`, `isPullRequest`
+
+**JMESPath Examples:**
+```bash
+# Only open issues
+gh please search issues "is:issue label:bug" --query "[?state=='OPEN']"
+
+# Issues with many comments
+gh please search issues "is:issue" --query "[?commentsCount > `10`]"
+
+# Recently updated
+gh please search issues "react" --query "sort_by(@, &updatedAt)[-10:]"
+```
+
 #### search prs
 
 Search pull requests.
@@ -755,6 +825,27 @@ Search pull requests.
 **Usage:**
 ```bash
 gh please search prs <query> [flags]
+```
+
+**Common Flags:**
+- `-L, --limit <int>`: Maximum number of results
+- `--sort <string>`: Sort by comments, created, or updated
+- `--order <string>`: Order: asc or desc
+
+**Field Mapping** (18 fields):
+- Same as `search issues` plus:
+- `isDraft`: Whether the PR is in draft state
+
+**JMESPath Examples:**
+```bash
+# Only merged PRs
+gh please search prs "is:pr is:merged" --query "[?state=='MERGED']"
+
+# Draft PRs
+gh please search prs "is:pr" --query "[?isDraft]"
+
+# PRs by author
+gh please search prs "is:pr author:octocat" --query "[?author.login=='octocat']"
 ```
 
 ---
@@ -772,12 +863,38 @@ List labels in a repository.
 gh please label list [flags]
 ```
 
+**Common Flags:**
+- `-L, --limit <int>`: Maximum number to fetch
+- `-R, --repo <string>`: Select another repository using OWNER/REPO format
+
 **TOON Output:**
 ```
-name	description	color
-bug	Something isn't working	d73a4a
-enhancement	New feature or request	a2eeef
-documentation	Improvements to documentation	0075ca
+color	createdAt	description	id	isDefault	name	updatedAt	url
+cfd3d7	2025-10-18T13:13:44Z	This issue or pull request already exists	LA_kwDOQE1D188AAAACNVMikA	true	duplicate	2025-10-18T13:13:44Z	https://github.com/owner/repo/labels/duplicate
+7057ff	2025-10-18T13:13:44Z	Good for newcomers	LA_kwDOQE1D188AAAACNVMilA	true	good first issue	2025-10-18T13:13:44Z	https://github.com/owner/repo/labels/good%20first%20issue
+008672	2025-10-18T13:13:44Z	Extra attention is needed	LA_kwDOQE1D188AAAACNVMilg	true	help wanted	2025-10-18T13:13:44Z	https://github.com/owner/repo/labels/help%20wanted
+```
+
+**Field Mapping** (8 fields):
+- `color`: Label color (hex code without #)
+- `createdAt`: Creation timestamp (ISO 8601)
+- `description`: Label description text
+- `id`: GitHub Node ID for the label
+- `isDefault`: Whether this is a default GitHub label
+- `name`: Label name
+- `updatedAt`: Last update timestamp (ISO 8601)
+- `url`: GitHub URL to the label
+
+**JMESPath Examples:**
+```bash
+# Only custom labels (not defaults)
+gh please label list --query "[?!isDefault]"
+
+# Labels by color
+gh please label list --query "[?color=='d73a4a']"
+
+# Recently updated labels (last 5)
+gh please label list --query "sort_by(@, &updatedAt)[-5:]"
 ```
 
 ---
@@ -795,11 +912,36 @@ List secrets.
 gh please secret list [flags]
 ```
 
+**Common Flags:**
+- `-R, --repo <string>`: Select another repository using OWNER/REPO format
+- `-o, --org <string>`: List organization secrets
+- `-e, --env <string>`: List environment secrets
+
 **TOON Output:**
 ```
-name	updatedAt
-DATABASE_URL	2024-01-15T10:00:00Z
-API_KEY	2024-01-14T15:30:00Z
+name	numSelectedRepos	selectedReposURL	updatedAt	visibility
+APP_ID	0		2025-10-18T20:47:15Z
+PRIVATE_KEY	0		2025-10-18T20:47:26Z
+DATABASE_URL	5	https://api.github.com/orgs/my-org/actions/secrets/DATABASE_URL/repositories	2024-01-15T10:00:00Z	selected
+```
+
+**Field Mapping** (5 fields):
+- `name`: Secret name
+- `numSelectedRepos`: Number of repositories with access (organization secrets only)
+- `selectedReposURL`: API URL to view selected repositories
+- `updatedAt`: Last update timestamp (ISO 8601)
+- `visibility`: Visibility level (all|private|selected)
+
+**JMESPath Examples:**
+```bash
+# Recently updated secrets
+gh please secret list --query "sort_by(@, &updatedAt)[-3:]"
+
+# Secrets with selective repository access
+gh please secret list --query "[?numSelectedRepos > `0`]"
+
+# Secrets by visibility
+gh please secret list --query "[?visibility=='selected']"
 ```
 
 ---
@@ -817,11 +959,41 @@ List variables.
 gh please variable list [flags]
 ```
 
+**Common Flags:**
+- `-R, --repo <string>`: Select another repository using OWNER/REPO format
+- `-o, --org <string>`: List organization variables
+- `-e, --env <string>`: List environment variables
+
 **TOON Output:**
 ```
-name	value	updatedAt
-NODE_VERSION	18.x	2024-01-15T09:00:00Z
-ENVIRONMENT	production	2024-01-10T14:20:00Z
+createdAt	name	numSelectedRepos	selectedReposURL	updatedAt	value	visibility
+2024-01-10T09:00:00Z	NODE_VERSION	0		2024-01-15T09:00:00Z	18.x
+2024-01-05T14:20:00Z	ENVIRONMENT	0		2024-01-10T14:20:00Z	production
+2024-01-08T11:30:00Z	DEPLOY_REGION	3	https://api.github.com/orgs/my-org/actions/variables/DEPLOY_REGION/repositories	2024-01-12T16:45:00Z	us-west-2	selected
+```
+
+**Field Mapping** (7 fields):
+- `createdAt`: Creation timestamp (ISO 8601)
+- `name`: Variable name
+- `numSelectedRepos`: Number of repositories with access (organization variables only)
+- `selectedReposURL`: API URL to view selected repositories
+- `updatedAt`: Last update timestamp (ISO 8601)
+- `value`: Variable value (plaintext)
+- `visibility`: Visibility level (all|private|selected)
+
+**JMESPath Examples:**
+```bash
+# Variables by name pattern
+gh please variable list --query "[?starts_with(name, 'DEPLOY_')]"
+
+# Recently created variables
+gh please variable list --query "sort_by(@, &createdAt)[-5:]"
+
+# Variables with selective repository access
+gh please variable list --query "[?numSelectedRepos > `0`]"
+
+# Get specific variable value
+gh please variable list --query "[?name=='NODE_VERSION'].value | [0]"
 ```
 
 ---
