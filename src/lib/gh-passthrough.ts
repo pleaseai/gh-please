@@ -73,9 +73,7 @@ export function isMutationCommand(args: string[]): boolean {
   }
   // Check for command verbs (e.g., 'create', 'edit') at the start of the command.
   // Verbs are typically at index 0 or 1.
-  const firstArg = args[0]
-  const secondArg = args[1]
-  if ((firstArg && MUTATION_COMMANDS.has(firstArg)) || (secondArg && MUTATION_COMMANDS.has(secondArg))) {
+  if (args.slice(0, 2).some(arg => arg && MUTATION_COMMANDS.has(arg))) {
     return true
   }
 
