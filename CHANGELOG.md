@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.27.0](https://github.com/pleaseai/gh-please/compare/github-v0.26.1...github-v0.27.0) (2025-11-02)
+
+
+### Features
+
+* add mutation detection for variable set command ([#177](https://github.com/pleaseai/gh-please/issues/177)) ([65d1e76](https://github.com/pleaseai/gh-please/commit/65d1e7657cbabe5b47c3b01ca3660f65ce55fa82))
+
 ## [0.26.1](https://github.com/pleaseai/gh-please/compare/github-v0.26.0...github-v0.26.1) (2025-11-02)
 
 
