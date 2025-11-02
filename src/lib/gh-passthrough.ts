@@ -20,6 +20,70 @@ export interface PassthroughResult {
 export type ExtendedFormat = OutputFormat | 'table'
 
 /**
+ * Set of mutation command verbs that don't support --json
+ *
+ * These commands modify GitHub resources rather than querying them,
+ * so they return confirmation messages instead of structured data.
+ */
+const MUTATION_COMMANDS = new Set([
+  'create',
+  'edit',
+  'delete',
+  'close',
+  'reopen',
+  'merge',
+  'comment',
+  'lock',
+  'unlock',
+  'pin',
+  'unpin',
+  'transfer',
+  'approve',
+  'review',
+  'dismiss',
+  'add-assignee',
+  'remove-assignee',
+  'add-label',
+  'remove-label',
+  'add-project',
+  'remove-project',
+])
+
+/**
+ * Check if command contains a mutation verb
+ *
+ * Mutation commands modify GitHub resources and don't support --json output.
+ * Examples: create, edit, delete, close, merge, comment
+ *
+ * @param args - Command arguments
+ * @returns true if command contains mutation verb
+ *
+ * @example
+ * ```typescript
+ * isMutationCommand(['issue', 'edit', '123'])  // true
+ * isMutationCommand(['issue', 'list'])         // false
+ * isMutationCommand(['pr', 'create'])          // true
+ * isMutationCommand(['pr', 'view', '123'])     // false
+ * isMutationCommand(['issue', 'list', '--author', 'create'])  // false (not a verb)
+ * ```
+ */
+export function isMutationCommand(args: string[]): boolean {
+  if (args.length === 0) {
+    return false
+  }
+  // Check for command verbs (e.g., 'create', 'edit') at the start of the command.
+  // Verbs are typically at index 0 or 1.
+  if (args.slice(0, 2).some(arg => arg && MUTATION_COMMANDS.has(arg))) {
+    return true
+  }
+
+  // Check for mutation flags (e.g., '--add-label').
+  // We only check arguments that look like flags to avoid matching flag values.
+  // The set stores them without '--', so we strip the prefix before checking.
+  return args.some(arg => arg.startsWith('--') && MUTATION_COMMANDS.has(arg.substring(2)))
+}
+
+/**
  * Format detection result
  */
 export interface FormatDetection {
@@ -175,8 +239,9 @@ export function shouldConvertToStructuredFormat(args: string[]): FormatDetection
   }
 
   // Phase 1.1: Default to TOON format when no explicit format provided
+  // Exception: Skip TOON default for mutation commands (they don't support --json)
   if (!explicitFormatProvided) {
-    format = 'toon'
+    format = isMutationCommand(cleanArgs) ? null : 'toon'
   }
 
   return { format, cleanArgs, query }

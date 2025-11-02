@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, spyOn, test } from 'bun:test'
 import * as ghPassthrough from '../../src/lib/gh-passthrough'
-import { executeGhCommand, injectJsonFlag, passThroughCommand, shouldConvertToStructuredFormat } from '../../src/lib/gh-passthrough'
+import { executeGhCommand, injectJsonFlag, isMutationCommand, passThroughCommand, shouldConvertToStructuredFormat } from '../../src/lib/gh-passthrough'
 
 describe('gh-passthrough', () => {
   describe('executeGhCommand', () => {
@@ -40,6 +40,51 @@ describe('gh-passthrough', () => {
     })
   })
 
+  describe('isMutationCommand', () => {
+    test('should detect mutation commands', () => {
+      // Arrange & Act & Assert
+      expect(isMutationCommand(['issue', 'edit', '123'])).toBe(true)
+      expect(isMutationCommand(['issue', 'create'])).toBe(true)
+      expect(isMutationCommand(['pr', 'close', '456'])).toBe(true)
+      expect(isMutationCommand(['pr', 'merge', '789'])).toBe(true)
+      expect(isMutationCommand(['issue', 'delete', '1'])).toBe(true)
+      expect(isMutationCommand(['pr', 'comment', '2', '-b', 'text'])).toBe(true)
+    })
+
+    test('should detect add-* and remove-* mutation commands', () => {
+      // Arrange & Act & Assert
+      expect(isMutationCommand(['issue', 'edit', '123', '--add-label', 'bug'])).toBe(true)
+      expect(isMutationCommand(['issue', 'edit', '123', '--remove-label', 'wontfix'])).toBe(true)
+      expect(isMutationCommand(['issue', 'edit', '123', '--add-assignee', '@me'])).toBe(true)
+      expect(isMutationCommand(['issue', 'edit', '123', '--remove-assignee', 'user'])).toBe(true)
+    })
+
+    test('should NOT detect read commands as mutations', () => {
+      // Arrange & Act & Assert
+      expect(isMutationCommand(['issue', 'list'])).toBe(false)
+      expect(isMutationCommand(['issue', 'view', '123'])).toBe(false)
+      expect(isMutationCommand(['pr', 'list'])).toBe(false)
+      expect(isMutationCommand(['pr', 'view', '456'])).toBe(false)
+      expect(isMutationCommand(['repo', 'view'])).toBe(false)
+      expect(isMutationCommand(['release', 'list'])).toBe(false)
+      // Ensure flag values are not misinterpreted as verbs
+      expect(isMutationCommand(['issue', 'list', '--author', 'create'])).toBe(false)
+      // Ensure search terms are not misinterpreted as verbs
+      expect(isMutationCommand(['search', 'issues', 'edit'])).toBe(false)
+    })
+
+    test('should handle empty args', () => {
+      // Arrange & Act & Assert
+      expect(isMutationCommand([])).toBe(false)
+    })
+
+    test('should handle single arg commands', () => {
+      // Arrange & Act & Assert
+      expect(isMutationCommand(['create'])).toBe(true)
+      expect(isMutationCommand(['list'])).toBe(false)
+    })
+  })
+
   describe('shouldConvertToStructuredFormat', () => {
     test('should detect --format toon flag', () => {
       // Arrange
@@ -75,6 +120,39 @@ describe('gh-passthrough', () => {
       // Assert
       expect(result.format).toBe('toon')
       expect(result.cleanArgs).toEqual(['repo', 'view'])
+    })
+
+    test('should NOT default to toon for mutation commands', () => {
+      // Arrange & Act
+      const editResult = shouldConvertToStructuredFormat(['issue', 'edit', '123'])
+      const createResult = shouldConvertToStructuredFormat(['issue', 'create'])
+      const closeResult = shouldConvertToStructuredFormat(['pr', 'close', '456'])
+      const mergeResult = shouldConvertToStructuredFormat(['pr', 'merge', '789'])
+
+      // Assert
+      expect(editResult.format).toBeNull()
+      expect(editResult.cleanArgs).toEqual(['issue', 'edit', '123'])
+
+      expect(createResult.format).toBeNull()
+      expect(createResult.cleanArgs).toEqual(['issue', 'create'])
+
+      expect(closeResult.format).toBeNull()
+      expect(closeResult.cleanArgs).toEqual(['pr', 'close', '456'])
+
+      expect(mergeResult.format).toBeNull()
+      expect(mergeResult.cleanArgs).toEqual(['pr', 'merge', '789'])
+    })
+
+    test('should still default to toon for read commands', () => {
+      // Arrange & Act
+      const listResult = shouldConvertToStructuredFormat(['issue', 'list'])
+      const viewResult = shouldConvertToStructuredFormat(['pr', 'view', '123'])
+      const statusResult = shouldConvertToStructuredFormat(['pr', 'status'])
+
+      // Assert
+      expect(listResult.format).toBe('toon')
+      expect(viewResult.format).toBe('toon')
+      expect(statusResult.format).toBe('toon')
     })
 
     test('should extract and remove format flag from args', () => {
