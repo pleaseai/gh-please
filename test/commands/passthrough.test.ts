@@ -194,6 +194,85 @@ describe('passthrough E2E', () => {
     })
   })
 
+  describe('mutation command handling', () => {
+    test('should passthrough mutation commands without --json injection (issue edit)', async () => {
+      // Arrange
+      const program = await createProgram()
+      const args = ['issue', 'edit', '123', '--title', 'New title']
+
+      // Act
+      await program.parseAsync(args, { from: 'user' })
+
+      // Assert - passthrough should be called for mutation commands
+      expect(passThroughCommandSpy).toHaveBeenCalledTimes(1)
+      expect(passThroughCommandSpy.mock.calls[0][0]).toEqual(['issue', 'edit', '123', '--title', 'New title'])
+    })
+
+    test('should passthrough mutation commands without --json injection (issue create)', async () => {
+      // Arrange
+      const program = await createProgram()
+      const args = ['issue', 'create', '--title', 'New bug']
+
+      // Act
+      await program.parseAsync(args, { from: 'user' })
+
+      // Assert - should NOT be called because 'issue create' is a registered command in gh-please
+      expect(passThroughCommandSpy).not.toHaveBeenCalled()
+    })
+
+    test('should passthrough mutation commands without --json injection (pr close)', async () => {
+      // Arrange
+      const program = await createProgram()
+      const args = ['pr', 'close', '456']
+
+      // Act
+      await program.parseAsync(args, { from: 'user' })
+
+      // Assert - passthrough should be called for mutation commands
+      expect(passThroughCommandSpy).toHaveBeenCalledTimes(1)
+      expect(passThroughCommandSpy.mock.calls[0][0]).toEqual(['pr', 'close', '456'])
+    })
+
+    test('should passthrough mutation commands without --json injection (pr merge)', async () => {
+      // Arrange
+      const program = await createProgram()
+      const args = ['pr', 'merge', '789', '--squash']
+
+      // Act
+      await program.parseAsync(args, { from: 'user' })
+
+      // Assert - passthrough should be called for mutation commands
+      expect(passThroughCommandSpy).toHaveBeenCalledTimes(1)
+      expect(passThroughCommandSpy.mock.calls[0][0]).toEqual(['pr', 'merge', '789', '--squash'])
+    })
+
+    test('should still default to TOON for read commands (issue list)', async () => {
+      // Arrange
+      const program = await createProgram()
+      const args = ['issue', 'list']
+
+      // Act
+      await program.parseAsync(args, { from: 'user' })
+
+      // Assert - passthrough should be called for read commands with TOON default
+      expect(passThroughCommandSpy).toHaveBeenCalledTimes(1)
+      expect(passThroughCommandSpy.mock.calls[0][0]).toEqual(['issue', 'list'])
+    })
+
+    test('should still default to TOON for read commands (pr view)', async () => {
+      // Arrange
+      const program = await createProgram()
+      const args = ['pr', 'view', '123']
+
+      // Act
+      await program.parseAsync(args, { from: 'user' })
+
+      // Assert - passthrough should be called for read commands with TOON default
+      expect(passThroughCommandSpy).toHaveBeenCalledTimes(1)
+      expect(passThroughCommandSpy.mock.calls[0][0]).toEqual(['pr', 'view', '123'])
+    })
+  })
+
   describe('bilingual error messages', () => {
     test('should display error message in detected system language (Korean)', async () => {
       // Arrange

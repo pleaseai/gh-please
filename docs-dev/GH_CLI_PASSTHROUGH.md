@@ -5,6 +5,7 @@ gh-please automatically supports **all** GitHub CLI commands through passthrough
 ## Key Features
 
 - **Automatic command forwarding**: Unknown commands pass through to gh CLI
+- **Smart format defaults**: Read commands default to TOON format, mutation commands use native output
 - **Optional TOON format**: Use `--format toon` to convert gh CLI JSON output to TOON format (58.9% token reduction)
 - **Optional JSON format**: Use `--format json` to get structured JSON output
 - **Command priority**: Registered gh-please commands take priority over passthrough
@@ -13,19 +14,20 @@ gh-please automatically supports **all** GitHub CLI commands through passthrough
 ## Usage Examples
 
 ```bash
-# Passthrough with original gh CLI output (table format)
-gh please repo view
-gh please workflow list
-gh please release view v1.0.0
+# Read commands default to TOON format (automatic)
+gh please issue list              # Outputs TOON by default
+gh please pr view 123             # Outputs TOON by default
+gh please repo view               # Outputs TOON by default
 
-# Convert to TOON format (requires --json support in gh command)
-gh please issue list --format toon
-gh please pr list --state open --format toon
-gh please repo view --format toon
+# Mutation commands use native output (no --json injection)
+gh please issue edit 123 --title "New title"    # Native gh CLI output
+gh please pr close 456                          # Native gh CLI output
+gh please pr merge 789 --squash                 # Native gh CLI output
 
-# Convert to JSON format
-gh please workflow list --format json
-gh please pr checks 123 --format json
+# Explicit format conversion (overrides defaults)
+gh please issue list --format toon              # Explicit TOON
+gh please issue list --format json              # Explicit JSON
+gh please issue list --format table             # Legacy native output (deprecated)
 ```
 
 ## Implementation
@@ -36,9 +38,43 @@ gh please pr checks 123 --format json
 
 **Key Functions**:
 - `executeGhCommand(args)`: Execute gh CLI via Bun.spawn, return stdout/stderr/exitCode
-- `shouldConvertToStructuredFormat(args)`: Detect --format flag, extract and inject --json
+- `isMutationCommand(args)`: Detect mutation commands that don't support --json
+- `shouldConvertToStructuredFormat(args)`: Detect --format flag, skip TOON default for mutations
 - `injectJsonFlag(args)`: Inject --json flag with command-specific fields when available
 - `passThroughCommand(args)`: Main orchestration (format detection → execution → conversion → output)
+
+### Mutation Command Detection
+
+**Problem**: Mutation commands (create, edit, delete, close, merge, etc.) don't support `--json` flag because they perform actions rather than query data.
+
+**Solution**: Automatically detect mutation verbs and skip TOON format default.
+
+**Detected mutation verbs**:
+- `create`, `edit`, `delete`, `close`, `reopen`, `merge`
+- `comment`, `lock`, `unlock`, `pin`, `unpin`, `transfer`
+- `approve`, `review`, `dismiss`
+- `add-assignee`, `remove-assignee`, `add-label`, `remove-label`
+- `add-project`, `remove-project`
+
+**Behavior**:
+```typescript
+// Read commands: Default to TOON
+shouldConvertToStructuredFormat(['issue', 'list'])
+// → { format: 'toon', cleanArgs: ['issue', 'list'] }
+
+// Mutation commands: No format default (native output)
+shouldConvertToStructuredFormat(['issue', 'edit', '123'])
+// → { format: null, cleanArgs: ['issue', 'edit', '123'] }
+```
+
+**Override**: Users can explicitly request format conversion for any command:
+```bash
+# Force TOON for mutation (will fail if --json not supported)
+gh please issue edit 123 --format toon  # Error: --json not supported
+
+# Force native output for read commands
+gh please issue list --format table     # Works (deprecated)
+```
 
 ### Field Injection for View and List Commands
 
