@@ -51,6 +51,49 @@ describe('gh-passthrough', () => {
       expect(isMutationCommand(['pr', 'comment', '2', '-b', 'text'])).toBe(true)
     })
 
+    test('should detect Phase 2.2 mutation commands', () => {
+      // Arrange & Act & Assert
+      expect(isMutationCommand(['label', 'create', '--name', 'bug'])).toBe(true)
+      expect(isMutationCommand(['label', 'edit', 'bug', '--name', 'enhancement'])).toBe(true)
+      expect(isMutationCommand(['label', 'delete', 'bug'])).toBe(true)
+      expect(isMutationCommand(['variable', 'set', 'KEY', 'value'])).toBe(true)
+      expect(isMutationCommand(['variable', 'delete', 'KEY'])).toBe(true)
+    })
+
+    test('should detect all mutation command verbs', () => {
+      // Arrange & Act & Assert - Test all verbs in MUTATION_COMMANDS
+      // Basic mutations
+      expect(isMutationCommand(['issue', 'reopen', '123'])).toBe(true)
+      expect(isMutationCommand(['pr', 'reopen', '456'])).toBe(true)
+      expect(isMutationCommand(['issue', 'lock', '123'])).toBe(true)
+      expect(isMutationCommand(['issue', 'unlock', '123'])).toBe(true)
+      expect(isMutationCommand(['issue', 'pin', '123'])).toBe(true)
+      expect(isMutationCommand(['issue', 'unpin', '123'])).toBe(true)
+      expect(isMutationCommand(['issue', 'transfer', '123', '--repo', 'owner/other'])).toBe(true)
+
+      // PR-specific mutations
+      expect(isMutationCommand(['pr', 'approve', '456'])).toBe(true)
+      expect(isMutationCommand(['pr', 'review', '456'])).toBe(true)
+      expect(isMutationCommand(['pr', 'dismiss', '456'])).toBe(true)
+    })
+
+    test('should detect project mutation flags', () => {
+      // Arrange & Act & Assert
+      expect(isMutationCommand(['issue', 'edit', '123', '--add-project', 'Project'])).toBe(true)
+      expect(isMutationCommand(['issue', 'edit', '123', '--remove-project', 'Project'])).toBe(true)
+    })
+
+    test('should NOT detect Phase 2.2 read commands as mutations', () => {
+      // Arrange & Act & Assert
+      expect(isMutationCommand(['label', 'list'])).toBe(false)
+      expect(isMutationCommand(['secret', 'list'])).toBe(false)
+      expect(isMutationCommand(['variable', 'list'])).toBe(false)
+      expect(isMutationCommand(['search', 'repos', 'query'])).toBe(false)
+      expect(isMutationCommand(['search', 'issues', 'query'])).toBe(false)
+      expect(isMutationCommand(['search', 'prs', 'query'])).toBe(false)
+      expect(isMutationCommand(['api', '/user'])).toBe(false)
+    })
+
     test('should detect add-* and remove-* mutation commands', () => {
       // Arrange & Act & Assert
       expect(isMutationCommand(['issue', 'edit', '123', '--add-label', 'bug'])).toBe(true)
@@ -82,6 +125,31 @@ describe('gh-passthrough', () => {
       // Arrange & Act & Assert
       expect(isMutationCommand(['create'])).toBe(true)
       expect(isMutationCommand(['list'])).toBe(false)
+    })
+
+    test('should handle edge cases gracefully', () => {
+      // Arrange & Act & Assert
+      // Empty strings in args (empty strings are falsy, logic checks 'arg &&')
+      expect(isMutationCommand(['issue', '', 'list'])).toBe(false)
+      expect(isMutationCommand(['', 'create'])).toBe(true) // position 1 has 'create'
+      expect(isMutationCommand(['issue', '', 'edit'])).toBe(false) // 'edit' at position 2, not checked
+
+      // Multiple mutation flags
+      expect(isMutationCommand([
+        'issue',
+        'edit',
+        '123',
+        '--add-label',
+        'bug',
+        '--remove-label',
+        'wontfix',
+        '--add-assignee',
+        '@me',
+      ])).toBe(true)
+
+      // Mutation verb at different positions (should only check 0-1)
+      expect(isMutationCommand(['workflow', 'delete', 'workflow.yml'])).toBe(true)
+      expect(isMutationCommand(['codespace', 'edit', 'name'])).toBe(true)
     })
   })
 
@@ -458,42 +526,34 @@ describe('gh-passthrough', () => {
       expect(result[result.length - 1]).not.toContain(' ')
     })
 
-    test('should inject fields for mapped view commands (release view)', () => {
+    test('should fallback to --json only for release view (empty fields)', () => {
       // Arrange
       const args = ['release', 'view', 'v1.0.0']
 
       // Act
       const result = injectJsonFlag(args)
 
-      // Assert - release view now has fields (Phase 1.5)
+      // Assert - release view has empty field string, so falls back to --json only
       const jsonIndex = result.indexOf('--json')
       expect(jsonIndex).not.toBe(-1)
       expect(result.slice(0, jsonIndex)).toEqual(args)
-      expect(result.length).toBe(args.length + 2) // --json and fields string
-
-      const fields = result[jsonIndex + 1]
-      expect(fields).toContain('tagName')
-      expect(fields).toContain('isDraft')
-      expect(fields).toContain('isPrerelease')
+      expect(result.length).toBe(args.length + 1) // --json only (no fields)
+      expect(result[jsonIndex]).toBe('--json')
     })
 
-    test('should inject fields for release list (Phase 1.5)', () => {
+    test('should fallback to --json only for release list (unmapped command)', () => {
       // Arrange
       const args = ['release', 'list', '--limit', '10']
 
       // Act
       const result = injectJsonFlag(args)
 
-      // Assert
+      // Assert - release list is not mapped, so falls back to --json only
       const jsonIndex = result.indexOf('--json')
       expect(jsonIndex).not.toBe(-1)
       expect(result.slice(0, jsonIndex)).toEqual(args)
-      expect(result.length).toBe(args.length + 2) // --json and fields string
-
-      const fields = result[jsonIndex + 1]
-      expect(fields).toContain('tagName')
-      expect(fields).toContain('isDraft')
-      expect(fields).toContain('isLatest')
+      expect(result.length).toBe(args.length + 1) // --json only (no fields)
+      expect(result[jsonIndex]).toBe('--json')
     })
 
     test('should fallback to --json only for unmapped commands (workflow list)', () => {
@@ -1122,6 +1182,120 @@ describe('gh-passthrough', () => {
       expect(processExitSpy).toHaveBeenCalledWith(1)
 
       processStderrWriteSpy.mockRestore()
+    })
+
+    // Phase 2.2 Integration Tests
+    test('should not inject --json for label create mutation command (Phase 2.2)', async () => {
+      // Arrange
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: 'Created label "bug"',
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['label', 'create', '--name', 'bug']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert - no --json injection for mutation commands
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs).toEqual(['label', 'create', '--name', 'bug'])
+      expect(callArgs).not.toContain('--json')
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should not inject --json for variable set mutation command (Phase 2.2)', async () => {
+      // Arrange
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: 'Set variable KEY',
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['variable', 'set', 'KEY', 'value']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert - no --json injection for mutation commands
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs).toEqual(['variable', 'set', 'KEY', 'value'])
+      expect(callArgs).not.toContain('--json')
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should default to TOON for variable list read command (Phase 2.2)', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify([
+        { name: 'KEY1', value: 'value1' },
+        { name: 'KEY2', value: 'value2' },
+      ])
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['variable', 'list']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert - --json injected for read commands (TOON default)
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs[0]).toBe('variable')
+      expect(callArgs[1]).toBe('list')
+      expect(callArgs[2]).toBe('--json')
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should default to TOON for label list read command (Phase 2.2)', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify([
+        { name: 'bug', color: 'red' },
+        { name: 'enhancement', color: 'blue' },
+      ])
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['label', 'list']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert - --json injected for read commands
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs[0]).toBe('label')
+      expect(callArgs[1]).toBe('list')
+      expect(callArgs[2]).toBe('--json')
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should default to TOON for search read commands (Phase 2.2)', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify([{ name: 'repo1' }])
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['search', 'repos', 'query']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert - --json injected for read commands
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs[0]).toBe('search')
+      expect(callArgs[1]).toBe('repos')
+      expect(callArgs[2]).toBe('query')
+      expect(callArgs[3]).toBe('--json')
+      expect(processExitSpy).not.toHaveBeenCalled()
     })
   })
 

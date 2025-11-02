@@ -47,6 +47,7 @@ const MUTATION_COMMANDS = new Set([
   'remove-label',
   'add-project',
   'remove-project',
+  'set', // Mutation verb: variable set, secret set (Phase 2.2)
 ])
 
 /**
@@ -64,6 +65,7 @@ const MUTATION_COMMANDS = new Set([
  * isMutationCommand(['issue', 'list'])         // false
  * isMutationCommand(['pr', 'create'])          // true
  * isMutationCommand(['pr', 'view', '123'])     // false
+ * isMutationCommand(['variable', 'set', 'KEY', 'value'])  // true (Phase 2.2)
  * isMutationCommand(['issue', 'list', '--author', 'create'])  // false (not a verb)
  * ```
  */

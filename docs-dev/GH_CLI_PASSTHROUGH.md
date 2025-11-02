@@ -55,6 +55,7 @@ gh please issue list --format table             # Legacy native output (deprecat
 - `approve`, `review`, `dismiss`
 - `add-assignee`, `remove-assignee`, `add-label`, `remove-label`
 - `add-project`, `remove-project`
+- `set` (Phase 2.2: `variable set`, `secret set`)
 
 **Behavior**:
 ```typescript

@@ -78,6 +78,43 @@ const COMMANDS: CommandConfig[] = [
     testId: 'latest', // Use 'latest' tag
     description: 'Release view command',
   },
+  // Phase 2.2 commands
+  {
+    command: 'label',
+    subcommand: 'list',
+    testId: '--limit 1', // List commands need --limit flag
+    description: 'Label list command (Phase 2.2)',
+  },
+  {
+    command: 'secret',
+    subcommand: 'list',
+    testId: '', // No args needed for secret list
+    description: 'Secret list command (Phase 2.2)',
+  },
+  {
+    command: 'variable',
+    subcommand: 'list',
+    testId: '', // No args needed for variable list
+    description: 'Variable list command (Phase 2.2)',
+  },
+  {
+    command: 'search',
+    subcommand: 'repos',
+    testId: 'test --limit 1', // Search requires a query
+    description: 'Search repos command (Phase 2.2)',
+  },
+  {
+    command: 'search',
+    subcommand: 'issues',
+    testId: 'test --limit 1', // Search requires a query
+    description: 'Search issues command (Phase 2.2)',
+  },
+  {
+    command: 'search',
+    subcommand: 'prs',
+    testId: 'test --limit 1', // Search requires a query
+    description: 'Search PRs command (Phase 2.2)',
+  },
 ]
 
 /**
