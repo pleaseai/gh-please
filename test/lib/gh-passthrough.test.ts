@@ -151,6 +151,22 @@ describe('gh-passthrough', () => {
       expect(isMutationCommand(['workflow', 'delete', 'workflow.yml'])).toBe(true)
       expect(isMutationCommand(['codespace', 'edit', 'name'])).toBe(true)
     })
+
+    test('should detect Phase 2.3 codespace mutation commands', () => {
+      // Arrange & Act & Assert
+      expect(isMutationCommand(['codespace', 'create', '--repo', 'owner/repo'])).toBe(true)
+      expect(isMutationCommand(['codespace', 'delete', 'name'])).toBe(true)
+      expect(isMutationCommand(['codespace', 'edit', 'name', '--display-name', 'New'])).toBe(true)
+      expect(isMutationCommand(['codespace', 'stop', 'name'])).toBe(true)
+      expect(isMutationCommand(['codespace', 'rebuild', 'name'])).toBe(true)
+    })
+
+    test('should NOT detect Phase 2.3 codespace read commands as mutations', () => {
+      // Arrange & Act & Assert
+      expect(isMutationCommand(['codespace', 'list'])).toBe(false)
+      expect(isMutationCommand(['codespace', 'view'])).toBe(false)
+      expect(isMutationCommand(['codespace', 'logs', 'name'])).toBe(false)
+    })
   })
 
   describe('shouldConvertToStructuredFormat', () => {
@@ -1362,6 +1378,86 @@ describe('gh-passthrough', () => {
       expect(fields).toContain('displayName')
       expect(fields).toContain('machineDisplayName')
       expect(fields).toContain('state')
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should not inject --json for codespace create mutation command (Phase 2.3)', async () => {
+      // Arrange
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: 'Created codespace for owner/repo',
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['codespace', 'create', '--repo', 'owner/repo']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert - no --json injection for mutation commands
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs).toEqual(['codespace', 'create', '--repo', 'owner/repo'])
+      expect(callArgs).not.toContain('--json')
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should not inject --json for codespace delete mutation command (Phase 2.3)', async () => {
+      // Arrange
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: 'Deleted codespace: test-codespace',
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['codespace', 'delete', 'test-codespace']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert - no --json injection for mutation commands
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs).toEqual(['codespace', 'delete', 'test-codespace'])
+      expect(callArgs).not.toContain('--json')
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should not inject --json for codespace stop mutation command (Phase 2.3)', async () => {
+      // Arrange
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: 'Stopped codespace: test-codespace',
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['codespace', 'stop', 'test-codespace']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert - no --json injection for mutation commands
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs).toEqual(['codespace', 'stop', 'test-codespace'])
+      expect(callArgs).not.toContain('--json')
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should not inject --json for codespace rebuild mutation command (Phase 2.3)', async () => {
+      // Arrange
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: 'Rebuilding codespace: test-codespace',
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['codespace', 'rebuild', 'test-codespace']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert - no --json injection for mutation commands
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs).toEqual(['codespace', 'rebuild', 'test-codespace'])
+      expect(callArgs).not.toContain('--json')
       expect(processExitSpy).not.toHaveBeenCalled()
     })
   })
