@@ -64,10 +64,25 @@ const MUTATION_COMMANDS = new Set([
  * isMutationCommand(['issue', 'list'])         // false
  * isMutationCommand(['pr', 'create'])          // true
  * isMutationCommand(['pr', 'view', '123'])     // false
+ * isMutationCommand(['issue', 'list', '--author', 'create'])  // false (not a verb)
  * ```
  */
 export function isMutationCommand(args: string[]): boolean {
-  return args.some(arg => MUTATION_COMMANDS.has(arg))
+  if (args.length === 0) {
+    return false
+  }
+  // Check for command verbs (e.g., 'create', 'edit') at the start of the command.
+  // Verbs are typically at index 0 or 1.
+  const firstArg = args[0]
+  const secondArg = args[1]
+  if ((firstArg && MUTATION_COMMANDS.has(firstArg)) || (secondArg && MUTATION_COMMANDS.has(secondArg))) {
+    return true
+  }
+
+  // Check for mutation flags (e.g., '--add-label').
+  // We only check arguments that look like flags to avoid matching flag values.
+  // The set stores them without '--', so we strip the prefix before checking.
+  return args.some(arg => arg.startsWith('--') && MUTATION_COMMANDS.has(arg.substring(2)))
 }
 
 /**

@@ -67,6 +67,10 @@ describe('gh-passthrough', () => {
       expect(isMutationCommand(['pr', 'view', '456'])).toBe(false)
       expect(isMutationCommand(['repo', 'view'])).toBe(false)
       expect(isMutationCommand(['release', 'list'])).toBe(false)
+      // Ensure flag values are not misinterpreted as verbs
+      expect(isMutationCommand(['issue', 'list', '--author', 'create'])).toBe(false)
+      // Ensure search terms are not misinterpreted as verbs
+      expect(isMutationCommand(['search', 'issues', 'edit'])).toBe(false)
     })
 
     test('should handle empty args', () => {
