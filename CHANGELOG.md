@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.26.1](https://github.com/pleaseai/gh-please/compare/github-v0.26.0...github-v0.26.1) (2025-11-02)
+
+
+### Bug Fixes
+
+* prevent --json injection for mutation commands in passthrough ([#171](https://github.com/pleaseai/gh-please/issues/171)) ([2e37fe3](https://github.com/pleaseai/gh-please/commit/2e37fe3492f992e7b1b9e4044df72d2398675173))
+
 ## [0.26.0](https://github.com/pleaseai/gh-please/compare/github-v0.25.0...github-v0.26.0) (2025-11-01)
 
 
