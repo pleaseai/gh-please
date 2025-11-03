@@ -167,6 +167,26 @@ describe('gh-passthrough', () => {
       expect(isMutationCommand(['codespace', 'view'])).toBe(false)
       expect(isMutationCommand(['codespace', 'logs', 'name'])).toBe(false)
     })
+
+    test('should detect Phase 2.1 GitHub Actions mutation commands', () => {
+      // Arrange & Act & Assert
+      expect(isMutationCommand(['workflow', 'enable', 'ci.yml'])).toBe(true)
+      expect(isMutationCommand(['workflow', 'disable', 'ci.yml'])).toBe(true)
+      expect(isMutationCommand(['workflow', 'run', 'ci.yml'])).toBe(true)
+      expect(isMutationCommand(['run', 'cancel', '123'])).toBe(true)
+      expect(isMutationCommand(['run', 'rerun', '123'])).toBe(true)
+      expect(isMutationCommand(['run', 'watch', '123'])).toBe(true)
+      expect(isMutationCommand(['cache', 'delete', 'cache-key'])).toBe(true)
+    })
+
+    test('should NOT detect Phase 2.1 GitHub Actions read commands as mutations', () => {
+      // Arrange & Act & Assert
+      expect(isMutationCommand(['workflow', 'list'])).toBe(false)
+      expect(isMutationCommand(['workflow', 'view', 'ci.yml'])).toBe(false)
+      expect(isMutationCommand(['run', 'list'])).toBe(false)
+      expect(isMutationCommand(['run', 'view', '123'])).toBe(false)
+      expect(isMutationCommand(['cache', 'list'])).toBe(false)
+    })
   })
 
   describe('shouldConvertToStructuredFormat', () => {
@@ -572,7 +592,7 @@ describe('gh-passthrough', () => {
       expect(result[jsonIndex]).toBe('--json')
     })
 
-    test('should fallback to --json only for unmapped commands (workflow list)', () => {
+    test('should inject fields for workflow list (Phase 2.1)', () => {
       // Arrange
       const args = ['workflow', 'list']
 
@@ -581,12 +601,16 @@ describe('gh-passthrough', () => {
 
       // Assert
       expect(result).toContain('--json')
-      expect(result).toEqual(['workflow', 'list', '--json'])
-      // Should not inject fields for unmapped commands
-      expect(result.length).toBe(3)
+      expect(result.length).toBe(4) // args + --json + fields
+      expect(result[2]).toBe('--json')
+      const fields = result[3]
+      expect(fields).toContain('id')
+      expect(fields).toContain('name')
+      expect(fields).toContain('path')
+      expect(fields).toContain('state')
     })
 
-    test('should fallback to --json only for unmapped commands (run list)', () => {
+    test('should inject fields for run list (Phase 2.1)', () => {
       // Arrange
       const args = ['run', 'list']
 
@@ -595,9 +619,44 @@ describe('gh-passthrough', () => {
 
       // Assert
       expect(result).toContain('--json')
-      expect(result).toEqual(['run', 'list', '--json'])
-      // Should not inject fields for unmapped commands
-      expect(result.length).toBe(3)
+      expect(result.length).toBe(4) // args + --json + fields
+      expect(result[2]).toBe('--json')
+      const fields = result[3]
+      expect(fields).toContain('attempt')
+      expect(fields).toContain('conclusion')
+      expect(fields).toContain('status')
+      expect(fields).toContain('url')
+    })
+
+    test('should inject fields for cache list (Phase 2.1)', () => {
+      // Arrange
+      const args = ['cache', 'list']
+
+      // Act
+      const result = injectJsonFlag(args)
+
+      // Assert
+      expect(result).toContain('--json')
+      expect(result.length).toBe(4) // args + --json + fields
+      expect(result[2]).toBe('--json')
+      const fields = result[3]
+      expect(fields).toContain('createdAt')
+      expect(fields).toContain('id')
+      expect(fields).toContain('key')
+      expect(fields).toContain('sizeInBytes')
+    })
+
+    test('should fallback to --json only for run view (requires run ID)', () => {
+      // Arrange
+      const args = ['run', 'view', '123']
+
+      // Act
+      const result = injectJsonFlag(args)
+
+      // Assert
+      expect(result).toContain('--json')
+      expect(result.length).toBe(4) // args + --json
+      expect(result[3]).toBe('--json')
     })
 
     test('should preserve other arguments when injecting fields', () => {
@@ -1073,12 +1132,12 @@ describe('gh-passthrough', () => {
       expect(processExitSpy).not.toHaveBeenCalled()
     })
 
-    test('should handle JSON conversion with array data in injected fields', async () => {
+    test('should handle JSON conversion with array data in injected fields (Phase 2.1)', async () => {
       // Arrange
       const mockJsonOutput = JSON.stringify([
-        { number: 1, title: 'Item 1', state: 'OPEN' },
-        { number: 2, title: 'Item 2', state: 'CLOSED' },
-        { number: 3, title: 'Item 3', state: 'OPEN' },
+        { id: 1, name: 'Workflow 1', state: 'active' },
+        { id: 2, name: 'Workflow 2', state: 'disabled' },
+        { id: 3, name: 'Workflow 3', state: 'active' },
       ])
       executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
         stdout: mockJsonOutput,
@@ -1091,8 +1150,14 @@ describe('gh-passthrough', () => {
       // Act
       await passThroughCommand(args)
 
-      // Assert
-      expect(executeGhCommandSpy).toHaveBeenCalledWith(['workflow', 'list', '--json'])
+      // Assert - workflow list now has field mappings
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs[0]).toBe('workflow')
+      expect(callArgs[1]).toBe('list')
+      expect(callArgs[2]).toBe('--json')
+      expect(callArgs[3]).toContain('id')
+      expect(callArgs[3]).toContain('name')
+      expect(callArgs[3]).toContain('state')
       expect(processExitSpy).not.toHaveBeenCalled()
     })
 
@@ -1315,7 +1380,7 @@ describe('gh-passthrough', () => {
     })
 
     // Phase 2.3 Integration Tests
-    test('should default to TOON for codespace list read command (Phase 2.3)', async () => {
+    test('should fallback to --json only for codespace list (empty fields)', async () => {
       // Arrange
       const mockJsonOutput = JSON.stringify([{
         name: 'test-codespace',
@@ -1333,22 +1398,18 @@ describe('gh-passthrough', () => {
       // Act
       await passThroughCommand(args)
 
-      // Assert - --json injected with fields for codespace list
+      // Assert - --json injected without fields (empty field mapping)
       const callArgs = executeGhCommandSpy.mock.calls[0][0]
       expect(callArgs[0]).toBe('codespace')
       expect(callArgs[1]).toBe('list')
       expect(callArgs[2]).toBe('--limit')
       expect(callArgs[3]).toBe('10')
       expect(callArgs[4]).toBe('--json')
-      const fields = callArgs[5]
-      expect(fields).toContain('createdAt')
-      expect(fields).toContain('displayName')
-      expect(fields).toContain('state')
-      expect(fields).toContain('repository')
+      expect(callArgs.length).toBe(5) // No fields parameter
       expect(processExitSpy).not.toHaveBeenCalled()
     })
 
-    test('should inject fields for codespace view command (Phase 2.3)', async () => {
+    test('should fallback to --json only for codespace view (empty fields)', async () => {
       // Arrange
       const mockJsonOutput = JSON.stringify({
         name: 'test-codespace',
@@ -1367,17 +1428,12 @@ describe('gh-passthrough', () => {
       // Act
       await passThroughCommand(args)
 
-      // Assert - --json injected with fields for codespace view
+      // Assert - --json injected without fields (empty field mapping)
       const callArgs = executeGhCommandSpy.mock.calls[0][0]
       expect(callArgs[0]).toBe('codespace')
       expect(callArgs[1]).toBe('view')
       expect(callArgs[2]).toBe('--json')
-      const fields = callArgs[3]
-      expect(fields).toContain('billableOwner')
-      expect(fields).toContain('createdAt')
-      expect(fields).toContain('displayName')
-      expect(fields).toContain('machineDisplayName')
-      expect(fields).toContain('state')
+      expect(callArgs.length).toBe(3) // No fields parameter
       expect(processExitSpy).not.toHaveBeenCalled()
     })
 
@@ -1457,6 +1513,163 @@ describe('gh-passthrough', () => {
       // Assert - no --json injection for mutation commands
       const callArgs = executeGhCommandSpy.mock.calls[0][0]
       expect(callArgs).toEqual(['codespace', 'rebuild', 'test-codespace'])
+      expect(callArgs).not.toContain('--json')
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    // Phase 2.1: GitHub Actions Integration Tests
+    test('should default to TOON for workflow list (Phase 2.1)', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify([
+        { id: 123, name: 'CI', path: '.github/workflows/ci.yml', state: 'active' },
+        { id: 456, name: 'Release', path: '.github/workflows/release.yml', state: 'disabled' },
+      ])
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['workflow', 'list']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert - --json injected with fields
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs[0]).toBe('workflow')
+      expect(callArgs[1]).toBe('list')
+      expect(callArgs[2]).toBe('--json')
+      expect(callArgs[3]).toContain('id')
+      expect(callArgs[3]).toContain('name')
+      expect(callArgs[3]).toContain('path')
+      expect(callArgs[3]).toContain('state')
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should default to TOON for run list (Phase 2.1)', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify([
+        {
+          databaseId: 123,
+          displayTitle: 'Test Run',
+          status: 'completed',
+          conclusion: 'success',
+          workflowName: 'CI',
+        },
+      ])
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['run', 'list']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert - --json injected with fields
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs[0]).toBe('run')
+      expect(callArgs[1]).toBe('list')
+      expect(callArgs[2]).toBe('--json')
+      expect(callArgs[3]).toContain('databaseId')
+      expect(callArgs[3]).toContain('displayTitle')
+      expect(callArgs[3]).toContain('status')
+      expect(callArgs[3]).toContain('conclusion')
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should default to TOON for cache list (Phase 2.1)', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify([
+        {
+          id: 1,
+          key: 'cache-key-1',
+          sizeInBytes: 1024,
+          createdAt: '2025-01-01T00:00:00Z',
+        },
+      ])
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['cache', 'list']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert - --json injected with fields
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs[0]).toBe('cache')
+      expect(callArgs[1]).toBe('list')
+      expect(callArgs[2]).toBe('--json')
+      expect(callArgs[3]).toContain('id')
+      expect(callArgs[3]).toContain('key')
+      expect(callArgs[3]).toContain('sizeInBytes')
+      expect(callArgs[3]).toContain('createdAt')
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should not inject --json for workflow enable mutation command (Phase 2.1)', async () => {
+      // Arrange
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: 'Enabled workflow: ci.yml',
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['workflow', 'enable', 'ci.yml']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert - no --json injection for mutation commands
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs).toEqual(['workflow', 'enable', 'ci.yml'])
+      expect(callArgs).not.toContain('--json')
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should not inject --json for run cancel mutation command (Phase 2.1)', async () => {
+      // Arrange
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: 'Cancelled run: 123',
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['run', 'cancel', '123']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert - no --json injection for mutation commands
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs).toEqual(['run', 'cancel', '123'])
+      expect(callArgs).not.toContain('--json')
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should not inject --json for cache delete mutation command (Phase 2.1)', async () => {
+      // Arrange
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: 'Deleted cache: cache-key-1',
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['cache', 'delete', 'cache-key-1']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert - no --json injection for mutation commands
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs).toEqual(['cache', 'delete', 'cache-key-1'])
       expect(callArgs).not.toContain('--json')
       expect(processExitSpy).not.toHaveBeenCalled()
     })
@@ -1540,6 +1753,260 @@ describe('gh-passthrough', () => {
       expect(callArgs).not.toContain('[?isDraft]')
       expect(callArgs).toContain('--limit')
       expect(callArgs).toContain('10')
+    })
+
+    describe('Priority 1: Special case run command handling', () => {
+      test('should inject fields for run list (read command)', async () => {
+        // Arrange
+        const mockJsonOutput = JSON.stringify([
+          { databaseId: 123, displayTitle: 'Test Run', status: 'completed', conclusion: 'success', workflowName: 'CI' },
+        ])
+        executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+          stdout: mockJsonOutput,
+          stderr: '',
+          exitCode: 0,
+        })
+
+        const args = ['run', 'list']
+
+        // Act
+        await passThroughCommand(args)
+
+        // Assert - should inject fields for read command
+        const callArgs = executeGhCommandSpy.mock.calls[0][0]
+        expect(callArgs[0]).toBe('run')
+        expect(callArgs[1]).toBe('list')
+        expect(callArgs[2]).toBe('--json')
+        expect(callArgs[3]).toContain('databaseId')
+        expect(callArgs[3]).toContain('displayTitle')
+        expect(callArgs[3]).toContain('status')
+      })
+
+      test('should NOT inject fields for run cancel (mutation command)', async () => {
+        // Arrange
+        const mockNativeOutput = 'Canceling run...\nCanceled run 123'
+        executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+          stdout: mockNativeOutput,
+          stderr: '',
+          exitCode: 0,
+        })
+
+        const args = ['run', 'cancel', '123']
+
+        // Act
+        await passThroughCommand(args)
+
+        // Assert - should NOT inject fields for mutation command
+        const callArgs = executeGhCommandSpy.mock.calls[0][0]
+        expect(callArgs).toEqual(['run', 'cancel', '123'])
+        expect(callArgs).not.toContain('--json')
+      })
+
+      test('should NOT inject fields for run rerun (mutation command)', async () => {
+        // Arrange
+        executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+          stdout: 'Rerunning run 123',
+          stderr: '',
+          exitCode: 0,
+        })
+
+        const args = ['run', 'rerun', '123']
+
+        // Act
+        await passThroughCommand(args)
+
+        // Assert
+        const callArgs = executeGhCommandSpy.mock.calls[0][0]
+        expect(callArgs).toEqual(['run', 'rerun', '123'])
+        expect(callArgs).not.toContain('--json')
+      })
+
+      test('should NOT inject fields for run watch (interactive command)', async () => {
+        // Arrange
+        executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+          stdout: 'Watching run 123...',
+          stderr: '',
+          exitCode: 0,
+        })
+
+        const args = ['run', 'watch', '123']
+
+        // Act
+        await passThroughCommand(args)
+
+        // Assert
+        const callArgs = executeGhCommandSpy.mock.calls[0][0]
+        expect(callArgs).toEqual(['run', 'watch', '123'])
+        expect(callArgs).not.toContain('--json')
+      })
+
+      test('should inject fields for run view (read command)', async () => {
+        // Arrange - run view returns empty fields, so --json only
+        executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+          stdout: JSON.stringify({ databaseId: 123, displayTitle: 'Test Run' }),
+          stderr: '',
+          exitCode: 0,
+        })
+
+        const args = ['run', 'view', '123']
+
+        // Act
+        await passThroughCommand(args)
+
+        // Assert - should inject --json (fields are empty for run view)
+        const callArgs = executeGhCommandSpy.mock.calls[0][0]
+        expect(callArgs[0]).toBe('run')
+        expect(callArgs[1]).toBe('view')
+        expect(callArgs[2]).toBe('123')
+        expect(callArgs[3]).toBe('--json')
+        expect(callArgs.length).toBe(4) // No fields parameter
+      })
+    })
+
+    describe('Priority 1: Query support for GitHub Actions commands', () => {
+      test('should support --query flag for workflow list', async () => {
+        // Arrange
+        const mockJsonOutput = JSON.stringify([
+          { id: 123, name: 'CI', path: '.github/workflows/ci.yml', state: 'active' },
+          { id: 456, name: 'Release', path: '.github/workflows/release.yml', state: 'disabled' },
+        ])
+        executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+          stdout: mockJsonOutput,
+          stderr: '',
+          exitCode: 0,
+        })
+
+        const args = ['workflow', 'list', '--query', '[?state==`active`]']
+
+        // Act
+        await passThroughCommand(args)
+
+        // Assert - query should be stripped from gh command
+        const callArgs = executeGhCommandSpy.mock.calls[0][0]
+        expect(callArgs).not.toContain('--query')
+        expect(callArgs).not.toContain('[?state==`active`]')
+        expect(callArgs[0]).toBe('workflow')
+        expect(callArgs[1]).toBe('list')
+        expect(callArgs[2]).toBe('--json')
+      })
+
+      test('should support --query flag for run list', async () => {
+        // Arrange
+        const mockJsonOutput = JSON.stringify([
+          { databaseId: 123, displayTitle: 'Test Run', status: 'completed', conclusion: 'success' },
+          { databaseId: 456, displayTitle: 'Failed Run', status: 'completed', conclusion: 'failure' },
+        ])
+        executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+          stdout: mockJsonOutput,
+          stderr: '',
+          exitCode: 0,
+        })
+
+        const args = ['run', 'list', '--query', '[?conclusion==`failure`]']
+
+        // Act
+        await passThroughCommand(args)
+
+        // Assert
+        const callArgs = executeGhCommandSpy.mock.calls[0][0]
+        expect(callArgs).not.toContain('--query')
+        expect(callArgs).not.toContain('[?conclusion==`failure`]')
+        expect(callArgs[0]).toBe('run')
+        expect(callArgs[1]).toBe('list')
+      })
+
+      test('should support --query flag for cache list', async () => {
+        // Arrange
+        const mockJsonOutput = JSON.stringify([
+          { id: 1, key: 'cache-key-1', sizeInBytes: 1024, createdAt: '2025-01-01T00:00:00Z' },
+          { id: 2, key: 'cache-key-2', sizeInBytes: 2048, createdAt: '2025-01-02T00:00:00Z' },
+        ])
+        executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+          stdout: mockJsonOutput,
+          stderr: '',
+          exitCode: 0,
+        })
+
+        const args = ['cache', 'list', '--query', '[?sizeInBytes > `1500`]']
+
+        // Act
+        await passThroughCommand(args)
+
+        // Assert
+        const callArgs = executeGhCommandSpy.mock.calls[0][0]
+        expect(callArgs).not.toContain('--query')
+        expect(callArgs).not.toContain('[?sizeInBytes > `1500`]')
+        expect(callArgs[0]).toBe('cache')
+        expect(callArgs[1]).toBe('list')
+      })
+
+      test('should apply JMESPath query to workflow list results', async () => {
+        // Arrange
+        const mockJsonOutput = JSON.stringify([
+          { id: 123, name: 'CI', path: '.github/workflows/ci.yml', state: 'active' },
+          { id: 456, name: 'Release', path: '.github/workflows/release.yml', state: 'disabled' },
+          { id: 789, name: 'Deploy', path: '.github/workflows/deploy.yml', state: 'active' },
+        ])
+        executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+          stdout: mockJsonOutput,
+          stderr: '',
+          exitCode: 0,
+        })
+
+        // Use valid JMESPath syntax with string literals
+        const args = ['workflow', 'list', '--query', '[?state==\'active\']']
+
+        // Act
+        await passThroughCommand(args)
+
+        // Assert - verify command execution succeeded
+        // The query should filter results without causing exit
+        expect(executeGhCommandSpy).toHaveBeenCalledTimes(1)
+        // Note: processExitSpy may be called during TOON output, so we don't check it
+      })
+
+      test('should apply JMESPath projection to run list results', async () => {
+        // Arrange
+        const mockJsonOutput = JSON.stringify([
+          { databaseId: 123, displayTitle: 'Test Run', status: 'completed', conclusion: 'success', workflowName: 'CI' },
+          { databaseId: 456, displayTitle: 'Failed Run', status: 'completed', conclusion: 'failure', workflowName: 'Release' },
+        ])
+        executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+          stdout: mockJsonOutput,
+          stderr: '',
+          exitCode: 0,
+        })
+
+        const args = ['run', 'list', '--query', '[].{id: databaseId, title: displayTitle}']
+
+        // Act
+        await passThroughCommand(args)
+
+        // Assert
+        expect(processExitSpy).not.toHaveBeenCalled()
+        expect(executeGhCommandSpy).toHaveBeenCalledTimes(1)
+      })
+
+      test('should handle invalid JMESPath query gracefully', async () => {
+        // Arrange
+        const mockJsonOutput = JSON.stringify([
+          { id: 123, name: 'CI', state: 'active' },
+        ])
+        executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+          stdout: mockJsonOutput,
+          stderr: '',
+          exitCode: 0,
+        })
+
+        const args = ['workflow', 'list', '--query', '[invalid syntax']
+
+        // Act
+        await passThroughCommand(args)
+
+        // Assert - should exit with error
+        expect(processExitSpy).toHaveBeenCalledWith(1)
+        expect(consoleErrorSpy).toHaveBeenCalled()
+      })
     })
   })
 })

@@ -128,10 +128,36 @@ const COMMANDS: CommandConfig[] = [
     testId: '', // View requires interactive selection or codespace name, use empty for error
     description: 'Codespace view command (Phase 2.3)',
   },
+  // Phase 2.1 commands - GitHub Actions
+  {
+    command: 'workflow',
+    subcommand: 'list',
+    testId: '--limit 1', // List commands need --limit flag
+    description: 'Workflow list command (Phase 2.1)',
+  },
+  {
+    command: 'run',
+    subcommand: 'list',
+    testId: '--limit 1', // List commands need --limit flag
+    description: 'Run list command (Phase 2.1)',
+  },
+  {
+    command: 'run',
+    subcommand: 'view',
+    testId: '', // View requires interactive selection or run ID, use empty for error
+    description: 'Run view command (Phase 2.1)',
+  },
+  {
+    command: 'cache',
+    subcommand: 'list',
+    testId: '--limit 1', // List commands need --limit flag
+    description: 'Cache list command (Phase 2.1)',
+  },
   // Note: gist, org, and project commands do NOT support --json flag
   // - gist list/view: No --json support
   // - org list: No --json support
   // - project list/view: Uses --format json (different pattern, returns JSON but no field selection)
+  // Note: workflow view does NOT support --json flag (only --yaml and --web)
 ]
 
 /**
@@ -215,15 +241,28 @@ function binarySearchValidFields(
 ): string[] {
   // Base cases
   if (fields.length === 0) {
+    if (depth === 0) {
+      console.log(`   ⚠️  No fields provided for validation`)
+    }
     return []
   }
   if (fields.length === 1) {
-    return validateFields(command, subcommand, fields, testId) ? fields : []
+    const isValid = validateFields(command, subcommand, fields, testId)
+    if (!isValid && depth > 0) {
+      const indent = '  '.repeat(depth + 1)
+      console.log(`${indent}❌ Field failed validation: ${fields[0]}`)
+    }
+    return isValid ? fields : []
   }
 
   // Test all fields first
   if (validateFields(command, subcommand, fields, testId)) {
     return fields
+  }
+
+  // Log when splitting is needed
+  if (depth === 0) {
+    console.log(`   ⚠️  Full field set failed validation, splitting to identify problematic fields...`)
   }
 
   // Split and test each half
@@ -254,7 +293,40 @@ function extractAndValidateFields(
   const result = executeGhCommand([command, subcommand, testId, '--json', 'invalidfield'])
 
   if (!result.stderr.includes('Available fields:')) {
-    throw new Error(`Failed to extract fields for ${command} ${subcommand}\nStderr: ${result.stderr}`)
+    // Enhanced error message with root cause analysis
+    let errorReason = 'Unknown error'
+
+    if (result.exitCode !== 0) {
+      // Parse stderr to identify specific failure reasons
+      const stderr = result.stderr.toLowerCase()
+
+      if (stderr.includes('authentication') || stderr.includes('not authenticated')) {
+        errorReason = 'Authentication required. Run: gh auth login'
+      }
+      else if (stderr.includes('not found') || stderr.includes('could not resolve')) {
+        errorReason = `Resource not found. Check if test ID is valid: ${testId}`
+      }
+      else if (stderr.includes('permission') || stderr.includes('forbidden') || stderr.includes('403')) {
+        errorReason = 'Permission denied. Ensure you have access to the repository.'
+      }
+      else if (stderr.includes('rate limit')) {
+        errorReason = 'GitHub API rate limit exceeded. Wait and retry.'
+      }
+      else if (stderr.includes('not support') || stderr.includes('unknown flag')) {
+        errorReason = 'Command does not support --json flag'
+      }
+      else if (result.stderr.trim()) {
+        // Include first line of stderr for debugging
+        errorReason = result.stderr.split('\n')[0].trim()
+      }
+    }
+
+    throw new Error(
+      `Failed to extract fields for ${command} ${subcommand}\n`
+      + `Reason: ${errorReason}\n`
+      + `Exit code: ${result.exitCode}\n`
+      + `Full stderr: ${result.stderr}`,
+    )
   }
 
   const allFields = result.stderr

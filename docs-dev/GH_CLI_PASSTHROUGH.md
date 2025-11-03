@@ -19,15 +19,33 @@ gh please issue list              # Outputs TOON by default
 gh please pr view 123             # Outputs TOON by default
 gh please repo view               # Outputs TOON by default
 
+# Phase 2.1: GitHub Actions commands (read commands, TOON by default)
+gh please workflow list           # Outputs TOON by default
+gh please run list                # Outputs TOON by default
+gh please cache list              # Outputs TOON by default
+
 # Mutation commands use native output (no --json injection)
 gh please issue edit 123 --title "New title"    # Native gh CLI output
 gh please pr close 456                          # Native gh CLI output
 gh please pr merge 789 --squash                 # Native gh CLI output
 
+# Phase 2.1: GitHub Actions mutations (native output)
+gh please workflow enable ci.yml  # Native gh CLI output
+gh please workflow disable ci.yml # Native gh CLI output
+gh please workflow run ci.yml     # Native gh CLI output
+gh please run cancel 123          # Native gh CLI output
+gh please run rerun 123           # Native gh CLI output
+gh please cache delete cache-key  # Native gh CLI output
+
 # Explicit format conversion (overrides defaults)
 gh please issue list --format toon              # Explicit TOON
 gh please issue list --format json              # Explicit JSON
 gh please issue list --format table             # Legacy native output (deprecated)
+
+# Phase 2.1: Query support for GitHub Actions commands
+gh please workflow list --query '[?state==`active`]'
+gh please run list --query '[?conclusion==`failure`]'
+gh please cache list --query '[?sizeInBytes > `1000000`]'
 ```
 
 ## Implementation
@@ -56,6 +74,9 @@ gh please issue list --format table             # Legacy native output (deprecat
 - `add-assignee`, `remove-assignee`, `add-label`, `remove-label`
 - `add-project`, `remove-project`
 - `set` (Phase 2.2: `variable set`, `secret set`)
+- `enable`, `disable` (Phase 2.1: `workflow enable/disable`)
+- `run` (Phase 2.1: `workflow run` - mutation verb)
+- `cancel`, `rerun`, `watch` (Phase 2.1: `run cancel/rerun/watch`)
 
 **Behavior**:
 ```typescript
@@ -76,6 +97,30 @@ gh please issue edit 123 --format toon  # Error: --json not supported
 # Force native output for read commands
 gh please issue list --format table     # Works (deprecated)
 ```
+
+### Special Case: 'run' Command Ambiguity (Phase 2.1)
+
+The word 'run' appears as both a **command group** and a **mutation verb**:
+
+```bash
+# Command group (read commands - inject fields)
+gh please run list        # Read command → injects fields
+gh please run view 123    # Read command → injects --json
+
+# Mutation verbs (mutation commands - native output)
+gh please run cancel 123  # Mutation → no field injection
+gh please run rerun 123   # Mutation → no field injection
+gh please run watch 123   # Interactive → no field injection
+
+# 'workflow run' - mutation verb
+gh please workflow run ci.yml  # Mutation → no field injection
+```
+
+**Implementation**: Position-aware detection in `isMutationCommand()`:
+- If `run` at index 0: treat as command group (check index 1 for mutation verbs)
+- If `run` at index 1: treat as mutation verb (e.g., `workflow run`)
+
+This allows `run list` to inject fields while `run cancel` remains a mutation.
 
 ### Field Injection for View and List Commands
 
@@ -101,9 +146,15 @@ gh-please automatically injects fields for common view and list commands using g
 | `pr list`    | additions,assignees,author,baseRefName,... (46 fields) |
 | `repo view`  | name,owner,description,archivedAt,... (66 fields)¹    |
 | `release view` | (empty)²                                              |
+| **Phase 2.1 GitHub Actions Commands** | |
+| `workflow list` | id,name,path,state (4 fields)                        |
+| `run list`   | attempt,conclusion,createdAt,databaseId,displayTitle,... (16 fields) |
+| `run view`   | (empty)³ - requires interactive run ID selection     |
+| `cache list` | createdAt,id,key,lastAccessedAt,ref,sizeInBytes,version (7 fields) |
 
 ¹ Field counts may change as deprecated fields are removed during generation.
 ² Field generation for `release view` failed as no releases were found in the test repository, resulting in an empty field list.
+³ `run view` requires interactive run ID selection, so field generation returned empty.
 
 **How it works:**
 

@@ -50,6 +50,12 @@ const MUTATION_COMMANDS = new Set([
   'set', // Mutation verb: variable set, secret set (Phase 2.2)
   'stop', // Mutation verb: codespace stop (Phase 2.3)
   'rebuild', // Mutation verb: codespace rebuild (Phase 2.3)
+  'enable', // Mutation verb: workflow enable (Phase 2.1)
+  'disable', // Mutation verb: workflow disable (Phase 2.1)
+  'run', // Mutation verb: workflow run (Phase 2.1)
+  'cancel', // Mutation verb: run cancel (Phase 2.1)
+  'rerun', // Mutation verb: run rerun (Phase 2.1)
+  'watch', // Interactive verb: run watch (Phase 2.1)
 ])
 
 /**
@@ -69,12 +75,26 @@ const MUTATION_COMMANDS = new Set([
  * isMutationCommand(['pr', 'view', '123'])     // false
  * isMutationCommand(['variable', 'set', 'KEY', 'value'])  // true (Phase 2.2)
  * isMutationCommand(['issue', 'list', '--author', 'create'])  // false (not a verb)
+ * isMutationCommand(['workflow', 'run', 'test'])  // true (Phase 2.1)
+ * isMutationCommand(['run', 'list'])  // false (Phase 2.1 - 'run' is the command, not a verb)
  * ```
  */
 export function isMutationCommand(args: string[]): boolean {
   if (args.length === 0) {
     return false
   }
+
+  // Special case: 'run' at index 0 is a command group (run list, run view),
+  // not a mutation verb (workflow run). But 'run cancel', 'run rerun', 'run watch'
+  // at index 1 ARE mutation verbs.
+  if (args[0] === 'run') {
+    // Check if there's a mutation verb at index 1
+    if (args.length > 1 && args[1] && MUTATION_COMMANDS.has(args[1])) {
+      return true
+    }
+    return false
+  }
+
   // Check for command verbs (e.g., 'create', 'edit') at the start of the command.
   // Verbs are typically at index 0 or 1.
   if (args.slice(0, 2).some(arg => arg && MUTATION_COMMANDS.has(arg))) {
@@ -382,6 +402,12 @@ export async function passThroughCommand(args: string[]): Promise<void> {
     try {
       // Handle empty output gracefully (e.g., empty lists)
       if (result.stdout.trim() === '') {
+        // Distinguish between legitimate empty results and potential failures
+        // Log for debugging when --json returns empty output
+        if (process.env.DEBUG) {
+          console.error(`[DEBUG] gh CLI returned empty output for: gh ${cleanArgs.join(' ')} --json`)
+          console.error(`[DEBUG] This may be a legitimate empty result (e.g., empty list)`)
+        }
         // If stdout is empty, there's nothing to format, so we can exit gracefully.
         return
       }
