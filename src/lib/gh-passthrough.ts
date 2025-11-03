@@ -48,6 +48,8 @@ const MUTATION_COMMANDS = new Set([
   'add-project',
   'remove-project',
   'set', // Mutation verb: variable set, secret set (Phase 2.2)
+  'stop', // Mutation verb: codespace stop (Phase 2.3)
+  'rebuild', // Mutation verb: codespace rebuild (Phase 2.3)
 ])
 
 /**

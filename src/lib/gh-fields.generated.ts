@@ -43,6 +43,10 @@
  *     - uploadUrl: release not found
  *     - url: release not found
  *     - zipballUrl: release not found
+ *   codespace list:
+ *     Note: Fields could not be validated (requires Codespaces access). Manually added from gh CLI available fields.
+ *   codespace view:
+ *     Note: Fields could not be validated (requires Codespaces access). Manually added from gh CLI available fields.
  */
 export const GH_JSON_FIELDS: Record<string, string> = {
   'issue view': 'assignees,author,body,closed,closedAt,closedByPullRequestsReferences,comments,createdAt,id,isPinned,labels,milestone,number,reactionGroups,state,stateReason,title,updatedAt,url',
@@ -58,4 +62,8 @@ export const GH_JSON_FIELDS: Record<string, string> = {
   'search repos': 'createdAt,defaultBranch,description,forksCount,fullName,hasDownloads,hasIssues,hasPages,hasProjects,hasWiki,homepage,id,isArchived,isDisabled,isFork,isPrivate,language,license,name,openIssuesCount,owner,pushedAt,size,stargazersCount,updatedAt,url,visibility,watchersCount',
   'search issues': 'assignees,author,authorAssociation,body,closedAt,commentsCount,createdAt,id,isLocked,isPullRequest,labels,number,repository,state,title,updatedAt,url',
   'search prs': 'assignees,author,authorAssociation,body,closedAt,commentsCount,createdAt,id,isDraft,isLocked,isPullRequest,labels,number,repository,state,title,updatedAt,url',
+  // Codespace fields - manually added due to 403 permissions (requires Codespaces access)
+  // Fields extracted from gh CLI error messages, will work when user has proper access
+  'codespace list': 'createdAt,displayName,gitStatus,lastUsedAt,machineName,name,owner,repository,state,vscsTarget',
+  'codespace view': 'billableOwner,createdAt,devcontainerPath,displayName,environmentId,gitStatus,idleTimeoutMinutes,lastUsedAt,location,machineDisplayName,machineName,name,owner,prebuild,recentFolders,repository,retentionExpiresAt,retentionPeriodDays,state,vscsTarget',
 }

@@ -115,6 +115,23 @@ const COMMANDS: CommandConfig[] = [
     testId: 'test --limit 1', // Search requires a query
     description: 'Search PRs command (Phase 2.2)',
   },
+  // Phase 2.3 commands
+  {
+    command: 'codespace',
+    subcommand: 'list',
+    testId: '--limit 1', // List commands need --limit flag
+    description: 'Codespace list command (Phase 2.3)',
+  },
+  {
+    command: 'codespace',
+    subcommand: 'view',
+    testId: '', // View requires interactive selection or codespace name, use empty for error
+    description: 'Codespace view command (Phase 2.3)',
+  },
+  // Note: gist, org, and project commands do NOT support --json flag
+  // - gist list/view: No --json support
+  // - org list: No --json support
+  // - project list/view: Uses --format json (different pattern, returns JSON but no field selection)
 ]
 
 /**

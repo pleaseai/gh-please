@@ -463,6 +463,8 @@ url, zipballUrl
 
 Manage gists.
 
+**⚠️ LIMITATION:** Gist commands do NOT support `--json` flag and therefore cannot output TOON format. Commands will use native gh CLI output.
+
 #### gist list
 
 List your gists.
@@ -477,29 +479,16 @@ gh please gist list [flags]
 - `--public`: Show only public gists
 - `--secret`: Show only secret gists
 
-**TOON Output:**
-```
-id	description	public	files	updatedAt	url
-abc123def456	Quick script for data processing	true	process.py	2024-01-15T09:30:00Z	https://gist.github.com/abc123def456
-xyz789uvw012	Config file template	false	config.yaml	2024-01-14T16:20:00Z	https://gist.github.com/xyz789uvw012
-```
-
-**Field Mapping:**
-- `id`: Gist ID
-- `description`: Gist description
-- `public`: Public status (true/false)
-- `files`: Comma-separated file names
-- `updatedAt`: Last update timestamp
-- `url`: Gist URL
+**Output:** Native gh CLI table format (TOON conversion not available)
 
 #### Other gist commands
 
 | Command | Description | TOON Support |
 |---------|-------------|--------------|
-| `gist create <files...>` | Create a new gist | ✅ Yes |
-| `gist view <id>` | View gist content | ✅ Yes |
-| `gist edit <id>` | Edit a gist | ✅ Yes |
-| `gist delete <id>` | Delete a gist | ✅ Yes |
+| `gist create <files...>` | Create a new gist | ❌ No (--json not supported) |
+| `gist view <id>` | View gist content | ❌ No (--json not supported) |
+| `gist edit <id>` | Edit a gist | ❌ No (--json not supported) |
+| `gist delete <id>` | Delete a gist | ❌ No (--json not supported) |
 | `gist clone <id>` | Clone a gist | ❌ No (action command) |
 
 ---
@@ -507,6 +496,8 @@ xyz789uvw012	Config file template	false	config.yaml	2024-01-14T16:20:00Z	https:/
 ### org
 
 Manage organizations.
+
+**⚠️ LIMITATION:** Org commands do NOT support `--json` flag and therefore cannot output TOON format. Commands will use native gh CLI output.
 
 #### org list
 
@@ -517,18 +508,21 @@ List organizations for a user.
 gh please org list [flags]
 ```
 
-**TOON Output:**
-```
-login	name	description	url
-github	GitHub	How people build software	https://github.com/github
-nodejs	Node.js	Node.js JavaScript runtime	https://github.com/nodejs
-```
+**Common Flags:**
+- `-L, --limit <int>`: Maximum number to list (default 30)
+
+**Output:** Native gh CLI table format (TOON conversion not available)
 
 ---
 
 ### project
 
 Manage GitHub Projects.
+
+**⚠️ LIMITATION:** Project commands use `--format json` instead of `--json <fields>`, which means:
+- TOON conversion is possible but without field selection
+- All available fields are returned (cannot customize field list)
+- Commands will work with `--format toon` but may return more data than needed
 
 #### project list
 
@@ -539,13 +533,20 @@ List projects in a repository or organization.
 gh please project list [flags]
 ```
 
-**TOON Output:**
+**Common Flags:**
+- `--closed`: Include closed projects
+- `-L, --limit <int>`: Maximum number to fetch (default 30)
+- `--owner <string>`: Login of the owner
+
+**TOON Output:** (All fields returned, no field selection)
 ```
-number	title	state	url
-1	Website redesign	OPEN	https://github.com/users/owner/projects/1
-2	Bug tracking	OPEN	https://github.com/users/owner/projects/2
-3	Q4 2023 goals	CLOSED	https://github.com/users/owner/projects/3
+number	title	state	url	public	readme	shortDescription
+1	Website redesign	OPEN	https://github.com/users/owner/projects/1	true		Redesign project
+2	Bug tracking	OPEN	https://github.com/users/owner/projects/2	false	Track bugs	Bug tracker
+3	Q4 2023 goals	CLOSED	https://github.com/users/owner/projects/3	true		Quarterly goals
 ```
+
+**Note:** Projects use `--format json` which returns all fields. Use JMESPath queries to filter specific fields if needed.
 
 ---
 
@@ -562,12 +563,69 @@ List codespaces.
 gh please codespace list [flags]
 ```
 
+**Common Flags:**
+- `-L, --limit <int>`: Maximum number to fetch
+- `-R, --repo <string>`: Filter by repository name (user/repo)
+- `--repo-owner <string>`: Filter by repository owner (username or org)
+
 **TOON Output:**
 ```
-name	repository	branch	state	createdAt	url
-monalisa-shiny-space	owner/repo	main	AVAILABLE	2024-01-15T08:00:00Z	https://github.com/codespaces/abc123
-octocat-happy-tree	owner/repo2	dev	SHUTDOWN	2024-01-10T14:30:00Z	https://github.com/codespaces/xyz789
+createdAt	displayName	gitStatus	lastUsedAt	machineName	name	owner	repository	state	vscsTarget
+2024-01-15T08:00:00Z	Shiny Space	UpToDate	2024-01-16T10:30:00Z	standardLinux32gb	monalisa-shiny-space	monalisa	owner/repo	Available	https://github.com/codespaces/abc123
+2024-01-10T14:20:00Z	Happy Tree	Uncommitted	2024-01-14T09:15:00Z	basicLinux32gb	octocat-happy-tree	octocat	owner/repo2	Shutdown	https://github.com/codespaces/xyz789
 ```
+
+**Field Mapping** (10 fields):
+- `createdAt`: Creation timestamp (ISO 8601)
+- `displayName`: Human-readable codespace name
+- `gitStatus`: Git status (UpToDate | Uncommitted | etc.)
+- `lastUsedAt`: Last usage timestamp (ISO 8601)
+- `machineName`: Machine type (standardLinux32gb, etc.)
+- `name`: Codespace identifier
+- `owner`: Owner username
+- `repository`: Repository (owner/repo format)
+- `state`: Codespace state (Available, Shutdown, Starting, etc.)
+- `vscsTarget`: Codespace URL
+
+**JMESPath Examples:**
+```bash
+# Only available codespaces
+gh please codespace list --query "[?state=='Available']"
+
+# Codespaces for specific repository
+gh please codespace list --query "[?repository=='owner/repo']"
+
+# Recently used codespaces (last 7 days)
+gh please codespace list --query "[?lastUsedAt > '2024-01-09']"
+
+# Codespaces with uncommitted changes
+gh please codespace list --query "[?gitStatus=='Uncommitted']"
+```
+
+#### codespace view
+
+View details of a specific codespace.
+
+**Usage:**
+```bash
+gh please codespace view [flags]
+```
+
+**TOON Output:**
+```
+billableOwner	createdAt	displayName	machineDisplayName	state	repository	idleTimeoutMinutes	retentionPeriodDays
+owner	2024-01-15T08:00:00Z	My Dev Environment	4 cores, 16 GB RAM, 32 GB storage	Available	owner/repo	30	5
+```
+
+**Available Fields** (20 fields):
+```
+billableOwner, createdAt, devcontainerPath, displayName, environmentId, gitStatus,
+idleTimeoutMinutes, lastUsedAt, location, machineDisplayName, machineName, name,
+owner, prebuild, recentFolders, repository, retentionExpiresAt, retentionPeriodDays,
+state, vscsTarget
+```
+
+**Note:** Codespace commands require GitHub Codespaces access. Field mappings have been manually added and will work when proper permissions are available.
 
 ---
 
@@ -812,7 +870,7 @@ gh please search issues <query> [flags]
 gh please search issues "is:issue label:bug" --query "[?state=='OPEN']"
 
 # Issues with many comments
-gh please search issues "is:issue" --query "[?commentsCount > `10`]"
+gh please search issues "is:issue" --query "[?commentsCount > 10]"
 
 # Recently updated
 gh please search issues "react" --query "sort_by(@, &updatedAt)[-10:]"
@@ -938,7 +996,7 @@ DATABASE_URL	5	https://api.github.com/orgs/my-org/actions/secrets/DATABASE_URL/r
 gh please secret list --query "sort_by(@, &updatedAt)[-3:]"
 
 # Secrets with selective repository access
-gh please secret list --query "[?numSelectedRepos > `0`]"
+gh please secret list --query "[?numSelectedRepos > 0]"
 
 # Secrets by visibility
 gh please secret list --query "[?visibility=='selected']"
@@ -990,7 +1048,7 @@ gh please variable list --query "[?starts_with(name, 'DEPLOY_')]"
 gh please variable list --query "sort_by(@, &createdAt)[-5:]"
 
 # Variables with selective repository access
-gh please variable list --query "[?numSelectedRepos > `0`]"
+gh please variable list --query "[?numSelectedRepos > 0]"
 
 # Get specific variable value
 gh please variable list --query "[?name=='NODE_VERSION'].value | [0]"
@@ -1002,25 +1060,29 @@ gh please variable list --query "[?name=='NODE_VERSION'].value | [0]"
 
 ### TOON Format Support
 
-| Command Group | List Commands | View Commands | Action Commands | Total |
-|---------------|---------------|---------------|----------------|-------|
-| issue | ✅ Full | ✅ Full | ✅ Full | 12/12 |
-| pr | ✅ Full | ✅ Full | ⚠️ Partial | 14/16 |
-| repo | ✅ Full | ✅ Full | ⚠️ Partial | 8/13 |
-| release | ✅ Full | ✅ Full | ⚠️ Partial | 6/8 |
-| workflow | ✅ Full | ✅ Full | ✅ Full | 5/5 |
-| run | ✅ Full | ✅ Full | ⚠️ Partial | 5/7 |
-| cache | ✅ Full | N/A | ✅ Full | 2/2 |
-| gist | ✅ Full | ✅ Full | ⚠️ Partial | 4/6 |
-| search | ✅ Full | N/A | N/A | 3/3 |
-| label | ✅ Full | N/A | ✅ Full | 4/4 |
-| secret | ✅ Full | N/A | ✅ Full | 3/3 |
-| variable | ✅ Full | N/A | ✅ Full | 3/3 |
+| Command Group | List Commands | View Commands | Action Commands | Total | Notes |
+|---------------|---------------|---------------|----------------|-------|-------|
+| issue | ✅ Full | ✅ Full | ✅ Full | 12/12 | |
+| pr | ✅ Full | ✅ Full | ⚠️ Partial | 14/16 | |
+| repo | ✅ Full | ✅ Full | ⚠️ Partial | 8/13 | |
+| release | ✅ Full | ✅ Full | ⚠️ Partial | 6/8 | |
+| workflow | ✅ Full | ✅ Full | ✅ Full | 5/5 | |
+| run | ✅ Full | ✅ Full | ⚠️ Partial | 5/7 | |
+| cache | ✅ Full | N/A | ✅ Full | 2/2 | |
+| gist | ❌ None | ❌ None | ❌ None | 0/6 | No --json support |
+| org | ❌ None | N/A | N/A | 0/1 | No --json support |
+| project | ⚠️ Limited | ⚠️ Limited | ⚠️ Partial | 3/3 | Uses --format json (no field selection) |
+| codespace | ✅ Full | ✅ Full | ⚠️ Partial | 2/12 | Requires Codespaces access |
+| search | ✅ Full | N/A | N/A | 3/3 | |
+| label | ✅ Full | N/A | ✅ Full | 4/4 | |
+| secret | ✅ Full | N/A | ✅ Full | 3/3 | |
+| variable | ✅ Full | N/A | ✅ Full | 3/3 | |
 
 **Legend:**
-- ✅ Full: All subcommands support TOON format
+- ✅ Full: All subcommands support TOON format with field selection
+- ⚠️ Limited: TOON conversion available but without field selection (uses --format json)
 - ⚠️ Partial: Some subcommands don't support TOON (action commands like clone, checkout)
-- ❌ None: No TOON support (commands without --json support)
+- ❌ None: No TOON support (commands don't support --json or --format json)
 
 ### JMESPath Query Support
 
