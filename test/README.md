@@ -104,7 +104,7 @@ test('should trigger triage command', async () => {
 bun run test:integration
 ```
 
-### 3. E2E Tests (`test/e2e/`)
+### 3. E2E Tests (`e2e/`)
 
 Tests against real GitHub API (environment-gated).
 
@@ -178,7 +178,7 @@ const issue = mockIssue // { number: 123, title: "Test Issue", ... }
 const response = createIssueCommentResponse(123, 'comment text', 456)
 ```
 
-### E2E Setup (`test/e2e/setup.ts`)
+### E2E Setup (`e2e/setup.ts`)
 
 E2E test infrastructure:
 

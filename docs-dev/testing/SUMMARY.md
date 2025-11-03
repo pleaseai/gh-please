@@ -29,7 +29,7 @@ A comprehensive **3-level testing strategy** with automated CI/CD integration:
 |------|---------|-------|
 | `test/helpers/cli-runner.ts` | CLI execution utilities, mocking, assertions | ~300 |
 | `test/fixtures/github-responses.ts` | Mock GitHub API responses, builders | ~500 |
-| `test/e2e/setup.ts` | E2E infrastructure, environment gating, cleanup | ~250 |
+| `e2e/setup.ts` | E2E infrastructure, environment gating, cleanup | ~250 |
 | `scripts/manual-test.sh` | Automated smoke test script (executable) | ~350 |
 
 ### Integration Tests (3 files)
@@ -44,8 +44,8 @@ A comprehensive **3-level testing strategy** with automated CI/CD integration:
 
 | File | Workflow Tested | Test Cases |
 |------|-----------------|------------|
-| `test/e2e/sub-issue.e2e.test.ts` | Sub-issue management with real GitHub | ~6 tests |
-| `test/e2e/dependency.e2e.test.ts` | Dependency management with real GitHub | ~8 tests |
+| `e2e/sub-issue.e2e.test.ts` | Sub-issue management with real GitHub | ~6 tests |
+| `e2e/dependency.e2e.test.ts` | Dependency management with real GitHub | ~8 tests |
 
 ### CI/CD Workflows (2 files)
 
@@ -415,7 +415,7 @@ All success criteria have been met:
 **Test Execution:**
 - [Unit Tests](../../test/lib/)
 - [Integration Tests](../../test/integration/cli/)
-- [E2E Tests](../../test/e2e/)
+- [E2E Tests](../../e2e/)
 - [Manual Script](../../scripts/manual-test.sh)
 
 **CI/CD:**

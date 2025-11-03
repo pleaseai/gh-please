@@ -92,7 +92,7 @@ bun test test/integration/cli/ai-commands.test.ts
 
 ## 3. E2E Tests (Optional)
 
-**Location**: `test/e2e/`
+**Location**: `e2e/`
 **Purpose**: Test against real GitHub API
 **Speed**: Slow (~10-30s)
 **Requirements**: GitHub personal access token
@@ -133,7 +133,7 @@ bun run test:e2e
 E2E_SKIP_CLEANUP=true bun run test:e2e
 
 # Run specific E2E test
-GITHUB_TEST_TOKEN=ghp_... bun test test/e2e/sub-issue.e2e.test.ts
+GITHUB_TEST_TOKEN=ghp_... bun test e2e/sub-issue.e2e.test.ts
 ```
 
 **⚠️ Important Notes:**
@@ -217,7 +217,7 @@ bun run test:manual
 - Common test data (issues, PRs, comments)
 - Response builder functions
 
-**`test/e2e/setup.ts`**
+**`e2e/setup.ts`**
 - E2E test configuration and environment gating
 - Test artifact tracking and cleanup
 - Helper class for E2E operations
@@ -328,7 +328,7 @@ bun test test/integration/cli/ai-commands.test.ts --verbose
 E2E_SKIP_CLEANUP=true bun run test:e2e
 
 # Run single E2E test
-GITHUB_TEST_TOKEN=ghp_... bun test test/e2e/sub-issue.e2e.test.ts
+GITHUB_TEST_TOKEN=ghp_... bun test e2e/sub-issue.e2e.test.ts
 
 # Check created issues on GitHub
 # Visit: https://github.com/<OWNER>/<REPO>/issues
