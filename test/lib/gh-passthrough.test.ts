@@ -577,6 +577,19 @@ describe('gh-passthrough', () => {
       expect(result[jsonIndex]).toBe('--json')
     })
 
+    test('should inject fields for auth status (Phase 3)', () => {
+      // Arrange
+      const args = ['auth', 'status']
+
+      // Act
+      const result = injectJsonFlag(args)
+
+      // Assert
+      expect(result).toContain('--json')
+      expect(result[result.length - 1]).toContain('hosts')
+      expect(result[result.length - 1]).not.toContain(' ')
+    })
+
     test('should fallback to --json only for release list (unmapped command)', () => {
       // Arrange
       const args = ['release', 'list', '--limit', '10']
