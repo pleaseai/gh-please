@@ -139,10 +139,17 @@ describe('passthrough E2E', () => {
     test('should NOT passthrough registered issue subcommand (issue create)', async () => {
       // Arrange
       const program = await createProgram()
-      const args = ['issue', 'create', '--title', 'Test']
+      // Provide --repo flag to prevent git command execution and timeout
+      const args = ['issue', 'create', '--title', 'Test', '--repo', 'owner/repo']
 
-      // Act
-      await program.parseAsync(args, { from: 'user' })
+      // Act - command will fail due to missing GitHub API authentication, but we don't care
+      // We're only testing that passthrough is NOT called for registered commands
+      try {
+        await program.parseAsync(args, { from: 'user' })
+      }
+      catch (error) {
+        // Expected - command will fail but passthrough should not be called
+      }
 
       // Assert - passthrough should NOT be called for registered commands
       expect(passThroughCommandSpy).not.toHaveBeenCalled()
