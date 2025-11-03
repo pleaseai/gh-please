@@ -402,6 +402,12 @@ export async function passThroughCommand(args: string[]): Promise<void> {
     try {
       // Handle empty output gracefully (e.g., empty lists)
       if (result.stdout.trim() === '') {
+        // Distinguish between legitimate empty results and potential failures
+        // Log for debugging when --json returns empty output
+        if (process.env.DEBUG) {
+          console.error(`[DEBUG] gh CLI returned empty output for: gh ${cleanArgs.join(' ')} --json`)
+          console.error(`[DEBUG] This may be a legitimate empty result (e.g., empty list)`)
+        }
         // If stdout is empty, there's nothing to format, so we can exit gracefully.
         return
       }
