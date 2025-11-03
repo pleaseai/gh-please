@@ -577,6 +577,19 @@ describe('gh-passthrough', () => {
       expect(result[jsonIndex]).toBe('--json')
     })
 
+    test('should inject fields for auth status (Phase 3)', () => {
+      // Arrange
+      const args = ['auth', 'status']
+
+      // Act
+      const result = injectJsonFlag(args)
+
+      // Assert
+      expect(result).toContain('--json')
+      expect(result[result.length - 1]).toContain('hosts')
+      expect(result[result.length - 1]).not.toContain(' ')
+    })
+
     test('should fallback to --json only for release list (unmapped command)', () => {
       // Arrange
       const args = ['release', 'list', '--limit', '10']
@@ -1671,6 +1684,108 @@ describe('gh-passthrough', () => {
       const callArgs = executeGhCommandSpy.mock.calls[0][0]
       expect(callArgs).toEqual(['cache', 'delete', 'cache-key-1'])
       expect(callArgs).not.toContain('--json')
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    // Phase 3: Auth Status Integration Tests
+    test('should inject fields and convert to TOON for auth status (Phase 3)', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify({
+        hosts: {
+          'github.com': [{
+            state: 'success',
+            active: true,
+            host: 'github.com',
+            login: 'testuser',
+            tokenSource: '/home/user/.config/gh/hosts.yml',
+            scopes: 'repo, gist, read:org',
+            gitProtocol: 'https',
+          }],
+        },
+      })
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['auth', 'status', '--format', 'toon']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert - should inject --json with hosts field
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs[0]).toBe('auth')
+      expect(callArgs[1]).toBe('status')
+      expect(callArgs[2]).toBe('--json')
+      expect(callArgs[3]).toBe('hosts')
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should default to TOON for auth status without explicit flag (Phase 3)', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify({
+        hosts: {
+          'github.com': [{
+            state: 'success',
+            active: true,
+            host: 'github.com',
+            login: 'testuser',
+            tokenSource: '/home/user/.config/gh/hosts.yml',
+            scopes: 'repo, gist',
+            gitProtocol: 'ssh',
+          }],
+        },
+      })
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['auth', 'status']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert - should inject --json with hosts field (TOON is default)
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs[0]).toBe('auth')
+      expect(callArgs[1]).toBe('status')
+      expect(callArgs[2]).toBe('--json')
+      expect(callArgs[3]).toBe('hosts')
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
+
+    test('should convert to JSON format for auth status with --format json (Phase 3)', async () => {
+      // Arrange
+      const mockJsonOutput = JSON.stringify({
+        hosts: {
+          'github.com': [{
+            state: 'success',
+            active: true,
+            login: 'user',
+          }],
+        },
+      })
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: mockJsonOutput,
+        stderr: '',
+        exitCode: 0,
+      })
+
+      const args = ['auth', 'status', '--format', 'json']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert - should inject --json with hosts field
+      const callArgs = executeGhCommandSpy.mock.calls[0][0]
+      expect(callArgs[0]).toBe('auth')
+      expect(callArgs[1]).toBe('status')
+      expect(callArgs[2]).toBe('--json')
+      expect(callArgs[3]).toBe('hosts')
       expect(processExitSpy).not.toHaveBeenCalled()
     })
   })

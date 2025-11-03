@@ -153,11 +153,21 @@ const COMMANDS: CommandConfig[] = [
     testId: '--limit 1', // List commands need --limit flag
     description: 'Cache list command (Phase 2.1)',
   },
+  // Phase 3 commands - Remaining Commands
+  {
+    command: 'auth',
+    subcommand: 'status',
+    testId: '', // No args needed for auth status
+    description: 'Auth status command (Phase 3)',
+  },
   // Note: gist, org, and project commands do NOT support --json flag
   // - gist list/view: No --json support
   // - org list: No --json support
   // - project list/view: Uses --format json (different pattern, returns JSON but no field selection)
   // Note: workflow view does NOT support --json flag (only --yaml and --web)
+  // Note: alias, config, extension, gpg-key, ssh-key do NOT support --json flag
+  // Note: browse, completion, status, agent-task, preview are action/utility commands without --json
+  // Note: attestation verify uses --format json (different pattern from --json)
 ]
 
 /**
