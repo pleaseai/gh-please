@@ -40,13 +40,16 @@ export GITHUB_TEST_PR=123           # Existing PR number with review comments
 
 ```bash
 # Run all E2E tests
-bun test test/e2e/
+bun run test:e2e
+
+# Or directly
+bun test e2e/
 
 # Run specific test suite
-bun test test/e2e/sub-issue.e2e.test.ts
-bun test test/e2e/dependency.e2e.test.ts
-bun test test/e2e/pr-review-thread.e2e.test.ts
-bun test test/e2e/comment.e2e.test.ts
+bun test e2e/sub-issue.e2e.test.ts
+bun test e2e/dependency.e2e.test.ts
+bun test e2e/pr-review-thread.e2e.test.ts
+bun test e2e/comment.e2e.test.ts
 ```
 
 ## Test Behavior
@@ -155,7 +158,7 @@ E2E tests are **not** run automatically in CI to avoid API rate limits and test 
 
 ### Adding New E2E Tests
 
-1. Create test file in `test/e2e/`
+1. Create test file in `e2e/` directory (at project root)
 2. Use `setupE2ESuite()` for setup/teardown
 3. Use `E2ETestHelper` for common operations:
    - `createTestIssue()` - Create test issues
