@@ -128,10 +128,36 @@ const COMMANDS: CommandConfig[] = [
     testId: '', // View requires interactive selection or codespace name, use empty for error
     description: 'Codespace view command (Phase 2.3)',
   },
+  // Phase 2.1 commands - GitHub Actions
+  {
+    command: 'workflow',
+    subcommand: 'list',
+    testId: '--limit 1', // List commands need --limit flag
+    description: 'Workflow list command (Phase 2.1)',
+  },
+  {
+    command: 'run',
+    subcommand: 'list',
+    testId: '--limit 1', // List commands need --limit flag
+    description: 'Run list command (Phase 2.1)',
+  },
+  {
+    command: 'run',
+    subcommand: 'view',
+    testId: '', // View requires interactive selection or run ID, use empty for error
+    description: 'Run view command (Phase 2.1)',
+  },
+  {
+    command: 'cache',
+    subcommand: 'list',
+    testId: '--limit 1', // List commands need --limit flag
+    description: 'Cache list command (Phase 2.1)',
+  },
   // Note: gist, org, and project commands do NOT support --json flag
   // - gist list/view: No --json support
   // - org list: No --json support
   // - project list/view: Uses --format json (different pattern, returns JSON but no field selection)
+  // Note: workflow view does NOT support --json flag (only --yaml and --web)
 ]
 
 /**
