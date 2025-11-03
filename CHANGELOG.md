@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.28.0](https://github.com/pleaseai/gh-please/compare/github-v0.27.0...github-v0.28.0) (2025-11-03)
+
+
+### Features
+
+* **phase-2.1:** GitHub Actions Commands TOON Migration ([#195](https://github.com/pleaseai/gh-please/issues/195)) ([02bc1f2](https://github.com/pleaseai/gh-please/commit/02bc1f29a692e970903706289f909f513bbf0aea))
+* **phase-2.3:** add TOON support for codespace commands ([#187](https://github.com/pleaseai/gh-please/issues/187)) ([0a2e376](https://github.com/pleaseai/gh-please/commit/0a2e3766e310e747a4c232c66e6fe503e97045b3))
+
 ## [0.27.0](https://github.com/pleaseai/gh-please/compare/github-v0.26.1...github-v0.27.0) (2025-11-02)
 
 
