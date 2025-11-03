@@ -147,7 +147,7 @@ describe('passthrough E2E', () => {
       try {
         await program.parseAsync(args, { from: 'user' })
       }
-      catch (error) {
+      catch {
         // Expected - command will fail but passthrough should not be called
       }
 
