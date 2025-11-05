@@ -1,6 +1,6 @@
 import { Command } from 'commander'
+import { createReviewCommentReply } from '../../../lib/github'
 import { getCurrentPrInfo, getRepoInfo } from '../../../lib/github-api'
-import { createReviewCommentReply } from '../../../lib/github-graphql'
 import { detectSystemLanguage, getPrMessages } from '../../../lib/i18n'
 import { toReviewCommentNodeId, validateCommentIdentifier } from '../../../lib/id-converter'
 import { validateReplyBody } from '../../../lib/validation'

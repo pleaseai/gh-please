@@ -19,7 +19,7 @@ import {
   resolveReviewThread,
   updateIssueCommentByNodeId,
   updateReviewCommentByNodeId,
-} from '../../src/lib/github-graphql'
+} from '../../src/lib/github'
 
 describe('github-graphql', () => {
   describe('executeGraphQL', () => {
@@ -226,8 +226,8 @@ describe('github-graphql', () => {
     test('should use GraphQL query to fetch thread information', () => {
       const func = getThreadIdFromComment.toString()
       expect(func).toContain('query')
-      expect(func).toContain('pullRequest')
-      expect(func).toContain('reviewThreads')
+      expect(func).toContain('pullRequestReviewThread')
+      expect(func).toContain('PullRequestReviewComment')
     })
 
     test('should return thread ID string', () => {
@@ -235,56 +235,30 @@ describe('github-graphql', () => {
       expect(typeof getThreadIdFromComment).toBe('function')
     })
 
-    // Behavioral tests for two-step query logic
-    describe('two-step query behavior', () => {
+    // Behavioral tests for optimized single-query logic
+    describe('single-query behavior', () => {
       // Note: These tests verify the implementation without mocking executeGraphQL
       // since it's a module-level import. Integration tests cover actual execution.
 
-      test('should query pullRequest field in step 1', () => {
+      test('should query pullRequestReviewThread field directly', () => {
         const func = getThreadIdFromComment.toString()
-        // Verify Step 1 queries for pullRequest from comment
-        expect(func).toContain('pullRequest')
+        // Verify direct query for pullRequestReviewThread
+        expect(func).toContain('pullRequestReviewThread')
         expect(func).toContain('PullRequestReviewComment')
       })
 
-      test('should query reviewThreads in step 2', () => {
+      test('should use single GraphQL query', () => {
         const func = getThreadIdFromComment.toString()
-        // Verify Step 2 queries reviewThreads with comments
-        expect(func).toContain('reviewThreads')
-        expect(func).toContain('first: 100')
-      })
-
-      test('should throw error when PR not found', () => {
-        const func = getThreadIdFromComment.toString()
-        expect(func).toContain('Could not find pull request for review comment')
-        expect(func).toContain('may have been deleted')
-        expect(func).toContain('may be incorrect')
-      })
-
-      test('should throw error when threads cannot be fetched', () => {
-        const func = getThreadIdFromComment.toString()
-        expect(func).toContain('Could not fetch review threads for PR')
-        expect(func).toContain('may lack permissions')
+        // Verify only one executeGraphQL call (optimized)
+        const queryMatches = func.match(/executeGraphQL/g)
+        expect(queryMatches?.length).toBe(1)
       })
 
       test('should throw error when thread not found', () => {
         const func = getThreadIdFromComment.toString()
         expect(func).toContain('Thread not found for review comment')
-        expect(func).toContain('Searched')
-        expect(func).toContain('review thread')
-      })
-
-      test('should include logging statements', () => {
-        const func = getThreadIdFromComment.toString()
-        expect(func).toContain('Looking up pull request')
-        expect(func).toContain('Fetching review threads')
-        expect(func).toContain('Retrieved')
-      })
-
-      test('should validate thread comments before mapping', () => {
-        const func = getThreadIdFromComment.toString()
-        expect(func).toContain('thread.comments?.nodes')
-        expect(func).toContain('warn')
+        expect(func).toContain('may have been deleted')
+        expect(func).toContain('may be incorrect')
       })
     })
   })
@@ -357,38 +331,38 @@ describe('github-graphql', () => {
 
   describe('listIssueTypes', () => {
     test('should export function with correct signature', () => {
-      const { listIssueTypes } = require('../../src/lib/github-graphql')
+      const { listIssueTypes } = require('../../src/lib/github')
       expect(typeof listIssueTypes).toBe('function')
     })
 
     test('should accept owner and repo parameters', () => {
-      const { listIssueTypes } = require('../../src/lib/github-graphql')
+      const { listIssueTypes } = require('../../src/lib/github')
       const func = listIssueTypes.toString()
       expect(func).toContain('owner')
       expect(func).toContain('repo')
     })
 
     test('should be async function', () => {
-      const { listIssueTypes } = require('../../src/lib/github-graphql')
+      const { listIssueTypes } = require('../../src/lib/github')
       const func = listIssueTypes.toString()
       expect(func).toContain('async')
     })
 
     test('should query repository issueTypes', () => {
-      const { listIssueTypes } = require('../../src/lib/github-graphql')
+      const { listIssueTypes } = require('../../src/lib/github')
       const func = listIssueTypes.toString()
       expect(func).toContain('repository')
       expect(func).toContain('issueTypes')
     })
 
     test('should return array of IssueType objects', () => {
-      const { listIssueTypes } = require('../../src/lib/github-graphql')
+      const { listIssueTypes } = require('../../src/lib/github')
       const func = listIssueTypes.toString()
       expect(func).toContain('nodes')
     })
 
     test('should throw error when repository not found', () => {
-      const { listIssueTypes } = require('../../src/lib/github-graphql')
+      const { listIssueTypes } = require('../../src/lib/github')
       const func = listIssueTypes.toString()
       expect(func).toContain('Repository')
       expect(func).toContain('not found')
@@ -396,7 +370,7 @@ describe('github-graphql', () => {
     })
 
     test('should return empty array when no issue types', () => {
-      const { listIssueTypes } = require('../../src/lib/github-graphql')
+      const { listIssueTypes } = require('../../src/lib/github')
       const func = listIssueTypes.toString()
       expect(func).toContain('return []')
     })
@@ -404,31 +378,31 @@ describe('github-graphql', () => {
 
   describe('getRepositoryNodeId', () => {
     test('should export function with correct signature', () => {
-      const { getRepositoryNodeId } = require('../../src/lib/github-graphql')
+      const { getRepositoryNodeId } = require('../../src/lib/github')
       expect(typeof getRepositoryNodeId).toBe('function')
     })
 
     test('should accept owner and repo parameters', () => {
-      const { getRepositoryNodeId } = require('../../src/lib/github-graphql')
+      const { getRepositoryNodeId } = require('../../src/lib/github')
       const func = getRepositoryNodeId.toString()
       expect(func).toContain('owner')
       expect(func).toContain('repo')
     })
 
     test('should be async function', () => {
-      const { getRepositoryNodeId } = require('../../src/lib/github-graphql')
+      const { getRepositoryNodeId } = require('../../src/lib/github')
       const func = getRepositoryNodeId.toString()
       expect(func).toContain('async')
     })
 
     test('should query repository id', () => {
-      const { getRepositoryNodeId } = require('../../src/lib/github-graphql')
+      const { getRepositoryNodeId } = require('../../src/lib/github')
       const func = getRepositoryNodeId.toString()
       expect(func).toContain('repository')
     })
 
     test('should throw error when repository not found', () => {
-      const { getRepositoryNodeId } = require('../../src/lib/github-graphql')
+      const { getRepositoryNodeId } = require('../../src/lib/github')
       const func = getRepositoryNodeId.toString()
       expect(func).toContain('Repository')
       expect(func).toContain('not found')
@@ -438,12 +412,12 @@ describe('github-graphql', () => {
 
   describe('createIssueWithType', () => {
     test('should export function with correct signature', () => {
-      const { createIssueWithType } = require('../../src/lib/github-graphql')
+      const { createIssueWithType } = require('../../src/lib/github')
       expect(typeof createIssueWithType).toBe('function')
     })
 
     test('should accept owner, repo, title, body, and issueTypeId parameters', () => {
-      const { createIssueWithType } = require('../../src/lib/github-graphql')
+      const { createIssueWithType } = require('../../src/lib/github')
       const func = createIssueWithType.toString()
       expect(func).toContain('owner')
       expect(func).toContain('repo')
@@ -453,24 +427,24 @@ describe('github-graphql', () => {
     })
 
     test('should be async function', () => {
-      const { createIssueWithType } = require('../../src/lib/github-graphql')
+      const { createIssueWithType } = require('../../src/lib/github')
       const func = createIssueWithType.toString()
       expect(func).toContain('async')
     })
 
     test('should use createIssue mutation', () => {
-      const { createIssueWithType } = require('../../src/lib/github-graphql')
+      const { createIssueWithType } = require('../../src/lib/github')
       const func = createIssueWithType.toString()
       expect(func).toContain('createIssue')
     })
 
     test('should return object with number and nodeId', () => {
-      const { createIssueWithType } = require('../../src/lib/github-graphql')
+      const { createIssueWithType } = require('../../src/lib/github')
       expect(typeof createIssueWithType).toBe('function')
     })
 
     test('should throw error when issue creation fails', () => {
-      const { createIssueWithType } = require('../../src/lib/github-graphql')
+      const { createIssueWithType } = require('../../src/lib/github')
       const func = createIssueWithType.toString()
       expect(func).toContain('Failed to create issue')
       expect(func).toContain('Possible reasons')
@@ -480,36 +454,36 @@ describe('github-graphql', () => {
 
   describe('updateIssueType', () => {
     test('should export function with correct signature', () => {
-      const { updateIssueType } = require('../../src/lib/github-graphql')
+      const { updateIssueType } = require('../../src/lib/github')
       expect(typeof updateIssueType).toBe('function')
     })
 
     test('should accept issueId and issueTypeId parameters', () => {
-      const { updateIssueType } = require('../../src/lib/github-graphql')
+      const { updateIssueType } = require('../../src/lib/github')
       const func = updateIssueType.toString()
       expect(func).toContain('issueId')
       expect(func).toContain('issueTypeId')
     })
 
     test('should be async function', () => {
-      const { updateIssueType } = require('../../src/lib/github-graphql')
+      const { updateIssueType } = require('../../src/lib/github')
       const func = updateIssueType.toString()
       expect(func).toContain('async')
     })
 
     test('should use updateIssueIssueType mutation', () => {
-      const { updateIssueType } = require('../../src/lib/github-graphql')
+      const { updateIssueType } = require('../../src/lib/github')
       const func = updateIssueType.toString()
       expect(func).toContain('updateIssueIssueType')
     })
 
     test('should support clearing type with null', () => {
-      const { updateIssueType } = require('../../src/lib/github-graphql')
+      const { updateIssueType } = require('../../src/lib/github')
       expect(typeof updateIssueType).toBe('function')
     })
 
     test('should throw error when update fails', () => {
-      const { updateIssueType } = require('../../src/lib/github-graphql')
+      const { updateIssueType } = require('../../src/lib/github')
       const func = updateIssueType.toString()
       expect(func).toContain('Failed to update issue type')
       expect(func).toContain('Possible reasons')
@@ -671,7 +645,8 @@ describe('github-graphql', () => {
 
     test('should return array of project Node IDs', () => {
       const func = getProjectNodeIds.toString()
-      expect(func).toContain('nodeIds')
+      expect(func).toContain('results')
+      expect(func).toContain('map')
     })
   })
 

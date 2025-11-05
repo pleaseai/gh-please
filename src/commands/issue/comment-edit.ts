@@ -1,6 +1,6 @@
 import { Command } from 'commander'
+import { updateIssueCommentByNodeId } from '../../lib/github'
 import { getRepoInfo } from '../../lib/github-api'
-import { updateIssueCommentByNodeId } from '../../lib/github-graphql'
 import { detectSystemLanguage, getCommentMessages } from '../../lib/i18n'
 import { toIssueCommentNodeId, validateCommentIdentifier } from '../../lib/id-converter'
 

@@ -1,6 +1,5 @@
 import { filterFields, outputJson, parseFields } from '@pleaseai/cli-toolkit/output'
 import { Command } from 'commander'
-import { getRepoInfo } from '../../lib/github-api'
 import {
   addSubIssue,
   createIssueWithType,
@@ -10,7 +9,8 @@ import {
   getMilestoneNodeId,
   getProjectNodeIds,
   listIssueTypes,
-} from '../../lib/github-graphql'
+} from '../../lib/github'
+import { getRepoInfo } from '../../lib/github-api'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
 
 interface IssueTemplate {
