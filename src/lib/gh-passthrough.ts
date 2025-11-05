@@ -361,12 +361,7 @@ export async function passThroughCommand(args: string[]): Promise<void> {
     // Distinguish between different types of --json related errors
     if (format) {
       // Detect resource-not-found errors (don't show "Command attempted" prefix)
-      const isResourceError = result.stderr.includes('Could not resolve')
-        || result.stderr.includes('Not Found')
-        || result.stderr.includes('does not exist')
-        || result.stderr.includes('no pull requests')
-        || result.stderr.includes('no issues')
-        || result.stderr.includes('not found')
+      const isResourceError = /could not resolve|not found|does not exist|no pull requests|no issues/i.test(result.stderr)
 
       if (isResourceError) {
         // Resource error - show gh CLI error directly without misleading prefix
