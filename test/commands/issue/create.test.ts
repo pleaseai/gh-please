@@ -93,4 +93,18 @@ describe('issue create command', () => {
     const parentOption = options.find(o => o.long === '--parent')
     expect(parentOption).toBeDefined()
   })
+
+  test('should have template option', () => {
+    const cmd = createIssueCreateCommand()
+    const options = cmd.options || []
+    const templateOption = options.find(o => o.long === '--template')
+    expect(templateOption).toBeDefined()
+  })
+
+  test('should have body-file option', () => {
+    const cmd = createIssueCreateCommand()
+    const options = cmd.options || []
+    const bodyFileOption = options.find(o => o.long === '--body-file')
+    expect(bodyFileOption).toBeDefined()
+  })
 })

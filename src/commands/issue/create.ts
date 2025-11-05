@@ -32,6 +32,8 @@ export function createIssueCreateCommand(): Command {
     .option('-m, --milestone <name>', 'Add to milestone')
     .option('-p, --project <title>', 'Add to project (can be used multiple times)', (value, previous: string[] = []) => [...previous, value], [])
     .option('--parent <number>', 'Parent issue number (creates sub-issue relationship)')
+    .option('-F, --body-file <path>', 'Read issue body from file ("-" for stdin)')
+    .option('-t, --template <name>', 'Use issue template')
     .option('--json [fields]', 'Output as JSON with optional field selection (number, title, url, type)')
     .action(async (options: {
       title: string
@@ -44,6 +46,8 @@ export function createIssueCreateCommand(): Command {
       milestone?: string
       project?: string[]
       parent?: string
+      bodyFile?: string
+      template?: string
       json?: string | boolean
     }) => {
       const lang = detectSystemLanguage()
@@ -52,6 +56,66 @@ export function createIssueCreateCommand(): Command {
       try {
         // Parse repository information
         const { owner, repo } = await getRepoInfo(options.repo)
+
+        // Handle body sources: --body, --body-file, or --template
+        let issueBody = options.body
+
+        if (options.bodyFile && options.template) {
+          throw new TypeError('Cannot specify both --body-file and --template')
+        }
+
+        if (options.body && (options.bodyFile || options.template)) {
+          throw new TypeError('Cannot specify --body with --body-file or --template')
+        }
+
+        if (options.bodyFile) {
+          if (options.bodyFile === '-') {
+            // Read from stdin
+            issueBody = await Bun.stdin.text()
+          }
+          else {
+            // Read from file
+            const file = Bun.file(options.bodyFile)
+            if (!(await file.exists())) {
+              throw new Error(`File not found: ${options.bodyFile}`)
+            }
+            issueBody = await file.text()
+          }
+        }
+        else if (options.template) {
+          // Use gh CLI to fetch template content
+          const proc = Bun.spawn([
+            'gh',
+            'api',
+            `/repos/${owner}/${repo}/issues/templates`,
+          ], {
+            stdout: 'pipe',
+            stderr: 'pipe',
+          })
+
+          const stdout = await new Response(proc.stdout).text()
+          const stderr = await new Response(proc.stderr).text()
+          const exitCode = await proc.exited
+
+          if (exitCode !== 0) {
+            throw new Error(`Failed to fetch issue templates: ${stderr}`)
+          }
+
+          const templates = JSON.parse(stdout)
+          const template = templates.find((t: any) => t.name === options.template)
+
+          if (!template) {
+            const availableTemplates = templates.map((t: any) => t.name).join(', ')
+            throw new Error(
+              `Template "${options.template}" not found.\n${
+                availableTemplates
+                  ? `Available templates: ${availableTemplates}`
+                  : 'No templates available'}`,
+            )
+          }
+
+          issueBody = template.body
+        }
 
         let issueTypeId: string | undefined
         let issueTypeName: string | undefined
@@ -136,7 +200,7 @@ export function createIssueCreateCommand(): Command {
           owner,
           repo,
           options.title,
-          options.body,
+          issueBody,
           issueTypeId,
           labelIds,
           assigneeIds,
