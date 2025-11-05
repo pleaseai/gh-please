@@ -3,6 +3,7 @@ import { Command } from 'commander'
 import { getRepoInfo } from '../../lib/github-api'
 import {
   createIssueWithType,
+  getAssigneeNodeIds,
   getLabelNodeIds,
   listIssueTypes,
 } from '../../lib/github-graphql'
@@ -23,6 +24,7 @@ export function createIssueCreateCommand(): Command {
     .option('--type <name>', 'Issue type name (e.g., "Bug", "Feature")')
     .option('--type-id <id>', 'Issue type Node ID (direct)')
     .option('-l, --label <name>', 'Add label (can be used multiple times)', (value, previous: string[] = []) => [...previous, value], [])
+    .option('-a, --assignee <login>', 'Add assignee (can be used multiple times)', (value, previous: string[] = []) => [...previous, value], [])
     .option('--json [fields]', 'Output as JSON with optional field selection (number, title, url, type)')
     .action(async (options: {
       title: string
@@ -31,6 +33,7 @@ export function createIssueCreateCommand(): Command {
       type?: string
       typeId?: string
       label?: string[]
+      assignee?: string[]
       json?: string | boolean
     }) => {
       const lang = detectSystemLanguage()
@@ -87,6 +90,15 @@ export function createIssueCreateCommand(): Command {
           labelIds = await getLabelNodeIds(owner, repo, options.label)
         }
 
+        // Get assignee Node IDs if assignees are provided
+        let assigneeIds: string[] | undefined
+        if (options.assignee && options.assignee.length > 0) {
+          if (!options.json) {
+            console.log(`👤 Looking up assignee IDs...`)
+          }
+          assigneeIds = await getAssigneeNodeIds(owner, repo, options.assignee)
+        }
+
         // Create the issue
         if (!options.json) {
           console.log(msg.creatingIssue)
@@ -99,6 +111,7 @@ export function createIssueCreateCommand(): Command {
           options.body,
           issueTypeId,
           labelIds,
+          assigneeIds,
         )
 
         // Output result

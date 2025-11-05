@@ -754,7 +754,7 @@ export async function getRepositoryNodeId(
 }
 
 /**
- * Create an issue with optional issue type and labels
+ * Create an issue with optional issue type, labels, and assignees
  *
  * @param owner - Repository owner
  * @param repo - Repository name
@@ -762,6 +762,7 @@ export async function getRepositoryNodeId(
  * @param body - Issue body (optional)
  * @param issueTypeId - Issue type Node ID (optional)
  * @param labelIds - Array of label Node IDs (optional)
+ * @param assigneeIds - Array of assignee Node IDs (optional)
  * @returns Object with issue number and Node ID
  * @throws Error if the mutation fails
  */
@@ -772,18 +773,20 @@ export async function createIssueWithType(
   body?: string,
   issueTypeId?: string,
   labelIds?: string[],
+  assigneeIds?: string[],
 ): Promise<{ number: number, nodeId: string }> {
   // Get repository Node ID
   const repositoryId = await getRepositoryNodeId(owner, repo)
 
   const mutation = `
-    mutation CreateIssueWithType($repositoryId: ID!, $title: String!, $body: String, $issueTypeId: ID, $labelIds: [ID!]) {
+    mutation CreateIssueWithType($repositoryId: ID!, $title: String!, $body: String, $issueTypeId: ID, $labelIds: [ID!], $assigneeIds: [ID!]) {
       createIssue(input: {
         repositoryId: $repositoryId
         title: $title
         body: $body
         issueTypeId: $issueTypeId
         labelIds: $labelIds
+        assigneeIds: $assigneeIds
       }) {
         issue {
           id
@@ -810,6 +813,10 @@ export async function createIssueWithType(
     variables.labelIds = labelIds
   }
 
+  if (assigneeIds !== undefined && assigneeIds.length > 0) {
+    variables.assigneeIds = assigneeIds
+  }
+
   const data = await executeGraphQL(mutation, variables, undefined, 'CreateIssueWithType')
 
   if (!data.createIssue?.issue) {
@@ -820,6 +827,7 @@ export async function createIssueWithType(
       + `  • The repository may be archived, locked, or deleted\n`
       + `  • The issue type ID may be invalid or disabled (if specified)\n`
       + `  • Label IDs may be invalid (if specified)\n`
+      + `  • Assignee IDs may be invalid (if specified)\n`
       + `  • The title may exceed the maximum length (256 characters)\n`
       + `  • Required fields may be missing or malformed`,
     )
@@ -931,6 +939,77 @@ export async function getLabelNodeIds(
     throw new Error(
       `Label(s) not found: ${notFound.join(', ')}\n`
       + `Available labels: ${labels.map((l: any) => l.name).join(', ')}`,
+    )
+  }
+
+  return nodeIds
+}
+
+/**
+ * Get Node IDs for multiple assignees by login
+ * Handles special case: @me (current user)
+ *
+ * @param owner - Repository owner
+ * @param repo - Repository name (not used in queries but kept for API consistency)
+ * @param logins - Array of user logins (supports @me)
+ * @returns Array of assignee Node IDs
+ * @throws Error if any user is not found
+ */
+export async function getAssigneeNodeIds(
+  owner: string,
+  repo: string,
+  logins: string[],
+): Promise<string[]> {
+  const nodeIds: string[] = []
+  const notFound: string[] = []
+
+  for (const login of logins) {
+    // Handle special case: @me
+    if (login === '@me') {
+      const viewerQuery = `
+        query GetCurrentUser {
+          viewer {
+            id
+          }
+        }
+      `
+      const viewerData = await executeGraphQL(viewerQuery, {}, undefined, 'GetCurrentUser')
+      if (viewerData.viewer?.id) {
+        nodeIds.push(viewerData.viewer.id)
+        continue
+      }
+      else {
+        notFound.push(login)
+        continue
+      }
+    }
+
+    // Query for user by login
+    const userQuery = `
+      query GetUserNodeId($login: String!) {
+        user(login: $login) {
+          id
+        }
+      }
+    `
+    try {
+      const userData = await executeGraphQL(userQuery, { login }, undefined, 'GetUserNodeId')
+      if (userData.user?.id) {
+        nodeIds.push(userData.user.id)
+      }
+      else {
+        notFound.push(login)
+      }
+    }
+    catch {
+      notFound.push(login)
+    }
+  }
+
+  if (notFound.length > 0) {
+    throw new Error(
+      `Assignee(s) not found: ${notFound.join(', ')}\n`
+      + `Make sure the user login(s) are correct or use @me for current user`,
     )
   }
 

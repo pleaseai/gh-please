@@ -4,6 +4,7 @@ import {
   addSubIssue,
   createReviewCommentReply,
   executeGraphQL,
+  getAssigneeNodeIds,
   getIssueNodeId,
   getLabelNodeIds,
   getPrNodeId,
@@ -540,6 +541,40 @@ describe('github-graphql', () => {
     test('should return array of label Node IDs', () => {
       const func = getLabelNodeIds.toString()
       expect(func).toContain('map')
+    })
+  })
+
+  describe('getAssigneeNodeIds', () => {
+    test('should export function with correct signature', () => {
+      expect(typeof getAssigneeNodeIds).toBe('function')
+    })
+
+    test('should accept owner, repo, and logins parameters', () => {
+      const func = getAssigneeNodeIds.toString()
+      expect(func).toContain('owner')
+      expect(func).toContain('repo')
+      expect(func).toContain('logins')
+    })
+
+    test('should be async function', () => {
+      const func = getAssigneeNodeIds.toString()
+      expect(func).toContain('async')
+    })
+
+    test('should handle @me special case', () => {
+      const func = getAssigneeNodeIds.toString()
+      expect(func).toContain('@me')
+      expect(func).toContain('viewer')
+    })
+
+    test('should query user Node IDs', () => {
+      const func = getAssigneeNodeIds.toString()
+      expect(func).toContain('user')
+    })
+
+    test('should return array of assignee Node IDs', () => {
+      const func = getAssigneeNodeIds.toString()
+      expect(func).toContain('nodeIds')
     })
   })
 })

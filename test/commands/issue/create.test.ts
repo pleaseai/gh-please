@@ -65,4 +65,11 @@ describe('issue create command', () => {
     const labelOption = options.find(o => o.long === '--label')
     expect(labelOption).toBeDefined()
   })
+
+  test('should have assignee option', () => {
+    const cmd = createIssueCreateCommand()
+    const options = cmd.options || []
+    const assigneeOption = options.find(o => o.long === '--assignee')
+    expect(assigneeOption).toBeDefined()
+  })
 })
