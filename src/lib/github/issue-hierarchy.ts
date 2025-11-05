@@ -5,6 +5,26 @@
 import { executeGraphQL } from './graphql-core'
 
 /**
+ * Map GraphQL issue node to standard issue info format
+ *
+ * @param issue - Raw issue node from GraphQL response
+ * @returns Formatted issue info
+ */
+function mapIssueNode(issue: any): {
+  number: number
+  title: string
+  state: string
+  nodeId: string
+} {
+  return {
+    number: issue.number,
+    title: issue.title,
+    state: issue.state,
+    nodeId: issue.id,
+  }
+}
+
+/**
  * Add a sub-issue to a parent issue
  *
  * @param parentNodeId - Node ID of parent issue
@@ -74,6 +94,8 @@ export async function removeSubIssue(
  *
  * @param parentNodeId - Node ID of parent issue
  * @returns Array of sub-issue info
+ * @warning This function returns a maximum of 100 sub-issues due to pagination limits.
+ *          For issues with more sub-issues, consider implementing pagination with `after` cursor.
  */
 export async function listSubIssues(
   parentNodeId: string,
@@ -110,12 +132,7 @@ export async function listSubIssues(
     return []
   }
 
-  return data.node.subIssues.nodes.map((issue: any) => ({
-    number: issue.number,
-    title: issue.title,
-    state: issue.state,
-    nodeId: issue.id,
-  }))
+  return data.node.subIssues.nodes.map(mapIssueNode)
 }
 
 /**
@@ -188,6 +205,8 @@ export async function removeBlockedBy(
  *
  * @param issueNodeId - Node ID of the issue
  * @returns Array of blocking issue info
+ * @warning This function returns a maximum of 100 blocking issues due to pagination limits.
+ *          For issues with more blockers, consider implementing pagination with `after` cursor.
  */
 export async function listBlockedBy(
   issueNodeId: string,
@@ -222,10 +241,5 @@ export async function listBlockedBy(
     return []
   }
 
-  return data.node.blockedBy.nodes.map((issue: any) => ({
-    number: issue.number,
-    title: issue.title,
-    state: issue.state,
-    nodeId: issue.id,
-  }))
+  return data.node.blockedBy.nodes.map(mapIssueNode)
 }

@@ -11,6 +11,8 @@ import { executeGraphQL, getRepositoryNodeId } from './graphql-core'
  * @param repo - Repository name
  * @returns Array of issue types
  * @throws Error if the query fails
+ * @warning This function returns a maximum of 100 issue types due to pagination limits.
+ *          For repositories with more issue types, consider implementing pagination with `after` cursor.
  */
 export async function listIssueTypes(
   owner: string,
@@ -106,33 +108,15 @@ export async function createIssueWithType(
     }
   `
 
-  const variables: Record<string, any> = {
+  const variables = {
     repositoryId,
     title,
-  }
-
-  if (body !== undefined) {
-    variables.body = body
-  }
-
-  if (issueTypeId !== undefined) {
-    variables.issueTypeId = issueTypeId
-  }
-
-  if (labelIds !== undefined && labelIds.length > 0) {
-    variables.labelIds = labelIds
-  }
-
-  if (assigneeIds !== undefined && assigneeIds.length > 0) {
-    variables.assigneeIds = assigneeIds
-  }
-
-  if (milestoneId !== undefined) {
-    variables.milestoneId = milestoneId
-  }
-
-  if (projectIds !== undefined && projectIds.length > 0) {
-    variables.projectIds = projectIds
+    ...(body !== undefined && { body }),
+    ...(issueTypeId !== undefined && { issueTypeId }),
+    ...(labelIds !== undefined && labelIds.length > 0 && { labelIds }),
+    ...(assigneeIds !== undefined && assigneeIds.length > 0 && { assigneeIds }),
+    ...(milestoneId !== undefined && { milestoneId }),
+    ...(projectIds !== undefined && projectIds.length > 0 && { projectIds }),
   }
 
   const data = await executeGraphQL(mutation, variables, undefined, 'CreateIssueWithType')

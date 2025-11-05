@@ -30,6 +30,9 @@ export async function resolveReviewThread(threadNodeId: string): Promise<void> {
  *
  * @param prNodeId - Node ID of the pull request
  * @returns Array of review thread info
+ * @warning This function returns a maximum of 100 review threads due to pagination limits.
+ *          Each thread returns only the first comment. For PRs with more threads or comments,
+ *          consider implementing pagination with `after` cursor.
  */
 export async function listReviewThreads(
   prNodeId: string,
@@ -97,12 +100,11 @@ export async function listReviewThreads(
 export async function getThreadIdFromComment(
   commentNodeId: string,
 ): Promise<string> {
-  // Step 1: Get PR ID from the comment
-  const commentQuery = `
-    query GetPrFromComment($commentId: ID!) {
+  const query = `
+    query GetThreadFromComment($commentId: ID!) {
       node(id: $commentId) {
         ... on PullRequestReviewComment {
-          pullRequest {
+          pullRequestReviewThread {
             id
           }
         }
@@ -110,13 +112,11 @@ export async function getThreadIdFromComment(
     }
   `
 
-  console.log(`🔍 Looking up pull request for review comment ${commentNodeId}...`)
-  const commentData = await executeGraphQL(commentQuery, { commentId: commentNodeId }, undefined, 'GetPrFromComment')
+  const data = await executeGraphQL(query, { commentId: commentNodeId }, undefined, 'GetThreadFromComment')
 
-  const prId = commentData.node?.pullRequest?.id
-  if (!prId) {
+  if (!data.node?.pullRequestReviewThread?.id) {
     throw new Error(
-      `Could not find pull request for review comment ${commentNodeId}.\n`
+      `Thread not found for review comment ${commentNodeId}.\n`
       + `Possible reasons:\n`
       + `  • The comment may have been deleted\n`
       + `  • The comment ID may be incorrect (use 'gh please pr review thread list <pr>' to see valid IDs)\n`
@@ -125,63 +125,8 @@ export async function getThreadIdFromComment(
       + `Please verify the comment ID and try again.`,
     )
   }
-  console.log(`✓ Found PR: ${prId}`)
 
-  // Step 2: Get all review threads and find the one containing this comment
-  const threadsQuery = `
-    query GetThreadsForComment($prId: ID!) {
-      node(id: $prId) {
-        ... on PullRequest {
-          reviewThreads(first: 100) {
-            nodes {
-              id
-              comments(first: 100) {
-                nodes {
-                  id
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  `
-
-  console.log(`🔍 Fetching review threads for PR...`)
-  const threadsData = await executeGraphQL(threadsQuery, { prId }, undefined, 'GetThreadsForComment')
-
-  const threads = threadsData.node?.reviewThreads?.nodes
-  if (!threads) {
-    throw new Error(
-      `Could not fetch review threads for PR.\n`
-      + `The PR may not exist, you may lack permissions, or there was an API error.`,
-    )
-  }
-  console.log(`✓ Retrieved ${threads.length} review thread(s)`)
-
-  // Find thread containing our comment
-  for (const thread of threads) {
-    if (!thread.comments?.nodes) {
-      console.warn(`⚠️  Warning: Thread ${thread.id} returned without comment data, skipping`)
-      continue
-    }
-
-    const commentIds = thread.comments.nodes.map((c: any) => c.id)
-    if (commentIds.includes(commentNodeId)) {
-      return thread.id
-    }
-  }
-
-  throw new Error(
-    `Thread not found for review comment ${commentNodeId}.\n`
-    + `Searched ${threads.length} review thread(s) on this PR but none contained this comment.\n`
-    + `Possible reasons:\n`
-    + `  • The comment ID may be incorrect\n`
-    + `  • The comment may have been deleted\n`
-    + `  • There may be a data synchronization issue with GitHub\n`
-    + `\n`
-    + `Try running 'gh please pr review thread list <pr-number>' to see available threads.`,
-  )
+  return data.node.pullRequestReviewThread.id
 }
 
 /**

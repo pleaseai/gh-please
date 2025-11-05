@@ -22,6 +22,8 @@ interface MilestoneNode {
  * @param labelNames - Array of label names
  * @returns Array of label Node IDs
  * @throws Error if any label is not found
+ * @warning This function fetches a maximum of 100 labels due to pagination limits.
+ *          For repositories with more labels, consider implementing pagination with `after` cursor.
  */
 export async function getLabelNodeIds(
   owner: string,
@@ -55,18 +57,8 @@ export async function getLabelNodeIds(
   const labels: LabelNode[] = data.repository.labels.nodes
   const labelMap = new Map<string, string>(labels.map(label => [label.name, label.id]))
 
-  const nodeIds: string[] = []
-  const notFound: string[] = []
-
-  for (const name of labelNames) {
-    const nodeId = labelMap.get(name)
-    if (nodeId) {
-      nodeIds.push(nodeId)
-    }
-    else {
-      notFound.push(name)
-    }
-  }
+  const results = labelNames.map(name => ({ name, nodeId: labelMap.get(name) }))
+  const notFound = results.filter(r => !r.nodeId).map(r => r.name)
 
   if (notFound.length > 0) {
     throw new Error(
@@ -75,7 +67,7 @@ export async function getLabelNodeIds(
     )
   }
 
-  return nodeIds
+  return results.map(r => r.nodeId!)
 }
 
 /**
@@ -253,6 +245,8 @@ async function fallbackSequentialLookup(
  * @param milestoneName - Milestone title (exact match required)
  * @returns Milestone Node ID
  * @throws Error if the milestone is not found or is closed
+ * @warning This function fetches a maximum of 100 open milestones due to pagination limits.
+ *          For repositories with more milestones, consider implementing pagination with `after` cursor.
  */
 export async function getMilestoneNodeId(
   owner: string,
@@ -309,6 +303,9 @@ export async function getMilestoneNodeId(
  * @param projectTitles - Array of project titles
  * @returns Array of project Node IDs
  * @throws Error if any project is not found
+ * @warning This function fetches a maximum of 100 repository projects and 100 organization projects
+ *          due to pagination limits. For accounts with more projects, consider implementing
+ *          pagination with `after` cursor.
  */
 export async function getProjectNodeIds(
   owner: string,
@@ -363,18 +360,8 @@ export async function getProjectNodeIds(
   // Map project titles to IDs
   const projectMap = new Map<string, string>(allProjects.map(p => [p.title, p.id]))
 
-  const nodeIds: string[] = []
-  const notFound: string[] = []
-
-  for (const title of projectTitles) {
-    const nodeId = projectMap.get(title)
-    if (nodeId) {
-      nodeIds.push(nodeId)
-    }
-    else {
-      notFound.push(title)
-    }
-  }
+  const results = projectTitles.map(title => ({ title, nodeId: projectMap.get(title) }))
+  const notFound = results.filter(r => !r.nodeId).map(r => r.title)
 
   if (notFound.length > 0) {
     const availableProjects = allProjects.map(p => p.title).join(', ')
@@ -386,5 +373,5 @@ export async function getProjectNodeIds(
     )
   }
 
-  return nodeIds
+  return results.map(r => r.nodeId!)
 }
