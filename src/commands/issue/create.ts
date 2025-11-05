@@ -3,6 +3,7 @@ import { Command } from 'commander'
 import { getRepoInfo } from '../../lib/github-api'
 import {
   createIssueWithType,
+  getLabelNodeIds,
   listIssueTypes,
 } from '../../lib/github-graphql'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
@@ -21,6 +22,7 @@ export function createIssueCreateCommand(): Command {
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format')
     .option('--type <name>', 'Issue type name (e.g., "Bug", "Feature")')
     .option('--type-id <id>', 'Issue type Node ID (direct)')
+    .option('-l, --label <name>', 'Add label (can be used multiple times)', (value, previous: string[] = []) => [...previous, value], [])
     .option('--json [fields]', 'Output as JSON with optional field selection (number, title, url, type)')
     .action(async (options: {
       title: string
@@ -28,6 +30,7 @@ export function createIssueCreateCommand(): Command {
       repo?: string
       type?: string
       typeId?: string
+      label?: string[]
       json?: string | boolean
     }) => {
       const lang = detectSystemLanguage()
@@ -75,6 +78,15 @@ export function createIssueCreateCommand(): Command {
           issueTypeName = matchingType.name
         }
 
+        // Get label Node IDs if labels are provided
+        let labelIds: string[] | undefined
+        if (options.label && options.label.length > 0) {
+          if (!options.json) {
+            console.log(`🏷️  Looking up label IDs...`)
+          }
+          labelIds = await getLabelNodeIds(owner, repo, options.label)
+        }
+
         // Create the issue
         if (!options.json) {
           console.log(msg.creatingIssue)
@@ -86,6 +98,7 @@ export function createIssueCreateCommand(): Command {
           options.title,
           options.body,
           issueTypeId,
+          labelIds,
         )
 
         // Output result

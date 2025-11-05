@@ -5,6 +5,7 @@ import {
   createReviewCommentReply,
   executeGraphQL,
   getIssueNodeId,
+  getLabelNodeIds,
   getPrNodeId,
   getThreadIdFromComment,
   listBlockedBy,
@@ -510,6 +511,35 @@ describe('github-graphql', () => {
       expect(func).toContain('Failed to update issue type')
       expect(func).toContain('Possible reasons')
       expect(func).toContain('does not exist')
+    })
+  })
+
+  describe('getLabelNodeIds', () => {
+    test('should export function with correct signature', () => {
+      expect(typeof getLabelNodeIds).toBe('function')
+    })
+
+    test('should accept owner, repo, and labelNames parameters', () => {
+      const func = getLabelNodeIds.toString()
+      expect(func).toContain('owner')
+      expect(func).toContain('repo')
+      expect(func).toContain('labelNames')
+    })
+
+    test('should be async function', () => {
+      const func = getLabelNodeIds.toString()
+      expect(func).toContain('async')
+    })
+
+    test('should query repository labels', () => {
+      const func = getLabelNodeIds.toString()
+      expect(func).toContain('repository')
+      expect(func).toContain('labels')
+    })
+
+    test('should return array of label Node IDs', () => {
+      const func = getLabelNodeIds.toString()
+      expect(func).toContain('map')
     })
   })
 })

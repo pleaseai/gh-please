@@ -754,13 +754,14 @@ export async function getRepositoryNodeId(
 }
 
 /**
- * Create an issue with optional issue type
+ * Create an issue with optional issue type and labels
  *
  * @param owner - Repository owner
  * @param repo - Repository name
  * @param title - Issue title
  * @param body - Issue body (optional)
  * @param issueTypeId - Issue type Node ID (optional)
+ * @param labelIds - Array of label Node IDs (optional)
  * @returns Object with issue number and Node ID
  * @throws Error if the mutation fails
  */
@@ -770,17 +771,19 @@ export async function createIssueWithType(
   title: string,
   body?: string,
   issueTypeId?: string,
+  labelIds?: string[],
 ): Promise<{ number: number, nodeId: string }> {
   // Get repository Node ID
   const repositoryId = await getRepositoryNodeId(owner, repo)
 
   const mutation = `
-    mutation CreateIssueWithType($repositoryId: ID!, $title: String!, $body: String, $issueTypeId: ID) {
+    mutation CreateIssueWithType($repositoryId: ID!, $title: String!, $body: String, $issueTypeId: ID, $labelIds: [ID!]) {
       createIssue(input: {
         repositoryId: $repositoryId
         title: $title
         body: $body
         issueTypeId: $issueTypeId
+        labelIds: $labelIds
       }) {
         issue {
           id
@@ -803,6 +806,10 @@ export async function createIssueWithType(
     variables.issueTypeId = issueTypeId
   }
 
+  if (labelIds !== undefined && labelIds.length > 0) {
+    variables.labelIds = labelIds
+  }
+
   const data = await executeGraphQL(mutation, variables, undefined, 'CreateIssueWithType')
 
   if (!data.createIssue?.issue) {
@@ -812,6 +819,7 @@ export async function createIssueWithType(
       + `  • You lack permissions to create issues in this repository\n`
       + `  • The repository may be archived, locked, or deleted\n`
       + `  • The issue type ID may be invalid or disabled (if specified)\n`
+      + `  • Label IDs may be invalid (if specified)\n`
       + `  • The title may exceed the maximum length (256 characters)\n`
       + `  • Required fields may be missing or malformed`,
     )
@@ -863,4 +871,68 @@ export async function updateIssueType(
       + `  • The issue may have been transferred to another repository`,
     )
   }
+}
+
+/**
+ * Get Node IDs for multiple labels by name
+ *
+ * @param owner - Repository owner
+ * @param repo - Repository name
+ * @param labelNames - Array of label names
+ * @returns Array of label Node IDs
+ * @throws Error if any label is not found
+ */
+export async function getLabelNodeIds(
+  owner: string,
+  repo: string,
+  labelNames: string[],
+): Promise<string[]> {
+  const query = `
+    query GetLabelNodeIds($owner: String!, $repo: String!) {
+      repository(owner: $owner, name: $repo) {
+        labels(first: 100) {
+          nodes {
+            id
+            name
+          }
+        }
+      }
+    }
+  `
+
+  const data = await executeGraphQL(query, { owner, repo }, undefined, 'GetLabelNodeIds')
+
+  if (!data.repository?.labels?.nodes) {
+    throw new Error(
+      `Repository ${owner}/${repo} not found or labels are not available.\n`
+      + `Possible reasons:\n`
+      + `  • The repository does not exist or you lack permissions to view it\n`
+      + `  • The owner or repo name may be misspelled`,
+    )
+  }
+
+  const labels = data.repository.labels.nodes
+  const labelMap = new Map<string, string>(labels.map((label: any) => [label.name, label.id]))
+
+  const nodeIds: string[] = []
+  const notFound: string[] = []
+
+  for (const name of labelNames) {
+    const nodeId = labelMap.get(name)
+    if (nodeId) {
+      nodeIds.push(nodeId)
+    }
+    else {
+      notFound.push(name)
+    }
+  }
+
+  if (notFound.length > 0) {
+    throw new Error(
+      `Label(s) not found: ${notFound.join(', ')}\n`
+      + `Available labels: ${labels.map((l: any) => l.name).join(', ')}`,
+    )
+  }
+
+  return nodeIds
 }

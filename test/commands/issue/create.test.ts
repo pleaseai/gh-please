@@ -58,4 +58,11 @@ describe('issue create command', () => {
     const jsonOption = options.find(o => o.long === '--json')
     expect(jsonOption).toBeDefined()
   })
+
+  test('should have label option', () => {
+    const cmd = createIssueCreateCommand()
+    const options = cmd.options || []
+    const labelOption = options.find(o => o.long === '--label')
+    expect(labelOption).toBeDefined()
+  })
 })
