@@ -109,12 +109,12 @@ export async function getAssigneeNodeIds(
   }
 
   // Add aliased user queries for regular logins
-  regularLogins.forEach((login, index) => {
+  for (const [index, login] of regularLogins.entries()) {
     const alias = `user${index}`
     const varName = `login${index}`
     queryParts.push(`${alias}: user(login: $${varName}) { id }`)
     variables[varName] = login
-  })
+  }
 
   // Build variable declarations
   const varDeclarations = Object.keys(variables)
