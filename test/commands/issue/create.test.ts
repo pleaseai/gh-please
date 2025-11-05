@@ -86,4 +86,11 @@ describe('issue create command', () => {
     const projectOption = options.find(o => o.long === '--project')
     expect(projectOption).toBeDefined()
   })
+
+  test('should have parent option', () => {
+    const cmd = createIssueCreateCommand()
+    const options = cmd.options || []
+    const parentOption = options.find(o => o.long === '--parent')
+    expect(parentOption).toBeDefined()
+  })
 })

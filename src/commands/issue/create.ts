@@ -2,8 +2,10 @@ import { filterFields, outputJson, parseFields } from '@pleaseai/cli-toolkit/out
 import { Command } from 'commander'
 import { getRepoInfo } from '../../lib/github-api'
 import {
+  addSubIssue,
   createIssueWithType,
   getAssigneeNodeIds,
+  getIssueNodeId,
   getLabelNodeIds,
   getMilestoneNodeId,
   getProjectNodeIds,
@@ -29,6 +31,7 @@ export function createIssueCreateCommand(): Command {
     .option('-a, --assignee <login>', 'Add assignee (can be used multiple times)', (value, previous: string[] = []) => [...previous, value], [])
     .option('-m, --milestone <name>', 'Add to milestone')
     .option('-p, --project <title>', 'Add to project (can be used multiple times)', (value, previous: string[] = []) => [...previous, value], [])
+    .option('--parent <number>', 'Parent issue number (creates sub-issue relationship)')
     .option('--json [fields]', 'Output as JSON with optional field selection (number, title, url, type)')
     .action(async (options: {
       title: string
@@ -40,6 +43,7 @@ export function createIssueCreateCommand(): Command {
       assignee?: string[]
       milestone?: string
       project?: string[]
+      parent?: string
       json?: string | boolean
     }) => {
       const lang = detectSystemLanguage()
@@ -139,6 +143,25 @@ export function createIssueCreateCommand(): Command {
           milestoneId,
           projectIds,
         )
+
+        // Link to parent issue if specified
+        if (options.parent) {
+          const parentNumber = Number.parseInt(options.parent, 10)
+          if (Number.isNaN(parentNumber)) {
+            throw new TypeError(`Invalid parent issue number: ${options.parent}`)
+          }
+
+          if (!options.json) {
+            console.log(`🔗 Linking to parent issue #${parentNumber}...`)
+          }
+
+          const parentNodeId = await getIssueNodeId(owner, repo, parentNumber)
+          await addSubIssue(parentNodeId, result.nodeId)
+
+          if (!options.json) {
+            console.log(`✓ Linked as sub-issue of #${parentNumber}`)
+          }
+        }
 
         // Output result
         if (options.json) {
