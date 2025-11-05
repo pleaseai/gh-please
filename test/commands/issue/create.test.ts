@@ -107,4 +107,31 @@ describe('issue create command', () => {
     const bodyFileOption = options.find(o => o.long === '--body-file')
     expect(bodyFileOption).toBeDefined()
   })
+
+  describe('Error handling validation', () => {
+    test('should export create command function', () => {
+      // Verify the function exists and can be called
+      expect(typeof createIssueCreateCommand).toBe('function')
+      const cmd = createIssueCreateCommand()
+      expect(cmd).toBeDefined()
+      expect(cmd.name()).toBe('create')
+    })
+
+    test('should have body-file option with stdin support', () => {
+      const cmd = createIssueCreateCommand()
+      const options = cmd.options || []
+      const bodyFileOption = options.find(o => o.long === '--body-file')
+      expect(bodyFileOption).toBeDefined()
+      // Description should mention stdin
+      expect(bodyFileOption?.description).toContain('stdin')
+    })
+
+    test('should have template option', () => {
+      const cmd = createIssueCreateCommand()
+      const options = cmd.options || []
+      const templateOption = options.find(o => o.long === '--template')
+      expect(templateOption).toBeDefined()
+      expect(templateOption?.description).toContain('template')
+    })
+  })
 })

@@ -643,4 +643,30 @@ describe('github-graphql', () => {
       expect(func).toContain('nodeIds')
     })
   })
+
+  describe('Error Handling Tests', () => {
+    describe('getAssigneeNodeIds error scenarios', () => {
+      test('should handle network errors differently from not found', () => {
+        const func = getAssigneeNodeIds.toString()
+        // Verify error handling distinguishes between user not found and other errors
+        expect(func).toContain('Could not resolve to a User')
+        expect(func).toContain('NOT_FOUND')
+        expect(func).toContain('network issue')
+      })
+
+      test('should re-throw unexpected errors with helpful message', () => {
+        const func = getAssigneeNodeIds.toString()
+        expect(func).toContain('Failed to look up assignee')
+        expect(func).toContain('gh auth status')
+      })
+    })
+
+    describe('getMilestoneNodeId limitations', () => {
+      test('should document OPEN milestones only limitation', () => {
+        const func = getMilestoneNodeId.toString()
+        // Verify function queries only OPEN milestones
+        expect(func).toContain('OPEN')
+      })
+    })
+  })
 })

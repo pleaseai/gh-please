@@ -71,7 +71,27 @@ export function createIssueCreateCommand(): Command {
         if (options.bodyFile) {
           if (options.bodyFile === '-') {
             // Read from stdin
-            issueBody = await Bun.stdin.text()
+            try {
+              issueBody = await Bun.stdin.text()
+
+              if (!issueBody || issueBody.trim().length === 0) {
+                throw new Error('stdin is empty or contains only whitespace')
+              }
+            }
+            catch (error) {
+              const errorMessage = error instanceof Error ? error.message : String(error)
+              throw new Error(
+                `Failed to read issue body from stdin.\n`
+                + `Error: ${errorMessage}\n`
+                + `\n`
+                + `Possible reasons:\n`
+                + `  • stdin is not available or has been closed\n`
+                + `  • The input contains invalid UTF-8 encoding\n`
+                + `  • The pipe was broken or interrupted\n`
+                + `\n`
+                + `Usage: echo "body text" | gh please issue create --title "..." --body-file -`,
+              )
+            }
           }
           else {
             // Read from file
@@ -79,7 +99,25 @@ export function createIssueCreateCommand(): Command {
             if (!(await file.exists())) {
               throw new Error(`File not found: ${options.bodyFile}`)
             }
-            issueBody = await file.text()
+
+            try {
+              issueBody = await file.text()
+            }
+            catch (error) {
+              const errorMessage = error instanceof Error ? error.message : String(error)
+              throw new Error(
+                `Failed to read file: ${options.bodyFile}\n`
+                + `Error: ${errorMessage}\n`
+                + `\n`
+                + `Possible reasons:\n`
+                + `  • The file cannot be read due to permissions\n`
+                + `  • The file contains invalid UTF-8 encoding\n`
+                + `  • The file is locked by another process\n`
+                + `  • A disk read error occurred\n`
+                + `\n`
+                + `Please check file permissions and encoding, then try again.`,
+              )
+            }
           }
         }
         else if (options.template) {
@@ -98,10 +136,32 @@ export function createIssueCreateCommand(): Command {
           const exitCode = await proc.exited
 
           if (exitCode !== 0) {
-            throw new Error(`Failed to fetch issue templates: ${stderr}`)
+            const errorMsg = stderr.includes('404')
+              ? `No issue templates found in ${owner}/${repo}.\n`
+              + `Make sure the repository has templates in .github/ISSUE_TEMPLATE/`
+              : `Failed to fetch issue templates: ${stderr}`
+            throw new Error(errorMsg)
           }
 
-          const templates = JSON.parse(stdout)
+          let templates: any[]
+          try {
+            templates = JSON.parse(stdout)
+
+            if (!Array.isArray(templates)) {
+              throw new TypeError('Expected array of templates')
+            }
+          }
+          catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error)
+            throw new Error(
+              `Failed to parse issue templates response from GitHub.\n`
+              + `Error: ${errorMessage}\n`
+              + `Response preview: ${stdout.substring(0, 200)}${stdout.length > 200 ? '...' : ''}\n`
+              + `\n`
+              + `This is likely a GitHub API issue. Please try again later.`,
+            )
+          }
+
           const template = templates.find((t: any) => t.name === options.template)
 
           if (!template) {

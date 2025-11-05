@@ -1017,8 +1017,20 @@ export async function getAssigneeNodeIds(
         notFound.push(login)
       }
     }
-    catch {
-      notFound.push(login)
+    catch (error) {
+      // Only treat "not found" errors as missing users
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      if (errorMessage.includes('Could not resolve to a User') || errorMessage.includes('NOT_FOUND')) {
+        notFound.push(login)
+      }
+      else {
+        // Re-throw unexpected errors (network, auth, API failures)
+        throw new Error(
+          `Failed to look up assignee "${login}": ${errorMessage}\n`
+          + `This may be a network issue, authentication problem, or API error.\n`
+          + `Please check your connection and GitHub authentication: gh auth status`,
+        )
+      }
     }
   }
 
@@ -1033,13 +1045,14 @@ export async function getAssigneeNodeIds(
 }
 
 /**
- * Get Node ID for a milestone by name
+ * Get Node ID for an open milestone by name
+ * Note: Only searches OPEN milestones - closed milestones will not be found
  *
  * @param owner - Repository owner
  * @param repo - Repository name
- * @param milestoneName - Milestone name (title)
+ * @param milestoneName - Milestone title (exact match required)
  * @returns Milestone Node ID
- * @throws Error if the milestone is not found
+ * @throws Error if the milestone is not found or is closed
  */
 export async function getMilestoneNodeId(
   owner: string,
