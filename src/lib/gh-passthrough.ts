@@ -360,7 +360,22 @@ export async function passThroughCommand(args: string[]): Promise<void> {
   if (result.exitCode !== 0) {
     // Distinguish between different types of --json related errors
     if (format) {
-      // Show command attempted for all format-related errors
+      // Detect resource-not-found errors (don't show "Command attempted" prefix)
+      const isResourceError = result.stderr.includes('Could not resolve')
+        || result.stderr.includes('Not Found')
+        || result.stderr.includes('does not exist')
+        || result.stderr.includes('no pull requests')
+        || result.stderr.includes('no issues')
+        || result.stderr.includes('not found')
+
+      if (isResourceError) {
+        // Resource error - show gh CLI error directly without misleading prefix
+        process.stderr.write(result.stderr)
+        process.exit(result.exitCode)
+        return // Early return in case process.exit is mocked
+      }
+
+      // Show command attempted only for format-specific errors
       console.error(`\nCommand attempted: gh ${cleanArgs.join(' ')} --json`)
 
       if (result.stderr.includes('Specify one or more comma-separated fields')) {
