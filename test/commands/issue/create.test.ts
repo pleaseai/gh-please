@@ -52,60 +52,22 @@ describe('issue create command', () => {
     expect(typeIdOption).toBeDefined()
   })
 
-  test('should have json option', () => {
-    const cmd = createIssueCreateCommand()
-    const options = cmd.options || []
-    const jsonOption = options.find(o => o.long === '--json')
-    expect(jsonOption).toBeDefined()
-  })
+  const expectedOptions = [
+    '--json',
+    '--label',
+    '--assignee',
+    '--milestone',
+    '--project',
+    '--parent',
+    '--template',
+    '--body-file',
+  ]
 
-  test('should have label option', () => {
+  test.each(expectedOptions)('should have %s option', (optionName) => {
     const cmd = createIssueCreateCommand()
     const options = cmd.options || []
-    const labelOption = options.find(o => o.long === '--label')
-    expect(labelOption).toBeDefined()
-  })
-
-  test('should have assignee option', () => {
-    const cmd = createIssueCreateCommand()
-    const options = cmd.options || []
-    const assigneeOption = options.find(o => o.long === '--assignee')
-    expect(assigneeOption).toBeDefined()
-  })
-
-  test('should have milestone option', () => {
-    const cmd = createIssueCreateCommand()
-    const options = cmd.options || []
-    const milestoneOption = options.find(o => o.long === '--milestone')
-    expect(milestoneOption).toBeDefined()
-  })
-
-  test('should have project option', () => {
-    const cmd = createIssueCreateCommand()
-    const options = cmd.options || []
-    const projectOption = options.find(o => o.long === '--project')
-    expect(projectOption).toBeDefined()
-  })
-
-  test('should have parent option', () => {
-    const cmd = createIssueCreateCommand()
-    const options = cmd.options || []
-    const parentOption = options.find(o => o.long === '--parent')
-    expect(parentOption).toBeDefined()
-  })
-
-  test('should have template option', () => {
-    const cmd = createIssueCreateCommand()
-    const options = cmd.options || []
-    const templateOption = options.find(o => o.long === '--template')
-    expect(templateOption).toBeDefined()
-  })
-
-  test('should have body-file option', () => {
-    const cmd = createIssueCreateCommand()
-    const options = cmd.options || []
-    const bodyFileOption = options.find(o => o.long === '--body-file')
-    expect(bodyFileOption).toBeDefined()
+    const option = options.find(o => o.long === optionName)
+    expect(option).toBeDefined()
   })
 
   describe('Error handling validation', () => {

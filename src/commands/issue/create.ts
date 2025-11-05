@@ -13,6 +13,11 @@ import {
 } from '../../lib/github-graphql'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
 
+interface IssueTemplate {
+  name: string
+  body: string
+}
+
 /**
  * Creates a command to create GitHub issues with optional issue type
  * @returns Command object for issue creation
@@ -143,7 +148,7 @@ export function createIssueCreateCommand(): Command {
             throw new Error(errorMsg)
           }
 
-          let templates: any[]
+          let templates: IssueTemplate[]
           try {
             templates = JSON.parse(stdout)
 
@@ -162,10 +167,10 @@ export function createIssueCreateCommand(): Command {
             )
           }
 
-          const template = templates.find((t: any) => t.name === options.template)
+          const template = templates.find(t => t.name === options.template)
 
           if (!template) {
-            const availableTemplates = templates.map((t: any) => t.name).join(', ')
+            const availableTemplates = templates.map(t => t.name).join(', ')
             throw new Error(
               `Template "${options.template}" not found.\n${
                 availableTemplates

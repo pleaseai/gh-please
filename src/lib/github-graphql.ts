@@ -3,6 +3,16 @@
  * Uses gh CLI to execute GraphQL queries and mutations
  */
 
+interface LabelNode {
+  id: string
+  name: string
+}
+
+interface MilestoneNode {
+  id: string
+  title: string
+}
+
 /**
  * Get the gh command path from environment variable or use default
  * This allows tests to inject a mock gh command
@@ -935,8 +945,8 @@ export async function getLabelNodeIds(
     )
   }
 
-  const labels = data.repository.labels.nodes
-  const labelMap = new Map<string, string>(labels.map((label: any) => [label.name, label.id]))
+  const labels: LabelNode[] = data.repository.labels.nodes
+  const labelMap = new Map<string, string>(labels.map(label => [label.name, label.id]))
 
   const nodeIds: string[] = []
   const notFound: string[] = []
@@ -1084,11 +1094,11 @@ export async function getMilestoneNodeId(
     )
   }
 
-  const milestones = data.repository.milestones.nodes
-  const milestone = milestones.find((m: any) => m.title === milestoneName)
+  const milestones: MilestoneNode[] = data.repository.milestones.nodes
+  const milestone = milestones.find(m => m.title === milestoneName)
 
   if (!milestone) {
-    const availableMilestones = milestones.map((m: any) => m.title).join(', ')
+    const availableMilestones = milestones.map(m => m.title).join(', ')
     throw new Error(
       `Milestone "${milestoneName}" not found.\n${
         availableMilestones
