@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.30.1](https://github.com/pleaseai/gh-please/compare/github-v0.30.0...github-v0.30.1) (2025-11-05)
+
+
+### Bug Fixes
+
+* don't show misleading error for resource-not-found with --format flag ([#211](https://github.com/pleaseai/gh-please/issues/211)) ([6dfdc3d](https://github.com/pleaseai/gh-please/commit/6dfdc3dfc011f3a80969ac0f5ce1def30ef8394c))
+
 ## [0.30.0](https://github.com/pleaseai/gh-please/compare/github-v0.29.0...github-v0.30.0) (2025-11-05)
 
 
