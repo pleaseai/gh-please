@@ -754,7 +754,7 @@ export async function getRepositoryNodeId(
 }
 
 /**
- * Create an issue with optional issue type, labels, assignees, and milestone
+ * Create an issue with optional issue type, labels, assignees, milestone, and projects
  *
  * @param owner - Repository owner
  * @param repo - Repository name
@@ -764,6 +764,7 @@ export async function getRepositoryNodeId(
  * @param labelIds - Array of label Node IDs (optional)
  * @param assigneeIds - Array of assignee Node IDs (optional)
  * @param milestoneId - Milestone Node ID (optional)
+ * @param projectIds - Array of project Node IDs (optional)
  * @returns Object with issue number and Node ID
  * @throws Error if the mutation fails
  */
@@ -776,12 +777,13 @@ export async function createIssueWithType(
   labelIds?: string[],
   assigneeIds?: string[],
   milestoneId?: string,
+  projectIds?: string[],
 ): Promise<{ number: number, nodeId: string }> {
   // Get repository Node ID
   const repositoryId = await getRepositoryNodeId(owner, repo)
 
   const mutation = `
-    mutation CreateIssueWithType($repositoryId: ID!, $title: String!, $body: String, $issueTypeId: ID, $labelIds: [ID!], $assigneeIds: [ID!], $milestoneId: ID) {
+    mutation CreateIssueWithType($repositoryId: ID!, $title: String!, $body: String, $issueTypeId: ID, $labelIds: [ID!], $assigneeIds: [ID!], $milestoneId: ID, $projectIds: [ID!]) {
       createIssue(input: {
         repositoryId: $repositoryId
         title: $title
@@ -790,6 +792,7 @@ export async function createIssueWithType(
         labelIds: $labelIds
         assigneeIds: $assigneeIds
         milestoneId: $milestoneId
+        projectIds: $projectIds
       }) {
         issue {
           id
@@ -824,6 +827,10 @@ export async function createIssueWithType(
     variables.milestoneId = milestoneId
   }
 
+  if (projectIds !== undefined && projectIds.length > 0) {
+    variables.projectIds = projectIds
+  }
+
   const data = await executeGraphQL(mutation, variables, undefined, 'CreateIssueWithType')
 
   if (!data.createIssue?.issue) {
@@ -836,6 +843,7 @@ export async function createIssueWithType(
       + `  • Label IDs may be invalid (if specified)\n`
       + `  • Assignee IDs may be invalid (if specified)\n`
       + `  • Milestone ID may be invalid (if specified)\n`
+      + `  • Project IDs may be invalid (if specified)\n`
       + `  • The title may exceed the maximum length (256 characters)\n`
       + `  • Required fields may be missing or malformed`,
     )
@@ -1077,4 +1085,93 @@ export async function getMilestoneNodeId(
   }
 
   return milestone.id
+}
+
+/**
+ * Get Node IDs for multiple projects by title
+ * Searches both repository projects and organization projects
+ *
+ * @param owner - Repository owner (or organization login)
+ * @param repo - Repository name
+ * @param projectTitles - Array of project titles
+ * @returns Array of project Node IDs
+ * @throws Error if any project is not found
+ */
+export async function getProjectNodeIds(
+  owner: string,
+  repo: string,
+  projectTitles: string[],
+): Promise<string[]> {
+  // Query both repository and organization projects
+  const query = `
+    query GetProjectNodeIds($owner: String!, $repo: String!) {
+      repository(owner: $owner, name: $repo) {
+        projectsV2(first: 100) {
+          nodes {
+            id
+            title
+          }
+        }
+      }
+      organization(login: $owner) {
+        projectsV2(first: 100) {
+          nodes {
+            id
+            title
+          }
+        }
+      }
+    }
+  `
+
+  const data = await executeGraphQL(query, { owner, repo }, undefined, 'GetProjectNodeIds')
+
+  // Collect all projects from both repository and organization
+  const allProjects: Array<{ id: string, title: string }> = []
+
+  if (data.repository?.projectsV2?.nodes) {
+    allProjects.push(...data.repository.projectsV2.nodes)
+  }
+
+  if (data.organization?.projectsV2?.nodes) {
+    allProjects.push(...data.organization.projectsV2.nodes)
+  }
+
+  if (allProjects.length === 0) {
+    throw new Error(
+      `No projects found for ${owner}/${repo}.\n`
+      + `Possible reasons:\n`
+      + `  • The repository or organization has no projects\n`
+      + `  • You lack permissions to view projects\n`
+      + `  • Projects (classic) are not supported - use Projects (beta/V2)`,
+    )
+  }
+
+  // Map project titles to IDs
+  const projectMap = new Map<string, string>(allProjects.map(p => [p.title, p.id]))
+
+  const nodeIds: string[] = []
+  const notFound: string[] = []
+
+  for (const title of projectTitles) {
+    const nodeId = projectMap.get(title)
+    if (nodeId) {
+      nodeIds.push(nodeId)
+    }
+    else {
+      notFound.push(title)
+    }
+  }
+
+  if (notFound.length > 0) {
+    const availableProjects = allProjects.map(p => p.title).join(', ')
+    throw new Error(
+      `Project(s) not found: ${notFound.join(', ')}\n${
+        availableProjects
+          ? `Available projects: ${availableProjects}`
+          : 'No projects available'}`,
+    )
+  }
+
+  return nodeIds
 }

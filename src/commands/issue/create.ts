@@ -6,6 +6,7 @@ import {
   getAssigneeNodeIds,
   getLabelNodeIds,
   getMilestoneNodeId,
+  getProjectNodeIds,
   listIssueTypes,
 } from '../../lib/github-graphql'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
@@ -27,6 +28,7 @@ export function createIssueCreateCommand(): Command {
     .option('-l, --label <name>', 'Add label (can be used multiple times)', (value, previous: string[] = []) => [...previous, value], [])
     .option('-a, --assignee <login>', 'Add assignee (can be used multiple times)', (value, previous: string[] = []) => [...previous, value], [])
     .option('-m, --milestone <name>', 'Add to milestone')
+    .option('-p, --project <title>', 'Add to project (can be used multiple times)', (value, previous: string[] = []) => [...previous, value], [])
     .option('--json [fields]', 'Output as JSON with optional field selection (number, title, url, type)')
     .action(async (options: {
       title: string
@@ -37,6 +39,7 @@ export function createIssueCreateCommand(): Command {
       label?: string[]
       assignee?: string[]
       milestone?: string
+      project?: string[]
       json?: string | boolean
     }) => {
       const lang = detectSystemLanguage()
@@ -111,6 +114,15 @@ export function createIssueCreateCommand(): Command {
           milestoneId = await getMilestoneNodeId(owner, repo, options.milestone)
         }
 
+        // Get project Node IDs if projects are provided
+        let projectIds: string[] | undefined
+        if (options.project && options.project.length > 0) {
+          if (!options.json) {
+            console.log(`📋 Looking up project IDs...`)
+          }
+          projectIds = await getProjectNodeIds(owner, repo, options.project)
+        }
+
         // Create the issue
         if (!options.json) {
           console.log(msg.creatingIssue)
@@ -125,6 +137,7 @@ export function createIssueCreateCommand(): Command {
           labelIds,
           assigneeIds,
           milestoneId,
+          projectIds,
         )
 
         // Output result

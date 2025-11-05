@@ -79,4 +79,11 @@ describe('issue create command', () => {
     const milestoneOption = options.find(o => o.long === '--milestone')
     expect(milestoneOption).toBeDefined()
   })
+
+  test('should have project option', () => {
+    const cmd = createIssueCreateCommand()
+    const options = cmd.options || []
+    const projectOption = options.find(o => o.long === '--project')
+    expect(projectOption).toBeDefined()
+  })
 })

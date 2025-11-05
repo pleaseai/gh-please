@@ -9,6 +9,7 @@ import {
   getLabelNodeIds,
   getMilestoneNodeId,
   getPrNodeId,
+  getProjectNodeIds,
   getThreadIdFromComment,
   listBlockedBy,
   listReviewThreads,
@@ -605,6 +606,41 @@ describe('github-graphql', () => {
     test('should return milestone Node ID string', () => {
       const func = getMilestoneNodeId.toString()
       expect(func).toContain('return')
+    })
+  })
+
+  describe('getProjectNodeIds', () => {
+    test('should export function with correct signature', () => {
+      expect(typeof getProjectNodeIds).toBe('function')
+    })
+
+    test('should accept owner, repo, and projectTitles parameters', () => {
+      const func = getProjectNodeIds.toString()
+      expect(func).toContain('owner')
+      expect(func).toContain('repo')
+      expect(func).toContain('projectTitles')
+    })
+
+    test('should be async function', () => {
+      const func = getProjectNodeIds.toString()
+      expect(func).toContain('async')
+    })
+
+    test('should query repository projects', () => {
+      const func = getProjectNodeIds.toString()
+      expect(func).toContain('repository')
+      expect(func).toContain('projectsV2')
+    })
+
+    test('should query organization projects', () => {
+      const func = getProjectNodeIds.toString()
+      expect(func).toContain('organization')
+      expect(func).toContain('projectsV2')
+    })
+
+    test('should return array of project Node IDs', () => {
+      const func = getProjectNodeIds.toString()
+      expect(func).toContain('nodeIds')
     })
   })
 })
