@@ -1,12 +1,12 @@
 import type { OutputFormat } from '@pleaseai/cli-toolkit/output'
 import { isStructuredOutput, outputData, parseFields } from '@pleaseai/cli-toolkit/output'
 import { Command } from 'commander'
-import { getRepoInfo } from '../../lib/github-api'
 import {
   getIssueNodeId,
   listIssueTypes,
   updateIssueType,
-} from '../../lib/github-graphql'
+} from '../../lib/github'
+import { getRepoInfo } from '../../lib/github-api'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
 import { applyQuery } from '../../lib/jmespath-query'
 

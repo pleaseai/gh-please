@@ -1,6 +1,6 @@
 import { Command } from 'commander'
+import { getPrNodeId, listReviewThreads, resolveReviewThread } from '../../lib/github'
 import { getRepoInfo } from '../../lib/github-api'
-import { getPrNodeId, listReviewThreads, resolveReviewThread } from '../../lib/github-graphql'
 import { detectSystemLanguage, getPrMessages } from '../../lib/i18n'
 
 /**

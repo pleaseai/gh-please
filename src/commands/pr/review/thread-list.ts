@@ -1,8 +1,8 @@
 import type { OutputFormat } from '@pleaseai/cli-toolkit/output'
 import { isStructuredOutput, outputData, parseFields } from '@pleaseai/cli-toolkit/output'
 import { Command } from 'commander'
+import { getPrNodeId, listReviewThreads } from '../../../lib/github'
 import { getRepoInfo } from '../../../lib/github-api'
-import { getPrNodeId, listReviewThreads } from '../../../lib/github-graphql'
 import { detectSystemLanguage, getPrMessages } from '../../../lib/i18n'
 
 /**

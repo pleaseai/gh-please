@@ -19,7 +19,7 @@ import {
   resolveReviewThread,
   updateIssueCommentByNodeId,
   updateReviewCommentByNodeId,
-} from '../../src/lib/github-graphql'
+} from '../../src/lib/github'
 
 describe('github-graphql', () => {
   describe('executeGraphQL', () => {
