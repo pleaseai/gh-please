@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.29.0](https://github.com/pleaseai/gh-please/compare/github-v0.28.0...github-v0.29.0) (2025-11-03)
+
+
+### Features
+
+* **phase-3:** Complete TOON migration for remaining commands ([#207](https://github.com/pleaseai/gh-please/issues/207)) ([11ffb72](https://github.com/pleaseai/gh-please/commit/11ffb72f30883ff554d6fb92d4be37b5c99d6622))
+
 ## [0.28.0](https://github.com/pleaseai/gh-please/compare/github-v0.27.0...github-v0.28.0) (2025-11-03)
 
 
