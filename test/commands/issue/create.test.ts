@@ -52,10 +52,48 @@ describe('issue create command', () => {
     expect(typeIdOption).toBeDefined()
   })
 
-  test('should have json option', () => {
+  const expectedOptions = [
+    '--json',
+    '--label',
+    '--assignee',
+    '--milestone',
+    '--project',
+    '--parent',
+    '--template',
+    '--body-file',
+  ]
+
+  test.each(expectedOptions)('should have %s option', (optionName) => {
     const cmd = createIssueCreateCommand()
     const options = cmd.options || []
-    const jsonOption = options.find(o => o.long === '--json')
-    expect(jsonOption).toBeDefined()
+    const option = options.find(o => o.long === optionName)
+    expect(option).toBeDefined()
+  })
+
+  describe('Error handling validation', () => {
+    test('should export create command function', () => {
+      // Verify the function exists and can be called
+      expect(typeof createIssueCreateCommand).toBe('function')
+      const cmd = createIssueCreateCommand()
+      expect(cmd).toBeDefined()
+      expect(cmd.name()).toBe('create')
+    })
+
+    test('should have body-file option with stdin support', () => {
+      const cmd = createIssueCreateCommand()
+      const options = cmd.options || []
+      const bodyFileOption = options.find(o => o.long === '--body-file')
+      expect(bodyFileOption).toBeDefined()
+      // Description should mention stdin
+      expect(bodyFileOption?.description).toContain('stdin')
+    })
+
+    test('should have template option', () => {
+      const cmd = createIssueCreateCommand()
+      const options = cmd.options || []
+      const templateOption = options.find(o => o.long === '--template')
+      expect(templateOption).toBeDefined()
+      expect(templateOption?.description).toContain('template')
+    })
   })
 })

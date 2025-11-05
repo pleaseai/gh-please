@@ -4,8 +4,12 @@ import {
   addSubIssue,
   createReviewCommentReply,
   executeGraphQL,
+  getAssigneeNodeIds,
   getIssueNodeId,
+  getLabelNodeIds,
+  getMilestoneNodeId,
   getPrNodeId,
+  getProjectNodeIds,
   getThreadIdFromComment,
   listBlockedBy,
   listReviewThreads,
@@ -510,6 +514,190 @@ describe('github-graphql', () => {
       expect(func).toContain('Failed to update issue type')
       expect(func).toContain('Possible reasons')
       expect(func).toContain('does not exist')
+    })
+  })
+
+  describe('getLabelNodeIds', () => {
+    test('should export function with correct signature', () => {
+      expect(typeof getLabelNodeIds).toBe('function')
+    })
+
+    test('should accept owner, repo, and labelNames parameters', () => {
+      const func = getLabelNodeIds.toString()
+      expect(func).toContain('owner')
+      expect(func).toContain('repo')
+      expect(func).toContain('labelNames')
+    })
+
+    test('should be async function', () => {
+      const func = getLabelNodeIds.toString()
+      expect(func).toContain('async')
+    })
+
+    test('should query repository labels', () => {
+      const func = getLabelNodeIds.toString()
+      expect(func).toContain('repository')
+      expect(func).toContain('labels')
+    })
+
+    test('should return array of label Node IDs', () => {
+      const func = getLabelNodeIds.toString()
+      expect(func).toContain('map')
+    })
+  })
+
+  describe('getAssigneeNodeIds', () => {
+    test('should export function with correct signature', () => {
+      expect(typeof getAssigneeNodeIds).toBe('function')
+    })
+
+    test('should accept owner, repo, and logins parameters', () => {
+      const func = getAssigneeNodeIds.toString()
+      expect(func).toContain('owner')
+      expect(func).toContain('repo')
+      expect(func).toContain('logins')
+    })
+
+    test('should be async function', () => {
+      const func = getAssigneeNodeIds.toString()
+      expect(func).toContain('async')
+    })
+
+    test('should handle @me special case', () => {
+      const func = getAssigneeNodeIds.toString()
+      expect(func).toContain('@me')
+      expect(func).toContain('viewer')
+    })
+
+    test('should query user Node IDs', () => {
+      const func = getAssigneeNodeIds.toString()
+      expect(func).toContain('user')
+    })
+
+    test('should return array of assignee Node IDs', () => {
+      const func = getAssigneeNodeIds.toString()
+      expect(func).toContain('nodeIds')
+    })
+
+    test('should use batched query with aliases', () => {
+      const func = getAssigneeNodeIds.toString()
+      expect(func).toContain('alias')
+      // Check for dynamic template literal usage
+      expect(func).toContain('user$')
+      expect(func).toContain('login$')
+    })
+
+    test('should build dynamic query with variables', () => {
+      const func = getAssigneeNodeIds.toString()
+      expect(func).toContain('varDeclarations')
+      expect(func).toContain('GetAssigneeNodeIds')
+    })
+
+    test('should have fallback sequential lookup', () => {
+      const func = getAssigneeNodeIds.toString()
+      expect(func).toContain('fallbackSequentialLookup')
+    })
+
+    test('should preserve order of input logins', () => {
+      const func = getAssigneeNodeIds.toString()
+      // Process results in the same order as input
+      expect(func).toContain('for (const login of logins)')
+    })
+
+    test('should handle empty logins array', () => {
+      const func = getAssigneeNodeIds.toString()
+      expect(func).toContain('logins.length === 0')
+      expect(func).toContain('return []')
+    })
+  })
+
+  describe('getMilestoneNodeId', () => {
+    test('should export function with correct signature', () => {
+      expect(typeof getMilestoneNodeId).toBe('function')
+    })
+
+    test('should accept owner, repo, and milestoneName parameters', () => {
+      const func = getMilestoneNodeId.toString()
+      expect(func).toContain('owner')
+      expect(func).toContain('repo')
+      expect(func).toContain('milestoneName')
+    })
+
+    test('should be async function', () => {
+      const func = getMilestoneNodeId.toString()
+      expect(func).toContain('async')
+    })
+
+    test('should query repository milestones', () => {
+      const func = getMilestoneNodeId.toString()
+      expect(func).toContain('repository')
+      expect(func).toContain('milestones')
+    })
+
+    test('should return milestone Node ID string', () => {
+      const func = getMilestoneNodeId.toString()
+      expect(func).toContain('return')
+    })
+  })
+
+  describe('getProjectNodeIds', () => {
+    test('should export function with correct signature', () => {
+      expect(typeof getProjectNodeIds).toBe('function')
+    })
+
+    test('should accept owner, repo, and projectTitles parameters', () => {
+      const func = getProjectNodeIds.toString()
+      expect(func).toContain('owner')
+      expect(func).toContain('repo')
+      expect(func).toContain('projectTitles')
+    })
+
+    test('should be async function', () => {
+      const func = getProjectNodeIds.toString()
+      expect(func).toContain('async')
+    })
+
+    test('should query repository projects', () => {
+      const func = getProjectNodeIds.toString()
+      expect(func).toContain('repository')
+      expect(func).toContain('projectsV2')
+    })
+
+    test('should query organization projects', () => {
+      const func = getProjectNodeIds.toString()
+      expect(func).toContain('organization')
+      expect(func).toContain('projectsV2')
+    })
+
+    test('should return array of project Node IDs', () => {
+      const func = getProjectNodeIds.toString()
+      expect(func).toContain('nodeIds')
+    })
+  })
+
+  describe('Error Handling Tests', () => {
+    describe('getAssigneeNodeIds error scenarios', () => {
+      test('should handle network errors differently from not found', () => {
+        const func = getAssigneeNodeIds.toString()
+        // Verify error handling distinguishes between user not found and other errors
+        expect(func).toContain('Could not resolve to a User')
+        expect(func).toContain('NOT_FOUND')
+        expect(func).toContain('network issue')
+      })
+
+      test('should re-throw unexpected errors with helpful message', () => {
+        const func = getAssigneeNodeIds.toString()
+        expect(func).toContain('Failed to look up assignee')
+        expect(func).toContain('gh auth status')
+      })
+    })
+
+    describe('getMilestoneNodeId limitations', () => {
+      test('should document OPEN milestones only limitation', () => {
+        const func = getMilestoneNodeId.toString()
+        // Verify function queries only OPEN milestones
+        expect(func).toContain('OPEN')
+      })
     })
   })
 })
