@@ -7,6 +7,7 @@ import {
   getAssigneeNodeIds,
   getIssueNodeId,
   getLabelNodeIds,
+  getMilestoneNodeId,
   getPrNodeId,
   getThreadIdFromComment,
   listBlockedBy,
@@ -575,6 +576,35 @@ describe('github-graphql', () => {
     test('should return array of assignee Node IDs', () => {
       const func = getAssigneeNodeIds.toString()
       expect(func).toContain('nodeIds')
+    })
+  })
+
+  describe('getMilestoneNodeId', () => {
+    test('should export function with correct signature', () => {
+      expect(typeof getMilestoneNodeId).toBe('function')
+    })
+
+    test('should accept owner, repo, and milestoneName parameters', () => {
+      const func = getMilestoneNodeId.toString()
+      expect(func).toContain('owner')
+      expect(func).toContain('repo')
+      expect(func).toContain('milestoneName')
+    })
+
+    test('should be async function', () => {
+      const func = getMilestoneNodeId.toString()
+      expect(func).toContain('async')
+    })
+
+    test('should query repository milestones', () => {
+      const func = getMilestoneNodeId.toString()
+      expect(func).toContain('repository')
+      expect(func).toContain('milestones')
+    })
+
+    test('should return milestone Node ID string', () => {
+      const func = getMilestoneNodeId.toString()
+      expect(func).toContain('return')
     })
   })
 })

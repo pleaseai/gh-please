@@ -754,7 +754,7 @@ export async function getRepositoryNodeId(
 }
 
 /**
- * Create an issue with optional issue type, labels, and assignees
+ * Create an issue with optional issue type, labels, assignees, and milestone
  *
  * @param owner - Repository owner
  * @param repo - Repository name
@@ -763,6 +763,7 @@ export async function getRepositoryNodeId(
  * @param issueTypeId - Issue type Node ID (optional)
  * @param labelIds - Array of label Node IDs (optional)
  * @param assigneeIds - Array of assignee Node IDs (optional)
+ * @param milestoneId - Milestone Node ID (optional)
  * @returns Object with issue number and Node ID
  * @throws Error if the mutation fails
  */
@@ -774,12 +775,13 @@ export async function createIssueWithType(
   issueTypeId?: string,
   labelIds?: string[],
   assigneeIds?: string[],
+  milestoneId?: string,
 ): Promise<{ number: number, nodeId: string }> {
   // Get repository Node ID
   const repositoryId = await getRepositoryNodeId(owner, repo)
 
   const mutation = `
-    mutation CreateIssueWithType($repositoryId: ID!, $title: String!, $body: String, $issueTypeId: ID, $labelIds: [ID!], $assigneeIds: [ID!]) {
+    mutation CreateIssueWithType($repositoryId: ID!, $title: String!, $body: String, $issueTypeId: ID, $labelIds: [ID!], $assigneeIds: [ID!], $milestoneId: ID) {
       createIssue(input: {
         repositoryId: $repositoryId
         title: $title
@@ -787,6 +789,7 @@ export async function createIssueWithType(
         issueTypeId: $issueTypeId
         labelIds: $labelIds
         assigneeIds: $assigneeIds
+        milestoneId: $milestoneId
       }) {
         issue {
           id
@@ -817,6 +820,10 @@ export async function createIssueWithType(
     variables.assigneeIds = assigneeIds
   }
 
+  if (milestoneId !== undefined) {
+    variables.milestoneId = milestoneId
+  }
+
   const data = await executeGraphQL(mutation, variables, undefined, 'CreateIssueWithType')
 
   if (!data.createIssue?.issue) {
@@ -828,6 +835,7 @@ export async function createIssueWithType(
       + `  • The issue type ID may be invalid or disabled (if specified)\n`
       + `  • Label IDs may be invalid (if specified)\n`
       + `  • Assignee IDs may be invalid (if specified)\n`
+      + `  • Milestone ID may be invalid (if specified)\n`
       + `  • The title may exceed the maximum length (256 characters)\n`
       + `  • Required fields may be missing or malformed`,
     )
@@ -1014,4 +1022,59 @@ export async function getAssigneeNodeIds(
   }
 
   return nodeIds
+}
+
+/**
+ * Get Node ID for a milestone by name
+ *
+ * @param owner - Repository owner
+ * @param repo - Repository name
+ * @param milestoneName - Milestone name (title)
+ * @returns Milestone Node ID
+ * @throws Error if the milestone is not found
+ */
+export async function getMilestoneNodeId(
+  owner: string,
+  repo: string,
+  milestoneName: string,
+): Promise<string> {
+  const query = `
+    query GetMilestoneNodeId($owner: String!, $repo: String!) {
+      repository(owner: $owner, name: $repo) {
+        milestones(first: 100, states: OPEN) {
+          nodes {
+            id
+            title
+            number
+          }
+        }
+      }
+    }
+  `
+
+  const data = await executeGraphQL(query, { owner, repo }, undefined, 'GetMilestoneNodeId')
+
+  if (!data.repository?.milestones?.nodes) {
+    throw new Error(
+      `Repository ${owner}/${repo} not found or milestones are not available.\n`
+      + `Possible reasons:\n`
+      + `  • The repository does not exist or you lack permissions to view it\n`
+      + `  • The owner or repo name may be misspelled`,
+    )
+  }
+
+  const milestones = data.repository.milestones.nodes
+  const milestone = milestones.find((m: any) => m.title === milestoneName)
+
+  if (!milestone) {
+    const availableMilestones = milestones.map((m: any) => m.title).join(', ')
+    throw new Error(
+      `Milestone "${milestoneName}" not found.\n${
+        availableMilestones
+          ? `Available milestones: ${availableMilestones}`
+          : 'No open milestones available in this repository'}`,
+    )
+  }
+
+  return milestone.id
 }

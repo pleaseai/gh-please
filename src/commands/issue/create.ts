@@ -5,6 +5,7 @@ import {
   createIssueWithType,
   getAssigneeNodeIds,
   getLabelNodeIds,
+  getMilestoneNodeId,
   listIssueTypes,
 } from '../../lib/github-graphql'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
@@ -25,6 +26,7 @@ export function createIssueCreateCommand(): Command {
     .option('--type-id <id>', 'Issue type Node ID (direct)')
     .option('-l, --label <name>', 'Add label (can be used multiple times)', (value, previous: string[] = []) => [...previous, value], [])
     .option('-a, --assignee <login>', 'Add assignee (can be used multiple times)', (value, previous: string[] = []) => [...previous, value], [])
+    .option('-m, --milestone <name>', 'Add to milestone')
     .option('--json [fields]', 'Output as JSON with optional field selection (number, title, url, type)')
     .action(async (options: {
       title: string
@@ -34,6 +36,7 @@ export function createIssueCreateCommand(): Command {
       typeId?: string
       label?: string[]
       assignee?: string[]
+      milestone?: string
       json?: string | boolean
     }) => {
       const lang = detectSystemLanguage()
@@ -99,6 +102,15 @@ export function createIssueCreateCommand(): Command {
           assigneeIds = await getAssigneeNodeIds(owner, repo, options.assignee)
         }
 
+        // Get milestone Node ID if milestone is provided
+        let milestoneId: string | undefined
+        if (options.milestone) {
+          if (!options.json) {
+            console.log(`🎯 Looking up milestone ID...`)
+          }
+          milestoneId = await getMilestoneNodeId(owner, repo, options.milestone)
+        }
+
         // Create the issue
         if (!options.json) {
           console.log(msg.creatingIssue)
@@ -112,6 +124,7 @@ export function createIssueCreateCommand(): Command {
           issueTypeId,
           labelIds,
           assigneeIds,
+          milestoneId,
         )
 
         // Output result
