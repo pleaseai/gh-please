@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.30.0](https://github.com/pleaseai/gh-please/compare/github-v0.29.0...github-v0.30.0) (2025-11-05)
+
+
+### Features
+
+* Add full gh issue create option support (labels, assignees, milestone, projects, parent, template, body-file) ([#219](https://github.com/pleaseai/gh-please/issues/219)) ([8d40e77](https://github.com/pleaseai/gh-please/commit/8d40e77864005033edc027cdbbc9889c623ed8a5))
+
 ## [0.29.0](https://github.com/pleaseai/gh-please/compare/github-v0.28.0...github-v0.29.0) (2025-11-03)
 
 
