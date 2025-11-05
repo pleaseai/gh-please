@@ -1278,6 +1278,91 @@ describe('gh-passthrough', () => {
       processStderrWriteSpy.mockRestore()
     })
 
+    test('should not show "Command attempted" prefix for resource-not-found errors (Issue #209)', async () => {
+      // Arrange
+      const errorMessage = 'GraphQL: Could not resolve to a PullRequest with the number of 10. (repository.pullRequest)'
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: '',
+        stderr: errorMessage,
+        exitCode: 1,
+      })
+
+      const processStderrWriteSpy = spyOn(process.stderr, 'write').mockImplementation(() => true)
+      const args = ['pr', 'view', '10', '--format', 'toon']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert - Should NOT show "Command attempted" prefix for resource errors
+      const commandAttemptedCalls = consoleErrorSpy.mock.calls.filter(call =>
+        call.some(arg => typeof arg === 'string' && arg.includes('Command attempted')),
+      )
+      expect(commandAttemptedCalls).toHaveLength(0)
+      expect(processStderrWriteSpy).toHaveBeenCalledWith(errorMessage)
+      expect(processExitSpy).toHaveBeenCalledWith(1)
+
+      processStderrWriteSpy.mockRestore()
+    })
+
+    test.each([
+      'Could not resolve to a PullRequest',
+      'Not Found',
+      'does not exist',
+      'no pull requests match',
+      'no issues found',
+      'repository not found',
+    ])('should detect resource-not-found error pattern: %s', async (errorPattern) => {
+      // Arrange
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: '',
+        stderr: `Error: ${errorPattern}`,
+        exitCode: 1,
+      })
+
+      const processStderrWriteSpy = spyOn(process.stderr, 'write').mockImplementation(() => true)
+      const args = ['issue', 'view', '999', '--format', 'toon']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert
+      const commandAttemptedCalls = consoleErrorSpy.mock.calls.filter(call =>
+        call.some(arg => typeof arg === 'string' && arg.includes('Command attempted')),
+      )
+      expect(commandAttemptedCalls).toHaveLength(0)
+      expect(processStderrWriteSpy).toHaveBeenCalledWith(`Error: ${errorPattern}`)
+      expect(processExitSpy).toHaveBeenCalledWith(1)
+
+      // Cleanup for spies created inside the test
+      processStderrWriteSpy.mockRestore()
+      executeGhCommandSpy.mockRestore()
+    })
+
+    test('should still show "Command attempted" for actual format errors (Issue #209)', async () => {
+      // Arrange
+      const errorMessage = 'unknown flag: --json\nSee \'gh issue edit --help\' for usage'
+      executeGhCommandSpy = spyOn(ghPassthrough, 'executeGhCommand').mockResolvedValue({
+        stdout: '',
+        stderr: errorMessage,
+        exitCode: 1,
+      })
+
+      const processStderrWriteSpy = spyOn(process.stderr, 'write').mockImplementation(() => true)
+      const args = ['issue', 'edit', '123', '--format', 'toon']
+
+      // Act
+      await passThroughCommand(args)
+
+      // Assert - Should show "Command attempted" for --json related errors
+      const commandAttemptedCalls = consoleErrorSpy.mock.calls.filter(call =>
+        call.some(arg => typeof arg === 'string' && arg.includes('Command attempted')),
+      )
+      expect(commandAttemptedCalls.length).toBe(1)
+      expect(processExitSpy).toHaveBeenCalledWith(1)
+
+      processStderrWriteSpy.mockRestore()
+    })
+
     // Phase 2.2 Integration Tests
     test('should not inject --json for label create mutation command (Phase 2.2)', async () => {
       // Arrange
