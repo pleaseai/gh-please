@@ -972,16 +972,121 @@ export async function getLabelNodeIds(
 }
 
 /**
- * Get Node IDs for multiple assignees by login
+ * Get Node IDs for multiple assignees by login using batched GraphQL query
  * Handles special case: @me (current user)
+ *
+ * Uses dynamic query building with aliases to fetch all users in a single request,
+ * reducing API rate limit consumption from N points to 1 point.
  *
  * @param owner - Repository owner
  * @param repo - Repository name (not used in queries but kept for API consistency)
  * @param logins - Array of user logins (supports @me)
- * @returns Array of assignee Node IDs
+ * @returns Array of assignee Node IDs in the same order as input logins
  * @throws Error if any user is not found
  */
 export async function getAssigneeNodeIds(
+  owner: string,
+  repo: string,
+  logins: string[],
+): Promise<string[]> {
+  if (logins.length === 0) {
+    return []
+  }
+
+  const nodeIds: string[] = []
+  const notFound: string[] = []
+
+  // Separate @me from regular logins
+  const hasMeAlias = logins.includes('@me')
+  const regularLogins = logins.filter(login => login !== '@me')
+
+  // Build batched query with aliases
+  const queryParts: string[] = []
+  const variables: Record<string, string> = {}
+
+  // Add viewer query if @me is present
+  if (hasMeAlias) {
+    queryParts.push('viewer { id }')
+  }
+
+  // Add aliased user queries for regular logins
+  regularLogins.forEach((login, index) => {
+    const alias = `user${index}`
+    const varName = `login${index}`
+    queryParts.push(`${alias}: user(login: $${varName}) { id }`)
+    variables[varName] = login
+  })
+
+  // Build variable declarations
+  const varDeclarations = Object.keys(variables)
+    .map(varName => `$${varName}: String!`)
+    .join(', ')
+
+  // Construct final query
+  const batchedQuery = `
+    query GetAssigneeNodeIds${varDeclarations ? `(${varDeclarations})` : ''} {
+      ${queryParts.join('\n      ')}
+    }
+  `
+
+  try {
+    const data = await executeGraphQL(batchedQuery, variables, undefined, 'GetAssigneeNodeIds')
+
+    // Process results in original order
+    for (const login of logins) {
+      if (login === '@me') {
+        if (data.viewer?.id) {
+          nodeIds.push(data.viewer.id)
+        }
+        else {
+          notFound.push(login)
+        }
+      }
+      else {
+        const index = regularLogins.indexOf(login)
+        const alias = `user${index}`
+        if (data[alias]?.id) {
+          nodeIds.push(data[alias].id)
+        }
+        else {
+          notFound.push(login)
+        }
+      }
+    }
+  }
+  catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+
+    // Check if error is due to users not found
+    if (errorMessage.includes('Could not resolve to a User') || errorMessage.includes('NOT_FOUND')) {
+      // Parse error to identify which users were not found
+      // GraphQL returns partial results, so re-query individually to identify missing users
+      return fallbackSequentialLookup(owner, repo, logins)
+    }
+
+    // Re-throw unexpected errors (network, auth, API failures)
+    throw new Error(
+      `Failed to look up assignees: ${errorMessage}\n`
+      + `This may be a network issue, authentication problem, or API error.\n`
+      + `Please check your connection and GitHub authentication: gh auth status`,
+    )
+  }
+
+  if (notFound.length > 0) {
+    throw new Error(
+      `Assignee(s) not found: ${notFound.join(', ')}\n`
+      + `Make sure the user login(s) are correct or use @me for current user`,
+    )
+  }
+
+  return nodeIds
+}
+
+/**
+ * Fallback to sequential lookup when batched query fails
+ * Used to identify which specific users are not found
+ */
+async function fallbackSequentialLookup(
   owner: string,
   repo: string,
   logins: string[],
@@ -990,34 +1095,24 @@ export async function getAssigneeNodeIds(
   const notFound: string[] = []
 
   for (const login of logins) {
-    // Handle special case: @me
     if (login === '@me') {
-      const viewerQuery = `
-        query GetCurrentUser {
-          viewer {
-            id
-          }
+      const viewerQuery = `query GetCurrentUser { viewer { id } }`
+      try {
+        const viewerData = await executeGraphQL(viewerQuery, {}, undefined, 'GetCurrentUser')
+        if (viewerData.viewer?.id) {
+          nodeIds.push(viewerData.viewer.id)
         }
-      `
-      const viewerData = await executeGraphQL(viewerQuery, {}, undefined, 'GetCurrentUser')
-      if (viewerData.viewer?.id) {
-        nodeIds.push(viewerData.viewer.id)
-        continue
+        else {
+          notFound.push(login)
+        }
       }
-      else {
+      catch {
         notFound.push(login)
-        continue
       }
+      continue
     }
 
-    // Query for user by login
-    const userQuery = `
-      query GetUserNodeId($login: String!) {
-        user(login: $login) {
-          id
-        }
-      }
-    `
+    const userQuery = `query GetUserNodeId($login: String!) { user(login: $login) { id } }`
     try {
       const userData = await executeGraphQL(userQuery, { login }, undefined, 'GetUserNodeId')
       if (userData.user?.id) {
@@ -1027,20 +1122,8 @@ export async function getAssigneeNodeIds(
         notFound.push(login)
       }
     }
-    catch (error) {
-      // Only treat "not found" errors as missing users
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      if (errorMessage.includes('Could not resolve to a User') || errorMessage.includes('NOT_FOUND')) {
-        notFound.push(login)
-      }
-      else {
-        // Re-throw unexpected errors (network, auth, API failures)
-        throw new Error(
-          `Failed to look up assignee "${login}": ${errorMessage}\n`
-          + `This may be a network issue, authentication problem, or API error.\n`
-          + `Please check your connection and GitHub authentication: gh auth status`,
-        )
-      }
+    catch {
+      notFound.push(login)
     }
   }
 

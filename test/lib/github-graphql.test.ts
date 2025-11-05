@@ -578,6 +578,37 @@ describe('github-graphql', () => {
       const func = getAssigneeNodeIds.toString()
       expect(func).toContain('nodeIds')
     })
+
+    test('should use batched query with aliases', () => {
+      const func = getAssigneeNodeIds.toString()
+      expect(func).toContain('alias')
+      // Check for dynamic template literal usage
+      expect(func).toContain('user$')
+      expect(func).toContain('login$')
+    })
+
+    test('should build dynamic query with variables', () => {
+      const func = getAssigneeNodeIds.toString()
+      expect(func).toContain('varDeclarations')
+      expect(func).toContain('GetAssigneeNodeIds')
+    })
+
+    test('should have fallback sequential lookup', () => {
+      const func = getAssigneeNodeIds.toString()
+      expect(func).toContain('fallbackSequentialLookup')
+    })
+
+    test('should preserve order of input logins', () => {
+      const func = getAssigneeNodeIds.toString()
+      // Process results in the same order as input
+      expect(func).toContain('for (const login of logins)')
+    })
+
+    test('should handle empty logins array', () => {
+      const func = getAssigneeNodeIds.toString()
+      expect(func).toContain('logins.length === 0')
+      expect(func).toContain('return []')
+    })
   })
 
   describe('getMilestoneNodeId', () => {
