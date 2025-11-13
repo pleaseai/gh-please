@@ -44,8 +44,19 @@ export async function executeGraphQL(
 
   // Add variables
   for (const [key, value] of Object.entries(variables)) {
-    const serialized = typeof value === 'string' ? value : JSON.stringify(value)
-    args.push('-F', `${key}=${serialized}`)
+    if (Array.isArray(value)) {
+      // Handle arrays: GitHub CLI requires multiple -F flags with array syntax
+      // e.g., -F 'labelIds[]=id1' -F 'labelIds[]=id2'
+      for (const item of value) {
+        const serialized = typeof item === 'string' ? item : JSON.stringify(item)
+        args.push('-F', `${key}[]=${serialized}`)
+      }
+    }
+    else {
+      // Handle scalars: -F 'key=value'
+      const serialized = typeof value === 'string' ? value : JSON.stringify(value)
+      args.push('-F', `${key}=${serialized}`)
+    }
   }
 
   const proc = Bun.spawn([getGhCommand(), ...args], {
