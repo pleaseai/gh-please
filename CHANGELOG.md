@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.30.2](https://github.com/pleaseai/gh-please/compare/github-v0.30.1...github-v0.30.2) (2025-11-17)
+
+
+### Bug Fixes
+
+* correct GraphQL array parameter serialization for gh CLI ([#240](https://github.com/pleaseai/gh-please/issues/240)) ([e1d1e23](https://github.com/pleaseai/gh-please/commit/e1d1e23f6cf9b0878459272211082732f42f8be0))
+
 ## [0.30.1](https://github.com/pleaseai/gh-please/compare/github-v0.30.0...github-v0.30.1) (2025-11-05)
 
 
