@@ -39,6 +39,7 @@ export {
 // Review operations
 export {
   createReviewCommentReply,
+  deleteIssueCommentByNodeId,
   getThreadIdFromComment,
   listReviewThreads,
   resolveReviewThread,

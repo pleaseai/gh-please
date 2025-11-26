@@ -1,6 +1,7 @@
 import { Command } from 'commander'
 import { passThroughCommand } from '../../lib/gh-passthrough'
 import { createCleanupCommand } from './cleanup'
+import { createIssueCommentDeleteCommand } from './comment-delete'
 import { createIssueCommentEditCommand } from './comment-edit'
 import { createIssueCommentListCommand } from './comment-list'
 import { createIssueCreateCommand } from './create'
@@ -24,6 +25,7 @@ export function createIssueCommand(): Command {
   // Add comment subcommand group
   const commentCommand = new Command('comment')
   commentCommand.description('Manage issue comments')
+  commentCommand.addCommand(createIssueCommentDeleteCommand())
   commentCommand.addCommand(createIssueCommentEditCommand())
   commentCommand.addCommand(createIssueCommentListCommand())
   command.addCommand(commentCommand)

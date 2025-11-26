@@ -248,3 +248,23 @@ export async function updateIssueCommentByNodeId(
     throw new Error('Failed to update issue comment')
   }
 }
+
+/**
+ * Delete an issue comment using Node ID
+ *
+ * @param commentNodeId - Node ID of the comment to delete (IC_...)
+ * @throws Error if the mutation fails
+ */
+export async function deleteIssueCommentByNodeId(
+  commentNodeId: string,
+): Promise<void> {
+  const mutation = `
+    mutation DeleteIssueComment($id: ID!) {
+      deleteIssueComment(input: { id: $id }) {
+        clientMutationId
+      }
+    }
+  `
+
+  await executeGraphQL(mutation, { id: commentNodeId }, undefined, 'DeleteIssueComment')
+}
