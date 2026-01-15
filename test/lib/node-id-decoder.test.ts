@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import {
   decodeNodeId,
+  encodeNodeId,
   extractDatabaseId,
   getNodeIdPrefix,
   getNodeIdType,
@@ -182,6 +183,159 @@ describe('node-id-decoder', () => {
 
     test('should throw for invalid Node ID', () => {
       expect(() => extractDatabaseId('invalid')).toThrow()
+    })
+  })
+
+  describe('encodeNodeId', () => {
+    describe('basic encoding', () => {
+      test('should encode Node ID with type string', () => {
+        const result = encodeNodeId({
+          type: 'PullRequestReviewComment',
+          repositoryId: 797346890,
+          databaseId: 2475899260,
+        })
+
+        expect(result).toMatch(/^PRRC_/)
+        expect(isNewNodeId(result)).toBe(true)
+      })
+
+      test('should encode Node ID with prefix string', () => {
+        const result = encodeNodeId({
+          prefix: 'PRRC_',
+          repositoryId: 797346890,
+          databaseId: 2475899260,
+        })
+
+        expect(result).toMatch(/^PRRC_/)
+        expect(isNewNodeId(result)).toBe(true)
+      })
+
+      test('should encode Issue Node ID', () => {
+        const result = encodeNodeId({
+          type: 'Issue',
+          repositoryId: 797346890,
+          databaseId: 2160321226,
+        })
+
+        expect(result).toMatch(/^I_/)
+        expect(isNewNodeId(result)).toBe(true)
+      })
+
+      test('should encode various types', () => {
+        const types = [
+          { type: 'Issue', prefix: 'I_' },
+          { type: 'PullRequest', prefix: 'PR_' },
+          { type: 'IssueComment', prefix: 'IC_' },
+          { type: 'Repository', prefix: 'R_' },
+          { type: 'User', prefix: 'U_' },
+        ]
+
+        for (const { type, prefix } of types) {
+          const result = encodeNodeId({
+            type,
+            repositoryId: 123456,
+            databaseId: 789012,
+          })
+          expect(result.startsWith(prefix)).toBe(true)
+        }
+      })
+    })
+
+    describe('roundtrip encoding/decoding', () => {
+      test('should roundtrip PRRC Node ID', () => {
+        const original = 'PRRC_kwDOL4aMSs6Tkzl8'
+        const decoded = decodeNodeId(original)
+
+        const reencoded = encodeNodeId({
+          type: decoded.type!,
+          repositoryId: decoded.repositoryId!,
+          databaseId: decoded.databaseId,
+        })
+
+        expect(reencoded).toBe(original)
+      })
+
+      test('should roundtrip Issue Node ID', () => {
+        const original = 'I_kwDOL4aMSs6Aw-LK'
+        const decoded = decodeNodeId(original)
+
+        const reencoded = encodeNodeId({
+          type: decoded.type!,
+          repositoryId: decoded.repositoryId!,
+          databaseId: decoded.databaseId,
+        })
+
+        expect(reencoded).toBe(original)
+      })
+
+      test('should roundtrip with small numbers', () => {
+        const encoded = encodeNodeId({
+          type: 'Issue',
+          repositoryId: 100,
+          databaseId: 50,
+        })
+
+        const decoded = decodeNodeId(encoded)
+
+        expect(decoded.type).toBe('Issue')
+        expect(decoded.repositoryId).toBe(100)
+        expect(decoded.databaseId).toBe(50)
+      })
+
+      test('should roundtrip with large numbers', () => {
+        const encoded = encodeNodeId({
+          type: 'PullRequestReviewComment',
+          repositoryId: 4294967295, // Max uint32
+          databaseId: 4294967295,
+        })
+
+        const decoded = decodeNodeId(encoded)
+
+        expect(decoded.type).toBe('PullRequestReviewComment')
+        expect(decoded.repositoryId).toBe(4294967295)
+        expect(decoded.databaseId).toBe(4294967295)
+      })
+    })
+
+    describe('error cases', () => {
+      test('should throw for unknown type', () => {
+        expect(() => encodeNodeId({
+          type: 'UnknownType',
+          repositoryId: 123,
+          databaseId: 456,
+        })).toThrow()
+      })
+
+      test('should throw for unknown prefix', () => {
+        expect(() => encodeNodeId({
+          prefix: 'UNKNOWN_',
+          repositoryId: 123,
+          databaseId: 456,
+        })).toThrow()
+      })
+
+      test('should throw when neither type nor prefix provided', () => {
+        expect(() => encodeNodeId({
+          repositoryId: 123,
+          databaseId: 456,
+        } as any)).toThrow()
+      })
+
+      test('should throw for negative databaseId', () => {
+        expect(() => encodeNodeId({
+          type: 'Issue',
+          repositoryId: 123,
+          databaseId: -1,
+        })).toThrow()
+      })
+
+      test('should throw for negative repositoryId', () => {
+        expect(() => encodeNodeId({
+          type: 'Issue',
+          repositoryId: -1,
+          databaseId: 456,
+        })).toThrow()
+      })
     })
   })
 })

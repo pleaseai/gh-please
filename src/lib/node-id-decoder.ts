@@ -28,6 +28,13 @@ const PREFIX_TO_TYPE: Record<string, string> = {
 }
 
 /**
+ * Type to prefix mapping (reverse of PREFIX_TO_TYPE)
+ */
+const TYPE_TO_PREFIX: Record<string, string> = Object.fromEntries(
+  Object.entries(PREFIX_TO_TYPE).map(([prefix, type]) => [type, prefix]),
+)
+
+/**
  * Legacy type ID to type name mapping
  * Format: "XXX:TypeNameDatabaseId"
  */
@@ -44,6 +51,20 @@ const LEGACY_TYPE_PATTERNS: Array<{ pattern: RegExp, type: string }> = [
   { pattern: /Label(\d+)$/, type: 'Label' },
   { pattern: /Milestone(\d+)$/, type: 'Milestone' },
 ]
+
+/**
+ * Options for encoding a Node ID
+ */
+export interface EncodeNodeIdOptions {
+  /** GitHub type (e.g., 'Issue', 'PullRequest', 'IssueComment') - provide this OR prefix */
+  type?: string
+  /** Node ID prefix (e.g., 'I_', 'PR_', 'PRRC_') - provide this OR type */
+  prefix?: string
+  /** Repository ID (required for New format) */
+  repositoryId: number
+  /** Database ID to encode */
+  databaseId: number
+}
 
 /**
  * Decoded Node ID result
@@ -179,6 +200,64 @@ export function decodeNodeId(nodeId: string): DecodedNodeId {
 export function extractDatabaseId(nodeId: string): number {
   const decoded = decodeNodeId(nodeId)
   return decoded.databaseId
+}
+
+/**
+ * Encode a Node ID from its components (Database ID → Node ID)
+ * Creates a New format Node ID (MessagePack + Base64)
+ *
+ * @param options - Encoding options (type or prefix, repositoryId, databaseId)
+ * @returns Encoded Node ID string
+ * @throws Error if options are invalid
+ *
+ * @example
+ * // Using type
+ * encodeNodeId({ type: 'Issue', repositoryId: 797346890, databaseId: 123 })
+ * // → 'I_kwDOL4aMSs4AAABz'
+ *
+ * @example
+ * // Using prefix
+ * encodeNodeId({ prefix: 'PRRC_', repositoryId: 797346890, databaseId: 2475899260 })
+ * // → 'PRRC_kwDOL4aMSs6Tkzl8'
+ */
+export function encodeNodeId(options: EncodeNodeIdOptions): string {
+  const { type, prefix: inputPrefix, repositoryId, databaseId } = options
+
+  // Resolve prefix from type or use provided prefix
+  let prefix: string
+  if (inputPrefix) {
+    if (!PREFIX_TO_TYPE[inputPrefix]) {
+      throw new Error(`Unknown Node ID prefix: "${inputPrefix}"`)
+    }
+    prefix = inputPrefix
+  }
+  else if (type) {
+    const resolvedPrefix = TYPE_TO_PREFIX[type]
+    if (!resolvedPrefix) {
+      throw new Error(`Unknown type: "${type}". Valid types: ${Object.keys(TYPE_TO_PREFIX).join(', ')}`)
+    }
+    prefix = resolvedPrefix
+  }
+  else {
+    throw new Error('Either type or prefix must be provided')
+  }
+
+  // Validate numeric values
+  if (repositoryId < 0 || !Number.isInteger(repositoryId)) {
+    throw new Error(`Invalid repositoryId: ${repositoryId}. Must be a non-negative integer.`)
+  }
+  if (databaseId < 0 || !Number.isInteger(databaseId)) {
+    throw new Error(`Invalid databaseId: ${databaseId}. Must be a non-negative integer.`)
+  }
+
+  // Encode as MessagePack array: [version, repositoryId, databaseId]
+  const version = 0 // GitHub uses version 0
+  const messagePackBytes = encodeMessagePackArray([version, repositoryId, databaseId])
+
+  // Encode as URL-safe Base64
+  const base64 = encodeBytesToBase64(messagePackBytes)
+
+  return prefix + base64
 }
 
 // ============================================================================
@@ -368,4 +447,113 @@ function decodeMessagePackArray(bytes: Uint8Array): number[] {
   }
 
   return result
+}
+
+/**
+ * Minimal MessagePack encoder for GitHub Node IDs
+ * Encodes an array of numbers to MessagePack format
+ *
+ * Supports:
+ * - fixarray (0x90-0x9f): small arrays (up to 15 elements)
+ * - positive fixint (0x00-0x7f): small positive integers (0-127)
+ * - uint8 (0xcc): 8-bit unsigned integers (128-255)
+ * - uint16 (0xcd): 16-bit unsigned integers (256-65535)
+ * - uint32 (0xce): 32-bit unsigned integers (65536-4294967295)
+ */
+function encodeMessagePackArray(values: number[]): Uint8Array {
+  if (values.length > 15) {
+    throw new Error('Array too large for fixarray format (max 15 elements)')
+  }
+
+  // Calculate total byte size needed
+  let totalSize = 1 // fixarray header
+  for (const value of values) {
+    totalSize += getMessagePackIntSize(value)
+  }
+
+  const bytes = new Uint8Array(totalSize)
+  let pos = 0
+
+  // Write fixarray header (0x90 | length)
+  bytes[pos++] = 0x90 | values.length
+
+  // Write each value
+  for (const value of values) {
+    pos = writeMessagePackInt(bytes, pos, value)
+  }
+
+  return bytes
+}
+
+/**
+ * Get the byte size needed to encode an integer in MessagePack format
+ */
+function getMessagePackIntSize(value: number): number {
+  if (value < 0) {
+    throw new Error('Negative integers not supported')
+  }
+  if (value <= 0x7F) {
+    return 1 // positive fixint
+  }
+  if (value <= 0xFF) {
+    return 2 // uint8
+  }
+  if (value <= 0xFFFF) {
+    return 3 // uint16
+  }
+  if (value <= 0xFFFFFFFF) {
+    return 5 // uint32
+  }
+  throw new Error('Integer too large for uint32')
+}
+
+/**
+ * Write an integer to a Uint8Array in MessagePack format
+ * Returns the new position after writing
+ */
+function writeMessagePackInt(bytes: Uint8Array, pos: number, value: number): number {
+  if (value <= 0x7F) {
+    // Positive fixint
+    bytes[pos++] = value
+  }
+  else if (value <= 0xFF) {
+    // uint8
+    bytes[pos++] = 0xCC
+    bytes[pos++] = value
+  }
+  else if (value <= 0xFFFF) {
+    // uint16 (big-endian)
+    bytes[pos++] = 0xCD
+    bytes[pos++] = (value >> 8) & 0xFF
+    bytes[pos++] = value & 0xFF
+  }
+  else {
+    // uint32 (big-endian)
+    bytes[pos++] = 0xCE
+    bytes[pos++] = (value >> 24) & 0xFF
+    bytes[pos++] = (value >> 16) & 0xFF
+    bytes[pos++] = (value >> 8) & 0xFF
+    bytes[pos++] = value & 0xFF
+  }
+  return pos
+}
+
+/**
+ * Encode bytes to URL-safe Base64 (without padding)
+ */
+function encodeBytesToBase64(bytes: Uint8Array): string {
+  // Convert to binary string
+  let binaryString = ''
+  for (let i = 0; i < bytes.length; i++) {
+    binaryString += String.fromCharCode(bytes[i]!)
+  }
+
+  // Encode to standard Base64
+  const base64 = btoa(binaryString)
+
+  // Convert to URL-safe Base64 (replace + with -, / with _, remove padding =)
+  return base64
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '')
 }

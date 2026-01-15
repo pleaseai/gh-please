@@ -111,11 +111,41 @@ const dbId = extractDatabaseId('PRRC_kwDOL4aMSs6Tkzl8')
 // → 2475899260
 ```
 
+### Offline Node ID Encoding
+
+gh-please also provides **offline Node ID encoding** (Database ID → Node ID):
+
+```typescript
+import { encodeNodeId } from 'gh-please/lib/id-converter'
+
+// Encode using type name
+const nodeId = encodeNodeId({
+  type: 'PullRequestReviewComment',
+  repositoryId: 797346890,
+  databaseId: 2475899260,
+})
+// → 'PRRC_kwDOL4aMSs6Tkzl8'
+
+// Encode using prefix
+const nodeId2 = encodeNodeId({
+  prefix: 'I_',
+  repositoryId: 797346890,
+  databaseId: 123456,
+})
+// → 'I_kwDOL4aMSs4AAeJA'
+```
+
+**Requirements for encoding**:
+- `type` or `prefix`: Specifies the GitHub entity type
+- `repositoryId`: The repository's database ID (available from decoded Node IDs)
+- `databaseId`: The entity's database ID to encode
+
 **Benefits**:
 - No API calls required
 - Works offline
 - Instant response (synchronous)
-- Supports both New and Legacy formats
+- Supports both New and Legacy formats (decoding)
+- Roundtrip safe: `decode(encode(x)) === x`
 
 **Reference**: See [Greptile Blog: GitHub IDs](https://www.greptile.com/blog/github-ids) for the original research.
 

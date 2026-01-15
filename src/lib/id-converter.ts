@@ -8,16 +8,17 @@ import {
   isNewNodeId as isNew,
 } from './node-id-decoder'
 
-// Re-export Node ID decoder functions for offline ID conversion
+// Re-export Node ID decoder/encoder functions for offline ID conversion
 export {
   decodeNodeId,
+  encodeNodeId,
   extractDatabaseId,
   getNodeIdPrefix,
   getNodeIdType,
   isLegacyNodeId,
   isNewNodeId,
 } from './node-id-decoder'
-export type { DecodedNodeId } from './node-id-decoder'
+export type { DecodedNodeId, EncodeNodeIdOptions } from './node-id-decoder'
 
 export type GitHubEntityType = 'review-comment' | 'issue-comment' | 'issue' | 'pull-request'
 

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
 import {
   decodeNodeId,
+  encodeNodeId,
   extractDatabaseId,
   getNodeIdPrefix,
   getNodeIdType,
@@ -247,6 +248,26 @@ describe('id-converter', () => {
     test('extractDatabaseId should return database ID', () => {
       expect(extractDatabaseId('PRRC_kwDOL4aMSs6Tkzl8')).toBe(2475899260)
       expect(extractDatabaseId('MDEwOlJlcG9zaXRvcnkxMzkwOTUzNzc=')).toBe(139095377)
+    })
+
+    test('encodeNodeId should encode Database ID to Node ID', () => {
+      const result = encodeNodeId({
+        type: 'PullRequestReviewComment',
+        repositoryId: 797346890,
+        databaseId: 2475899260,
+      })
+      expect(result).toBe('PRRC_kwDOL4aMSs6Tkzl8')
+    })
+
+    test('encodeNodeId roundtrip should preserve Node ID', () => {
+      const original = 'I_kwDOL4aMSs6Aw-LK'
+      const decoded = decodeNodeId(original)
+      const reencoded = encodeNodeId({
+        type: decoded.type!,
+        repositoryId: decoded.repositoryId!,
+        databaseId: decoded.databaseId,
+      })
+      expect(reencoded).toBe(original)
     })
   })
 })
