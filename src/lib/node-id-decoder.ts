@@ -265,17 +265,24 @@ export function encodeNodeId(options: EncodeNodeIdOptions): string {
 // ============================================================================
 
 /**
- * Decode Base64 string to bytes (Uint8Array)
- * Handles both standard and URL-safe Base64
+ * Prepares a Base64 string for decoding by handling URL-safe characters and padding.
  */
-function decodeBase64ToBytes(base64: string): Uint8Array {
+function prepareBase64(base64: string): string {
   // Convert URL-safe Base64 to standard Base64
   const standardBase64 = base64
     .replace(/-/g, '+')
     .replace(/_/g, '/')
 
   // Add padding if needed
-  const paddedBase64 = standardBase64 + '='.repeat((4 - standardBase64.length % 4) % 4)
+  return standardBase64 + '='.repeat((4 - standardBase64.length % 4) % 4)
+}
+
+/**
+ * Decode Base64 string to bytes (Uint8Array)
+ * Handles both standard and URL-safe Base64
+ */
+function decodeBase64ToBytes(base64: string): Uint8Array {
+  const paddedBase64 = prepareBase64(base64)
 
   // Decode using atob (available in Bun)
   const binaryString = atob(paddedBase64)
@@ -290,14 +297,7 @@ function decodeBase64ToBytes(base64: string): Uint8Array {
  * Decode Base64 string to text string (for Legacy format)
  */
 function decodeBase64ToString(base64: string): string {
-  // Convert URL-safe Base64 to standard Base64
-  const standardBase64 = base64
-    .replace(/-/g, '+')
-    .replace(/_/g, '/')
-
-  // Add padding if needed
-  const paddedBase64 = standardBase64 + '='.repeat((4 - standardBase64.length % 4) % 4)
-
+  const paddedBase64 = prepareBase64(base64)
   return atob(paddedBase64)
 }
 
