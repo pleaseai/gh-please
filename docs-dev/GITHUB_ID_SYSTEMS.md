@@ -76,6 +76,79 @@ GraphQL's universal identifier, required for types without Database ID.
 - **REST API**: Returned as `node_id` field
 - **GraphQL API**: Primary identifier (`id` field), `node(id: "...")` queries
 
+### Node ID Formats
+
+GitHub uses two Node ID formats:
+
+#### New Format (MessagePack + Base64)
+- **Pattern**: `PREFIX_base64EncodedMessagePack`
+- **Example**: `PRRC_kwDOL4aMSs6Tkzl8`
+- **Structure**: MessagePack array `[version, repositoryId, databaseId]`
+- **Prefixes**: `I_` (Issue), `PR_` (PullRequest), `IC_` (IssueComment), `PRRC_` (PullRequestReviewComment), `PRRT_` (PullRequestReviewThread), `R_` (Repository), etc.
+
+#### Legacy Format (Text Base64)
+- **Pattern**: Base64-encoded `"XXX:TypeNameDatabaseId"`
+- **Example**: `MDEwOlJlcG9zaXRvcnkxMzkwOTUzNzc=` (decodes to `"010:Repository139095377"`)
+- **Used by**: Older repositories (pre-2011)
+
+### Offline Node ID Decoding
+
+gh-please provides **offline Node ID decoding** without API calls:
+
+```typescript
+import { decodeNodeId, extractDatabaseId } from 'gh-please/lib/id-converter'
+
+// Decode New format Node ID
+const result = decodeNodeId('PRRC_kwDOL4aMSs6Tkzl8')
+// → { type: 'PullRequestReviewComment', databaseId: 2475899260, repositoryId: 797346890, format: 'new' }
+
+// Decode Legacy format Node ID
+const legacy = decodeNodeId('MDEwOlJlcG9zaXRvcnkxMzkwOTUzNzc=')
+// → { type: 'Repository', databaseId: 139095377, format: 'legacy' }
+
+// Extract only Database ID
+const dbId = extractDatabaseId('PRRC_kwDOL4aMSs6Tkzl8')
+// → 2475899260
+```
+
+### Offline Node ID Encoding
+
+gh-please also provides **offline Node ID encoding** (Database ID → Node ID):
+
+```typescript
+import { encodeNodeId } from 'gh-please/lib/id-converter'
+
+// Encode using type name
+const nodeId = encodeNodeId({
+  type: 'PullRequestReviewComment',
+  repositoryId: 797346890,
+  databaseId: 2475899260,
+})
+// → 'PRRC_kwDOL4aMSs6Tkzl8'
+
+// Encode using prefix
+const nodeId2 = encodeNodeId({
+  prefix: 'I_',
+  repositoryId: 797346890,
+  databaseId: 123456,
+})
+// → 'I_kwDOL4aMSs4AAeJA'
+```
+
+**Requirements for encoding**:
+- `type` or `prefix`: Specifies the GitHub entity type
+- `repositoryId`: The repository's database ID (available from decoded Node IDs)
+- `databaseId`: The entity's database ID to encode
+
+**Benefits**:
+- No API calls required
+- Works offline
+- Instant response (synchronous)
+- Supports both New and Legacy formats (decoding)
+- Roundtrip safe: `decode(encode(x)) === x`
+
+**Reference**: See [Greptile Blog: GitHub IDs](https://www.greptile.com/blog/github-ids) for the original research.
+
 **Usage in gh-please**:
 ```bash
 # Thread operations - Node ID required (GraphQL-only type)

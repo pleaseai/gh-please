@@ -3,6 +3,23 @@
  * Converts between Database ID and Node ID for various GitHub entities
  */
 
+import {
+  isLegacyNodeId as isLegacy,
+  isNewNodeId as isNew,
+} from './node-id-decoder'
+
+// Re-export Node ID decoder/encoder functions for offline ID conversion
+export {
+  decodeNodeId,
+  encodeNodeId,
+  extractDatabaseId,
+  getNodeIdPrefix,
+  getNodeIdType,
+  isLegacyNodeId,
+  isNewNodeId,
+} from './node-id-decoder'
+export type { DecodedNodeId, EncodeNodeIdOptions } from './node-id-decoder'
+
 export type GitHubEntityType = 'review-comment' | 'issue-comment' | 'issue' | 'pull-request'
 
 /**
@@ -14,15 +31,15 @@ function getGhCommand(): string {
 }
 
 /**
- * Detect if identifier is a Node ID
- * Node ID patterns: PRRC_xxx (PR Review Comment), IC_xxx (Issue Comment), I_xxx (Issue), PR_xxx (Pull Request)
+ * Detect if identifier is a Node ID (New or Legacy format)
+ * New format: PRRC_xxx, IC_xxx, I_xxx, PR_xxx (prefix + Base64)
+ * Legacy format: Base64-encoded "XXX:TypeNameDatabaseId"
  *
  * @param identifier - String to check
  * @returns True if identifier matches Node ID format
  */
 export function isNodeId(identifier: string): boolean {
-  // Node ID format: 1-4 uppercase letters, underscore, then alphanumeric/dash/underscore
-  return /^[A-Z]{1,4}_[\w-]+$/.test(identifier)
+  return isNew(identifier) || isLegacy(identifier)
 }
 
 /**
