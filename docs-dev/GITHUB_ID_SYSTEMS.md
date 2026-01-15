@@ -76,6 +76,49 @@ GraphQL's universal identifier, required for types without Database ID.
 - **REST API**: Returned as `node_id` field
 - **GraphQL API**: Primary identifier (`id` field), `node(id: "...")` queries
 
+### Node ID Formats
+
+GitHub uses two Node ID formats:
+
+#### New Format (MessagePack + Base64)
+- **Pattern**: `PREFIX_base64EncodedMessagePack`
+- **Example**: `PRRC_kwDOL4aMSs6Tkzl8`
+- **Structure**: MessagePack array `[version, repositoryId, databaseId]`
+- **Prefixes**: `I_` (Issue), `PR_` (PullRequest), `IC_` (IssueComment), `PRRC_` (PullRequestReviewComment), `PRRT_` (PullRequestReviewThread), `R_` (Repository), etc.
+
+#### Legacy Format (Text Base64)
+- **Pattern**: Base64-encoded `"XXX:TypeNameDatabaseId"`
+- **Example**: `MDEwOlJlcG9zaXRvcnkxMzkwOTUzNzc=` (decodes to `"010:Repository139095377"`)
+- **Used by**: Older repositories (pre-2011)
+
+### Offline Node ID Decoding
+
+gh-please provides **offline Node ID decoding** without API calls:
+
+```typescript
+import { decodeNodeId, extractDatabaseId } from 'gh-please/lib/id-converter'
+
+// Decode New format Node ID
+const result = decodeNodeId('PRRC_kwDOL4aMSs6Tkzl8')
+// → { type: 'PullRequestReviewComment', databaseId: 2475899260, repositoryId: 797346890, format: 'new' }
+
+// Decode Legacy format Node ID
+const legacy = decodeNodeId('MDEwOlJlcG9zaXRvcnkxMzkwOTUzNzc=')
+// → { type: 'Repository', databaseId: 139095377, format: 'legacy' }
+
+// Extract only Database ID
+const dbId = extractDatabaseId('PRRC_kwDOL4aMSs6Tkzl8')
+// → 2475899260
+```
+
+**Benefits**:
+- No API calls required
+- Works offline
+- Instant response (synchronous)
+- Supports both New and Legacy formats
+
+**Reference**: See [Greptile Blog: GitHub IDs](https://www.greptile.com/blog/github-ids) for the original research.
+
 **Usage in gh-please**:
 ```bash
 # Thread operations - Node ID required (GraphQL-only type)
