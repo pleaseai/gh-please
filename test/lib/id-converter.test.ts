@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
 import {
+  decodeNodeId,
+  extractDatabaseId,
+  getNodeIdPrefix,
+  getNodeIdType,
   isDatabaseId,
+  isLegacyNodeId,
+  isNewNodeId,
   isNodeId,
   toIssueCommentNodeId,
   toReviewCommentNodeId,
@@ -33,6 +39,12 @@ describe('id-converter', () => {
       expect(isNodeId('invalid-id')).toBe(false)
       expect(isNodeId('123abc')).toBe(false)
       expect(isNodeId('')).toBe(false)
+    })
+
+    test('should detect Legacy format Node ID', () => {
+      // Legacy format: Base64-encoded "XXX:TypeNameDatabaseId"
+      expect(isNodeId('MDEwOlJlcG9zaXRvcnkxMzkwOTUzNzc=')).toBe(true) // "010:Repository139095377"
+      expect(isNodeId('MDQ6VXNlcjEyMzQ1')).toBe(true) // "04:User12345"
     })
   })
 
@@ -191,6 +203,50 @@ describe('id-converter', () => {
           expect(error.message.length).toBeGreaterThan(0)
         }
       }
+    })
+  })
+
+  // Tests for re-exported node-id-decoder functions
+  describe('re-exported decoder functions', () => {
+    test('isNewNodeId should detect New format', () => {
+      expect(isNewNodeId('PRRC_kwDOP34zbs6ShH0J')).toBe(true)
+      expect(isNewNodeId('MDEwOlJlcG9zaXRvcnkxMzkwOTUzNzc=')).toBe(false)
+    })
+
+    test('isLegacyNodeId should detect Legacy format', () => {
+      expect(isLegacyNodeId('MDEwOlJlcG9zaXRvcnkxMzkwOTUzNzc=')).toBe(true)
+      expect(isLegacyNodeId('PRRC_kwDOP34zbs6ShH0J')).toBe(false)
+    })
+
+    test('getNodeIdPrefix should extract prefix', () => {
+      expect(getNodeIdPrefix('PRRC_kwDOP34zbs6ShH0J')).toBe('PRRC_')
+      expect(getNodeIdPrefix('IC_kwDOABC123')).toBe('IC_')
+      expect(getNodeIdPrefix('MDEwOlJlcG9zaXRvcnkxMzkwOTUzNzc=')).toBe(null)
+    })
+
+    test('getNodeIdType should return type', () => {
+      expect(getNodeIdType('PRRC_kwDOP34zbs6ShH0J')).toBe('PullRequestReviewComment')
+      expect(getNodeIdType('IC_kwDOABC123')).toBe('IssueComment')
+      expect(getNodeIdType('MDEwOlJlcG9zaXRvcnkxMzkwOTUzNzc=')).toBe('Repository')
+    })
+
+    test('decodeNodeId should decode New format', () => {
+      const result = decodeNodeId('PRRC_kwDOL4aMSs6Tkzl8')
+      expect(result.format).toBe('new')
+      expect(result.type).toBe('PullRequestReviewComment')
+      expect(result.databaseId).toBe(2475899260)
+    })
+
+    test('decodeNodeId should decode Legacy format', () => {
+      const result = decodeNodeId('MDEwOlJlcG9zaXRvcnkxMzkwOTUzNzc=')
+      expect(result.format).toBe('legacy')
+      expect(result.type).toBe('Repository')
+      expect(result.databaseId).toBe(139095377)
+    })
+
+    test('extractDatabaseId should return database ID', () => {
+      expect(extractDatabaseId('PRRC_kwDOL4aMSs6Tkzl8')).toBe(2475899260)
+      expect(extractDatabaseId('MDEwOlJlcG9zaXRvcnkxMzkwOTUzNzc=')).toBe(139095377)
     })
   })
 })
