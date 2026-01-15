@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.31.0](https://github.com/pleaseai/gh-please/compare/github-v0.30.2...github-v0.31.0) (2026-01-15)
+
+
+### Features
+
+* **core:** add Node ID universal decoder for offline database ID extraction ([#248](https://github.com/pleaseai/gh-please/issues/248)) ([4eed388](https://github.com/pleaseai/gh-please/commit/4eed38868008396fb1422710fb2cd9c8125c514e))
+
 ## [0.30.2](https://github.com/pleaseai/gh-please/compare/github-v0.30.1...github-v0.30.2) (2025-11-17)
 
 
