@@ -1,0 +1,121 @@
+{
+  "feature": "Fix GraphQL Schema Error in getThreadIdFromComment",
+  "issue_number": 251,
+  "plan_path": ".please/plans/2026-02-02-fix-review-reply-graphql-error.md",
+  "spec": null,
+  "stage": 1,
+  "created_at": "2026-02-02T12:50:00Z",
+  "tasks": [
+    {
+      "id": "T001",
+      "title": "id-converter.ts에 Thread ID 감지 함수 추가 - isThreadNodeId()",
+      "phase": 1,
+      "status": "pending",
+      "parallel": true,
+      "dependencies": [],
+      "files_affected": ["src/lib/id-converter.ts"]
+    },
+    {
+      "id": "T002",
+      "title": "id-converter.ts에 통합 ID 변환 함수 추가 - resolveThreadId()",
+      "phase": 1,
+      "status": "pending",
+      "parallel": true,
+      "dependencies": [],
+      "files_affected": ["src/lib/id-converter.ts"]
+    },
+    {
+      "id": "T003",
+      "title": "Unit test 작성 - ID 감지 및 변환 함수",
+      "phase": 1,
+      "status": "pending",
+      "parallel": false,
+      "dependencies": ["T001", "T002"],
+      "files_affected": ["test/lib/id-converter.test.ts"]
+    },
+    {
+      "id": "T004",
+      "title": "getThreadIdFromComment() 함수 시그니처 변경 - prNodeId 파라미터 추가",
+      "phase": 2,
+      "status": "pending",
+      "parallel": false,
+      "dependencies": ["T001"],
+      "files_affected": ["src/lib/github/review-operations.ts"]
+    },
+    {
+      "id": "T005",
+      "title": "getThreadIdFromComment() 구현 변경 - reviewThreads 조회 후 comment 매칭",
+      "phase": 2,
+      "status": "pending",
+      "parallel": false,
+      "dependencies": ["T004"],
+      "files_affected": ["src/lib/github/review-operations.ts"]
+    },
+    {
+      "id": "T006",
+      "title": "Unit test 작성 - getThreadIdFromComment() 함수",
+      "phase": 2,
+      "status": "pending",
+      "parallel": false,
+      "dependencies": ["T005"],
+      "files_affected": ["test/lib/github/review-operations.test.ts"]
+    },
+    {
+      "id": "T007",
+      "title": "createReviewCommentReply() 수정 - Thread ID 직접 사용 또는 comment에서 조회",
+      "phase": 3,
+      "status": "pending",
+      "parallel": false,
+      "dependencies": ["T002", "T005"],
+      "files_affected": ["src/lib/github/review-operations.ts"]
+    },
+    {
+      "id": "T008",
+      "title": "createReviewReplyCommand() 수정 - Thread ID 직접 입력 지원",
+      "phase": 3,
+      "status": "pending",
+      "parallel": false,
+      "dependencies": ["T007"],
+      "files_affected": ["src/commands/pr/review/reply.ts"]
+    },
+    {
+      "id": "T009",
+      "title": "Integration test 추가 - reply 명령 E2E 시나리오",
+      "phase": 4,
+      "status": "pending",
+      "parallel": false,
+      "dependencies": ["T008"],
+      "files_affected": ["test/commands/pr/review/reply.test.ts"]
+    },
+    {
+      "id": "T010",
+      "title": "Manual test - 실제 PR에서 reply 명령 테스트",
+      "phase": 4,
+      "status": "pending",
+      "parallel": false,
+      "dependencies": ["T009"],
+      "files_affected": []
+    }
+  ],
+  "verification": {
+    "automated_tests": [
+      "Unit tests: getThreadIdFromComment() 함수 - comment 매칭 로직",
+      "Integration tests: gh please pr review reply 명령 E2E",
+      "기존 테스트 통과 확인"
+    ],
+    "manual_tests": [
+      "실제 PR에서 Database ID로 reply 생성",
+      "실제 PR에서 Comment Node ID (PRRC_...)로 reply 생성",
+      "실제 PR에서 Thread Node ID (PRRT_...)로 reply 생성",
+      "thread가 100개 초과인 PR에서 테스트 (optional)"
+    ],
+    "acceptance_criteria": [
+      "gh please pr review reply <id> 명령이 정상 작동",
+      "Comment ID (PRRC_...) 입력 지원",
+      "Database ID (숫자) 입력 지원",
+      "Thread ID (PRRT_...) 직접 입력 지원",
+      "Thread ID 사용 시 API 호출 최소화 확인",
+      "에러 메시지가 명확하고 도움이 됨"
+    ]
+  }
+}

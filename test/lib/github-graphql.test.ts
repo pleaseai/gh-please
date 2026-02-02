@@ -213,9 +213,10 @@ describe('github-graphql', () => {
       expect(typeof getThreadIdFromComment).toBe('function')
     })
 
-    test('should accept commentNodeId parameter', () => {
+    test('should accept commentIdentifier and prNodeId parameters', () => {
       const func = getThreadIdFromComment.toString()
-      expect(func).toContain('commentNodeId')
+      expect(func).toContain('commentIdentifier')
+      expect(func).toContain('prNodeId')
     })
 
     test('should be async function', () => {
@@ -223,11 +224,11 @@ describe('github-graphql', () => {
       expect(func).toContain('async')
     })
 
-    test('should use GraphQL query to fetch thread information', () => {
+    test('should use GraphQL query to fetch reviewThreads from PR', () => {
       const func = getThreadIdFromComment.toString()
       expect(func).toContain('query')
-      expect(func).toContain('pullRequestReviewThread')
-      expect(func).toContain('PullRequestReviewComment')
+      expect(func).toContain('reviewThreads')
+      expect(func).toContain('PullRequest')
     })
 
     test('should return thread ID string', () => {
@@ -235,21 +236,22 @@ describe('github-graphql', () => {
       expect(typeof getThreadIdFromComment).toBe('function')
     })
 
-    // Behavioral tests for optimized single-query logic
-    describe('single-query behavior', () => {
+    // Behavioral tests for reviewThreads-based lookup
+    describe('reviewThreads-based lookup', () => {
       // Note: These tests verify the implementation without mocking executeGraphQL
       // since it's a module-level import. Integration tests cover actual execution.
 
-      test('should query pullRequestReviewThread field directly', () => {
+      test('should query reviewThreads with comments', () => {
         const func = getThreadIdFromComment.toString()
-        // Verify direct query for pullRequestReviewThread
-        expect(func).toContain('pullRequestReviewThread')
-        expect(func).toContain('PullRequestReviewComment')
+        // Verify query fetches reviewThreads with nested comments
+        expect(func).toContain('reviewThreads')
+        expect(func).toContain('comments')
+        expect(func).toContain('databaseId')
       })
 
       test('should use single GraphQL query', () => {
         const func = getThreadIdFromComment.toString()
-        // Verify only one executeGraphQL call (optimized)
+        // Verify only one executeGraphQL call
         const queryMatches = func.match(/executeGraphQL/g)
         expect(queryMatches?.length).toBe(1)
       })
@@ -268,10 +270,11 @@ describe('github-graphql', () => {
       expect(typeof createReviewCommentReply).toBe('function')
     })
 
-    test('should accept commentNodeId and body parameters', () => {
+    test('should accept identifier, body, and prNodeId parameters', () => {
       const func = createReviewCommentReply.toString()
-      expect(func).toContain('commentNodeId')
+      expect(func).toContain('identifier')
       expect(func).toContain('body')
+      expect(func).toContain('prNodeId')
     })
 
     test('should be async function', () => {
@@ -279,7 +282,12 @@ describe('github-graphql', () => {
       expect(func).toContain('async')
     })
 
-    test('should call getThreadIdFromComment', () => {
+    test('should support Thread ID (PRRT_) direct usage', () => {
+      const func = createReviewCommentReply.toString()
+      expect(func).toContain('PRRT_')
+    })
+
+    test('should call getThreadIdFromComment for non-thread IDs', () => {
       const func = createReviewCommentReply.toString()
       expect(func).toContain('getThreadIdFromComment')
     })

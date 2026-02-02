@@ -1,30 +1,36 @@
 import { Command } from 'commander'
-import { createReviewCommentReply } from '../../../lib/github'
+import { createReviewCommentReply, getPrNodeId } from '../../../lib/github'
 import { getCurrentPrInfo, getRepoInfo } from '../../../lib/github-api'
 import { detectSystemLanguage, getPrMessages } from '../../../lib/i18n'
-import { toReviewCommentNodeId, validateCommentIdentifier } from '../../../lib/id-converter'
+import { isDatabaseId, isNodeId, isThreadNodeId } from '../../../lib/id-converter'
 import { validateReplyBody } from '../../../lib/validation'
 
 /**
- * Creates a command to reply to PR review comments
+ * Creates a command to reply to PR review threads
  * @returns Command object configured for creating review replies
  */
 export function createReviewReplyCommand(): Command {
   const command = new Command('reply')
 
   command
-    .description('Create a reply to a PR review comment')
-    .argument('<comment-id>', 'Database ID (number) or Node ID (PRRC_...) of the review comment')
+    .description('Create a reply to a PR review thread')
+    .argument('<id>', 'Thread ID (PRRT_...), Comment ID (PRRC_...), or Database ID (number)')
     .option('-b, --body <text>', 'Reply body text')
     .option('-R, --repo <owner/repo>', 'Repository in owner/repo format (required if not in PR context)')
     .option('--pr <number>', 'PR number (required with --repo)')
-    .action(async (commentIdStr: string, options: { body?: string, repo?: string, pr?: string }) => {
+    .action(async (idStr: string, options: { body?: string, repo?: string, pr?: string }) => {
       const lang = detectSystemLanguage()
       const msg = getPrMessages(lang)
 
       try {
-        // Validate comment identifier (Database ID or Node ID)
-        const commentIdentifier = validateCommentIdentifier(commentIdStr)
+        // Validate identifier format
+        const identifier = idStr.trim()
+        if (!isThreadNodeId(identifier) && !isNodeId(identifier) && !isDatabaseId(identifier)) {
+          throw new Error(
+            `Invalid identifier: "${identifier}". `
+            + 'Expected Thread ID (PRRT_...), Comment ID (PRRC_...), or Database ID (positive integer)',
+          )
+        }
 
         let body = options.body
 
@@ -67,26 +73,27 @@ export function createReviewReplyCommand(): Command {
           prInfo = await getCurrentPrInfo()
         }
 
-        // Convert comment identifier to Node ID (supports both Database ID and Node ID)
-        console.log(`🔄 Converting comment identifier to Node ID...`)
-        const commentNodeId = await toReviewCommentNodeId(
-          commentIdentifier,
-          prInfo.owner,
-          prInfo.repo,
-          prInfo.number,
-        )
+        // Get PR Node ID for the createReviewCommentReply function
+        const prNodeId = await getPrNodeId(prInfo.owner, prInfo.repo, prInfo.number)
 
-        // For display purposes, show original identifier
-        const displayId = Number.parseInt(commentIdentifier, 10)
-        if (!Number.isNaN(displayId)) {
-          console.log(msg.creatingReply(displayId, prInfo.number))
+        // Show progress based on identifier type
+        if (isThreadNodeId(identifier)) {
+          console.log(`🔄 Creating reply to thread ${identifier} on PR #${prInfo.number}...`)
         }
         else {
-          console.log(`🔄 Creating reply to comment ${commentIdentifier} on PR #${prInfo.number}...`)
+          const displayId = Number.parseInt(identifier, 10)
+          if (!Number.isNaN(displayId)) {
+            console.log(msg.creatingReply(displayId, prInfo.number))
+          }
+          else {
+            console.log(`🔄 Creating reply to comment ${identifier} on PR #${prInfo.number}...`)
+          }
         }
 
-        // Create reply using GraphQL (supports all comment types including general comments)
-        const result = await createReviewCommentReply(commentNodeId, body)
+        // Create reply using GraphQL
+        // - Thread ID (PRRT_...): used directly, no additional API call
+        // - Comment ID or Database ID: finds thread via reviewThreads query
+        const result = await createReviewCommentReply(identifier, body, prNodeId)
 
         console.log(`✅ Reply created successfully!`)
         console.log(`   Comment ID: ${result.databaseId}`)

@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, test } from 'bun:test'
 import {
   createGetPrNodeIdResponse,
   createGetReviewCommentResponse,
+  createGetThreadsForCommentResponse,
   createListReviewThreadsResponse,
   createResolveThreadResponse,
   createReviewReplyResponse,
@@ -110,9 +111,34 @@ describe('PR Commands - CLI Integration', () => {
           exitCode: 0,
         },
       },
-      // Mock list review threads (GraphQL)
+      // Mock get thread ID from comment (GraphQL - GetThreadsForComment)
+      // IMPORTANT: This must come BEFORE the list review threads mock because
+      // both use reviewThreads query, but this one uses operationName=GetThreadsForComment
       {
-        args: /api graphql -f query=.*reviewThreads.*first.*-F prId=/,
+        args: /api graphql.*operationName=GetThreadsForComment/,
+        response: {
+          stdout: JSON.stringify(
+            createGetThreadsForCommentResponse([
+              {
+                id: mockReviewThread.id,
+                comments: [
+                  { id: mockReviewComment.nodeId, databaseId: mockReviewComment.id },
+                ],
+              },
+              {
+                id: 'PRRT_kwDOABCDEF67890',
+                comments: [
+                  { id: 'PRRC_kwDOAnotherComment', databaseId: 111222333 },
+                ],
+              },
+            ]),
+          ),
+          exitCode: 0,
+        },
+      },
+      // Mock list review threads (GraphQL - ListReviewThreads)
+      {
+        args: /api graphql.*operationName=ListReviewThreads/,
         response: {
           stdout: JSON.stringify(
             createListReviewThreadsResponse([
@@ -121,7 +147,7 @@ describe('PR Commands - CLI Integration', () => {
                 isResolved: false,
                 path: mockReviewThread.path,
                 line: mockReviewThread.line,
-                comments: [{ id: mockReviewComment.nodeId }],
+                comments: [{ id: mockReviewComment.nodeId, databaseId: mockReviewComment.id }],
               },
               {
                 id: 'PRRT_kwDOABCDEF67890',
@@ -141,22 +167,6 @@ describe('PR Commands - CLI Integration', () => {
           stdout: JSON.stringify(
             createResolveThreadResponse(mockReviewThread.id),
           ),
-          exitCode: 0,
-        },
-      },
-      // Mock get thread ID from comment (GraphQL - Optimized single query)
-      {
-        args: /api graphql.*-F commentId=PRRC_/,
-        response: {
-          stdout: JSON.stringify({
-            data: {
-              node: {
-                pullRequestReviewThread: {
-                  id: mockReviewThread.id,
-                },
-              },
-            },
-          }),
           exitCode: 0,
         },
       },
