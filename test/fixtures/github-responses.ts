@@ -311,7 +311,7 @@ export function createResolveThreadResponse(threadId: string) {
 /**
  * GraphQL Response: List Review Threads
  */
-export function createListReviewThreadsResponse(threads: Array<{ id: string, isResolved: boolean, path: string, line: number | null, comments?: Array<{ id: string }> }>) {
+export function createListReviewThreadsResponse(threads: Array<{ id: string, isResolved: boolean, path: string, line: number | null, comments?: Array<{ id: string, databaseId?: number }> }>) {
   return {
     data: {
       node: {
@@ -323,6 +323,26 @@ export function createListReviewThreadsResponse(threads: Array<{ id: string, isR
             line: thread.line,
             comments: {
               nodes: thread.comments || [],
+            },
+          })),
+        },
+      },
+    },
+  }
+}
+
+/**
+ * GraphQL Response: Get Threads For Comment (used for finding thread by comment ID)
+ */
+export function createGetThreadsForCommentResponse(threads: Array<{ id: string, comments: Array<{ id: string, databaseId: number }> }>) {
+  return {
+    data: {
+      node: {
+        reviewThreads: {
+          nodes: threads.map(thread => ({
+            id: thread.id,
+            comments: {
+              nodes: thread.comments,
             },
           })),
         },

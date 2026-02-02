@@ -43,6 +43,28 @@ export function isNodeId(identifier: string): boolean {
 }
 
 /**
+ * Detect if identifier is a Thread Node ID (PRRT_...)
+ * Thread IDs are used for PR review threads
+ *
+ * @param identifier - String to check
+ * @returns True if identifier is a Thread Node ID
+ */
+export function isThreadNodeId(identifier: string): boolean {
+  return /^PRRT_[\w-]+$/.test(identifier)
+}
+
+/**
+ * Detect if identifier is a Comment Node ID (PRRC_... or IC_...)
+ * Comment IDs are used for PR review comments or issue comments
+ *
+ * @param identifier - String to check
+ * @returns True if identifier is a Comment Node ID
+ */
+export function isCommentNodeId(identifier: string): boolean {
+  return /^(?:PRRC|IC)_[\w-]+$/.test(identifier)
+}
+
+/**
  * Detect if identifier is a Database ID (positive integer)
  *
  * @param identifier - String to check

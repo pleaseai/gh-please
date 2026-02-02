@@ -5,10 +5,12 @@ import {
   extractDatabaseId,
   getNodeIdPrefix,
   getNodeIdType,
+  isCommentNodeId,
   isDatabaseId,
   isLegacyNodeId,
   isNewNodeId,
   isNodeId,
+  isThreadNodeId,
   toIssueCommentNodeId,
   toReviewCommentNodeId,
   validateCommentIdentifier,
@@ -204,6 +206,48 @@ describe('id-converter', () => {
           expect(error.message.length).toBeGreaterThan(0)
         }
       }
+    })
+  })
+
+  describe('isThreadNodeId', () => {
+    test('should detect PR review thread Node ID', () => {
+      expect(isThreadNodeId('PRRT_kwDOABC123xyz')).toBe(true)
+      expect(isThreadNodeId('PRRT_kwDOL4aMSs6Aw-LK')).toBe(true)
+    })
+
+    test('should reject PR review comment Node ID', () => {
+      expect(isThreadNodeId('PRRC_kwDOP34zbs6ShH0J')).toBe(false)
+    })
+
+    test('should reject issue comment Node ID', () => {
+      expect(isThreadNodeId('IC_kwDOABC123')).toBe(false)
+    })
+
+    test('should reject database ID (number)', () => {
+      expect(isThreadNodeId('2458156297')).toBe(false)
+    })
+
+    test('should reject invalid format', () => {
+      expect(isThreadNodeId('invalid-id')).toBe(false)
+      expect(isThreadNodeId('')).toBe(false)
+    })
+  })
+
+  describe('isCommentNodeId', () => {
+    test('should detect PR review comment Node ID', () => {
+      expect(isCommentNodeId('PRRC_kwDOP34zbs6ShH0J')).toBe(true)
+    })
+
+    test('should detect issue comment Node ID', () => {
+      expect(isCommentNodeId('IC_kwDOABC123')).toBe(true)
+    })
+
+    test('should reject PR review thread Node ID', () => {
+      expect(isCommentNodeId('PRRT_kwDOABC123xyz')).toBe(false)
+    })
+
+    test('should reject database ID (number)', () => {
+      expect(isCommentNodeId('2458156297')).toBe(false)
     })
   })
 
