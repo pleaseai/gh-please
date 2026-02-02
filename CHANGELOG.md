@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.31.1](https://github.com/pleaseai/gh-please/compare/github-v0.31.0...github-v0.31.1) (2026-02-02)
+
+
+### Bug Fixes
+
+* **review:** GraphQL schema error in getThreadIdFromComment ([#252](https://github.com/pleaseai/gh-please/issues/252)) ([d730005](https://github.com/pleaseai/gh-please/commit/d730005d6290c9610157f902989b6f4193198cbd))
+
 ## [0.31.0](https://github.com/pleaseai/gh-please/compare/github-v0.30.2...github-v0.31.0) (2026-01-15)
 
 
