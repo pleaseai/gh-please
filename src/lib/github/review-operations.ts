@@ -156,6 +156,7 @@ export async function getThreadIdFromComment(
     + `  • The comment may have been deleted\n`
     + `  • The comment ID may be incorrect (use 'gh please pr review thread list <pr>' to see valid IDs)\n`
     + `  • The PR may have more than 100 review threads (pagination not yet supported)\n`
+    + `  • The thread may have more than 100 comments (pagination not yet supported)\n`
     + `  • You may lack permissions to view this PR\n`
     + `\n`
     + `Please verify the comment ID and try again.`,
