@@ -49,22 +49,45 @@ export async function createWorktreeFromRepo(
 ): Promise<void> {
   const expandedPath = await ensureParentDirectory(targetPath)
 
-  // First, fetch the branch to ensure we have the latest
-  const fetchResult = await runGitCommand(['git', '--git-dir', gitDir, 'fetch', 'origin', branch])
+  // Step 1: Fetch the branch with explicit refspec to update remote-tracking ref
+  // Using refspec ensures refs/remotes/origin/{branch} is updated
+  const fetchResult = await runGitCommand([
+    'git',
+    '--git-dir',
+    gitDir,
+    'fetch',
+    'origin',
+    `${branch}:refs/remotes/origin/${branch}`,
+  ])
   if (fetchResult.exitCode !== 0) {
-    warnWithFollowup(
-      `Could not fetch latest changes from remote: ${fetchResult.stderr.trim() || 'unknown error'}`,
-      'Proceeding with local branch state. Your worktree may not have the latest remote changes.',
-    )
+    // Check if it's a "couldn't find remote ref" error (local-only branch)
+    if (!fetchResult.stderr.includes('couldn\'t find remote ref')) {
+      warnWithFollowup(
+        `Could not fetch latest changes from remote: ${fetchResult.stderr.trim() || 'unknown error'}`,
+        'Proceeding with local branch state. Your worktree may not have the latest remote changes.',
+      )
+    }
   }
 
-  // Check if branch exists locally
+  // Step 2: Update local branch to match remote (if fetch succeeded)
+  // This ensures the worktree uses the latest code, not stale local branch
+  // Using -f flag: creates branch if not exists, updates if exists
+  await runGitCommand([
+    'git',
+    '--git-dir',
+    gitDir,
+    'branch',
+    '-f',
+    branch,
+    `refs/remotes/origin/${branch}`,
+  ])
+  // Ignore update errors - origin/branch might not exist for local-only branches
+
+  // Check if branch exists locally (for worktree add command selection)
   const checkResult = await runGitCommand(['git', '--git-dir', gitDir, 'rev-parse', '--verify', `refs/heads/${branch}`])
   const branchExists = checkResult.exitCode === 0
 
   // Create worktree with the branch
-  // If branch exists locally, just use it
-  // If not, create it tracking origin/{branch}
   const worktreeArgs = branchExists
     ? ['git', '--git-dir', gitDir, 'worktree', 'add', expandedPath, branch]
     : ['git', '--git-dir', gitDir, 'worktree', 'add', '-b', branch, expandedPath, `origin/${branch}`]

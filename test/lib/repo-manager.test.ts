@@ -57,7 +57,10 @@ describe('getGitDir', () => {
   })
 
   test('should return git directory path when in a git repo', async () => {
-    // This test is run from within the gh-please repo
+    // Guard: Skip if not in a git repo (e.g., running in isolated CI environment)
+    if (!(await isInGitRepo()))
+      return
+
     const gitDir = await getGitDir()
     expect(gitDir).not.toBeNull()
     expect(gitDir).toContain('.git')
