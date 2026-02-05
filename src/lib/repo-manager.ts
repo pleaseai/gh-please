@@ -80,6 +80,8 @@ export async function getGitDir(): Promise<string | null> {
   const exitCode = await proc.exited
 
   if (exitCode !== 0) {
+    // Consume stderr to prevent potential pipe issues
+    await new Response(proc.stderr).text()
     return null
   }
 
