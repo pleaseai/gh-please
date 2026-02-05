@@ -18,16 +18,8 @@ export async function getAllLinkedBranches(
   repo?: string,
 ): Promise<string[]> {
   if (!repo) {
-    // Try to get from current git repo
-    const result = await runGitCommand(['git', 'rev-parse', '--show-toplevel'])
-
-    if (result.exitCode !== 0) {
-      // Cannot determine repo, return empty array
-      return []
-    }
-
-    // For now, if no repo specified and can't auto-detect owner/repo, return empty
-    // This is a limitation of the current implementation
+    // For now, if no repo specified, return empty array
+    // This is a limitation of the current implementation - auto-detection not yet implemented
     return []
   }
 
