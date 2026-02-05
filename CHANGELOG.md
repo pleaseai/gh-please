@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.32.0](https://github.com/pleaseai/gh-please/compare/github-v0.31.1...github-v0.32.0) (2026-02-05)
+
+
+### Features
+
+* **develop:** use cloned repo gitDir for worktree creation ([#259](https://github.com/pleaseai/gh-please/issues/259)) ([8bece18](https://github.com/pleaseai/gh-please/commit/8bece18e496fe0ddc15d54b3e8b42f8e0b9ccb1f))
+
 ## [0.31.1](https://github.com/pleaseai/gh-please/compare/github-v0.31.0...github-v0.31.1) (2026-02-02)
 
 
