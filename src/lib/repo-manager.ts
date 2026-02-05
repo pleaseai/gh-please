@@ -2,13 +2,7 @@ import type { RepositoryInfo } from '../types'
 import * as fs from 'node:fs'
 import * as os from 'node:os'
 import * as path from 'node:path'
-
-/**
- * Get the gh command path from environment variable or use default
- */
-function getGhCommand(): string {
-  return process.env.GH_PATH || 'gh'
-}
+import { getGhCommand } from './gh-command'
 
 /**
  * Parse repository string in format "owner/repo" or GitHub URL

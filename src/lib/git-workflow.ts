@@ -1,4 +1,5 @@
 import type { DevelopOptions } from '../types'
+import { getGhCommand } from './gh-command'
 
 // Re-export worktree functions from dedicated module
 export {
@@ -7,13 +8,6 @@ export {
   listWorktrees,
   removeWorktree,
 } from './git-workflow-worktree'
-
-/**
- * Get the gh command path from environment variable or use default
- */
-function getGhCommand(): string {
-  return process.env.GH_PATH || 'gh'
-}
 
 /**
  * Get all linked branches for an issue using GitHub GraphQL API
