@@ -77,7 +77,7 @@ describe('createWorktree (bare repo)', () => {
     delete process.env.HOME
 
     try {
-      expect(createWorktree('/path/to/bare.git', 'branch', '~/worktrees/test'))
+      await expect(createWorktree('/path/to/bare.git', 'branch', '~/worktrees/test'))
         .rejects
         .toThrow('Cannot expand ~: HOME environment variable is not set')
     }
@@ -91,13 +91,15 @@ describe('createWorktreeFromRepo (cloned repo)', () => {
   test('should fetch with explicit refspec to update remote-tracking branch', async () => {
     // Step 1: Fetch succeeds
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' })
-    // Step 2: Branch update succeeds
-    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' })
-    // Step 3: Branch exists check
+    // Step 2: Remote ref check succeeds
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: 'abc123', stderr: '' })
-    // Step 4: Worktree add succeeds
+    // Step 3: Branch update succeeds
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' })
-    // Step 5: Set upstream tracking succeeds
+    // Step 4: Local branch exists check
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: 'abc123', stderr: '' })
+    // Step 5: Worktree add succeeds
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' })
+    // Step 6: Set upstream tracking succeeds
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' })
 
     await createWorktreeFromRepo('/path/to/.git', 'feature-123', '/tmp/worktree')
@@ -112,8 +114,19 @@ describe('createWorktreeFromRepo (cloned repo)', () => {
       'feature-123:refs/remotes/origin/feature-123',
     ]])
 
-    // Verify local branch update with -f flag
+    // Verify remote ref check (rev-parse --verify)
     expect(mockRunGitCommand.mock.calls[1]).toEqual([[
+      'git',
+      '--git-dir',
+      '/path/to/.git',
+      'rev-parse',
+      '--verify',
+      '--quiet',
+      'refs/remotes/origin/feature-123',
+    ]])
+
+    // Verify local branch update with -f flag
+    expect(mockRunGitCommand.mock.calls[2]).toEqual([[
       'git',
       '--git-dir',
       '/path/to/.git',
@@ -126,15 +139,16 @@ describe('createWorktreeFromRepo (cloned repo)', () => {
 
   test('should use existing local branch when it exists', async () => {
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // fetch
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: 'abc123', stderr: '' }) // remote ref exists
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // branch -f
-    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: 'abc123', stderr: '' }) // branch exists
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: 'abc123', stderr: '' }) // local branch exists
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // worktree add
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // set upstream
 
     await createWorktreeFromRepo('/path/to/.git', 'existing-branch', '/tmp/wt')
 
     // Worktree add should use existing branch (no -b flag)
-    expect(mockRunGitCommand.mock.calls[3]).toEqual([[
+    expect(mockRunGitCommand.mock.calls[4]).toEqual([[
       'git',
       '--git-dir',
       '/path/to/.git',
@@ -147,15 +161,16 @@ describe('createWorktreeFromRepo (cloned repo)', () => {
 
   test('should create new branch from origin when local branch does not exist', async () => {
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // fetch
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: 'abc123', stderr: '' }) // remote ref exists
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // branch -f
-    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 1, stdout: '', stderr: 'fatal: not found' }) // branch not exists
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 1, stdout: '', stderr: 'fatal: not found' }) // local branch not exists
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // worktree add
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // set upstream
 
     await createWorktreeFromRepo('/path/to/.git', 'new-branch', '/tmp/wt')
 
     // Worktree add should create new branch with -b flag
-    expect(mockRunGitCommand.mock.calls[3]).toEqual([[
+    expect(mockRunGitCommand.mock.calls[4]).toEqual([[
       'git',
       '--git-dir',
       '/path/to/.git',
@@ -174,8 +189,9 @@ describe('createWorktreeFromRepo (cloned repo)', () => {
       stdout: '',
       stderr: 'fatal: network error',
     }) // fetch fails
-    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // branch -f
-    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: 'abc123', stderr: '' }) // branch exists
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 1, stdout: '', stderr: '' }) // remote ref check fails
+    // branch -f skipped (no remote ref)
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: 'abc123', stderr: '' }) // local branch exists
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // worktree add
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // set upstream
 
@@ -194,8 +210,9 @@ describe('createWorktreeFromRepo (cloned repo)', () => {
       stdout: '',
       stderr: 'fatal: couldn\'t find remote ref local-only-branch',
     }) // fetch fails - local only
-    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // branch -f
-    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: 'abc123', stderr: '' }) // branch exists
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 1, stdout: '', stderr: '' }) // remote ref check fails
+    // branch -f skipped (no remote ref)
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: 'abc123', stderr: '' }) // local branch exists
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // worktree add
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // set upstream
 
@@ -205,14 +222,15 @@ describe('createWorktreeFromRepo (cloned repo)', () => {
     expect(mockWarnWithFollowup).not.toHaveBeenCalled()
   })
 
-  test('should warn when branch update fails (not local-only)', async () => {
+  test('should warn when branch update fails', async () => {
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // fetch succeeds
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: 'abc123', stderr: '' }) // remote ref exists
     mockRunGitCommand.mockResolvedValueOnce({
       exitCode: 1,
       stdout: '',
       stderr: 'fatal: Unable to create lock file',
     }) // branch -f fails (lock file error)
-    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: 'abc123', stderr: '' }) // branch exists
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: 'abc123', stderr: '' }) // local branch exists
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // worktree add
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // set upstream
 
@@ -225,27 +243,27 @@ describe('createWorktreeFromRepo (cloned repo)', () => {
     )
   })
 
-  test('should not warn when branch update fails due to local-only branch', async () => {
+  test('should skip branch update when remote ref does not exist (local-only branch)', async () => {
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // fetch succeeds
-    mockRunGitCommand.mockResolvedValueOnce({
-      exitCode: 1,
-      stdout: '',
-      stderr: 'fatal: not a valid object name',
-    }) // branch -f fails (local-only - remote ref doesn't exist)
-    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: 'abc123', stderr: '' }) // branch exists
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 1, stdout: '', stderr: '' }) // remote ref doesn't exist
+    // branch -f skipped (no remote ref)
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: 'abc123', stderr: '' }) // local branch exists
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // worktree add
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // set upstream
 
     await createWorktreeFromRepo('/path/to/.git', 'local-branch', '/tmp/wt')
 
-    // Should NOT warn for local-only branches
+    // Should NOT warn - branch update was skipped for local-only branch
     expect(mockWarnWithFollowup).not.toHaveBeenCalled()
+    // Should only have 5 calls (no branch -f)
+    expect(mockRunGitCommand).toHaveBeenCalledTimes(5)
   })
 
   test('should warn when upstream tracking setup fails', async () => {
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // fetch
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: 'abc123', stderr: '' }) // remote ref exists
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // branch -f
-    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: 'abc123', stderr: '' }) // branch exists
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: 'abc123', stderr: '' }) // local branch exists
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // worktree add
     mockRunGitCommand.mockResolvedValueOnce({
       exitCode: 1,
@@ -263,8 +281,9 @@ describe('createWorktreeFromRepo (cloned repo)', () => {
 
   test('should throw error when worktree add fails', async () => {
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // fetch
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: 'abc123', stderr: '' }) // remote ref exists
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // branch -f
-    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: 'abc123', stderr: '' }) // branch exists
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: 'abc123', stderr: '' }) // local branch exists
     mockRunGitCommand.mockResolvedValueOnce({
       exitCode: 1,
       stdout: '',

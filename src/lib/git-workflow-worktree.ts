@@ -73,26 +73,34 @@ export async function createWorktreeFromRepo(
     }
   }
 
-  // Step 2: Update local branch to match remote (if fetch succeeded)
-  // This ensures the worktree uses the latest code, not stale local branch
-  // Using -f flag: creates branch if not exists, updates if exists
-  const branchResult = await runGitCommand([
+  // Step 2: Check if remote-tracking ref exists before updating local branch
+  // Using rev-parse is language-agnostic (avoids relying on localized error messages)
+  const remoteRefCheck = await runGitCommand([
     'git',
     '--git-dir',
     gitDir,
-    'branch',
-    '-f',
-    branch,
+    'rev-parse',
+    '--verify',
+    '--quiet',
     `refs/remotes/origin/${branch}`,
   ])
-  // Only ignore errors for local-only branches (remote ref doesn't exist)
-  // Other errors (disk full, permission denied, lock file) should warn the user
-  if (branchResult.exitCode !== 0) {
-    const isLocalOnlyBranch = branchResult.stderr.includes('not a valid object name')
-      || branchResult.stderr.includes('does not point to a valid commit')
-      || branchResult.stderr.includes('Not a valid object name')
+  const remoteRefExists = remoteRefCheck.exitCode === 0
 
-    if (!isLocalOnlyBranch) {
+  // Step 3: Update local branch to match remote (only if remote ref exists)
+  // This ensures the worktree uses the latest code, not stale local branch
+  if (remoteRefExists) {
+    const branchResult = await runGitCommand([
+      'git',
+      '--git-dir',
+      gitDir,
+      'branch',
+      '-f',
+      branch,
+      `refs/remotes/origin/${branch}`,
+    ])
+    // Warn for real errors (disk full, permission denied, lock file)
+    // Skip warning for local-only branches (handled by remoteRefExists check)
+    if (branchResult.exitCode !== 0) {
       warnWithFollowup(
         `Could not update local branch '${branch}': ${branchResult.stderr.trim() || 'unknown error'}`,
         'The worktree will be created, but may not have the latest remote changes.',
