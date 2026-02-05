@@ -67,6 +67,26 @@ export async function isInGitRepo(): Promise<boolean> {
 }
 
 /**
+ * Get the .git directory of the current repository
+ * Returns absolute path if in a git repo, null otherwise
+ */
+export async function getGitDir(): Promise<string | null> {
+  const proc = Bun.spawn(['git', 'rev-parse', '--absolute-git-dir'], {
+    stdout: 'pipe',
+    stderr: 'pipe',
+  })
+
+  const output = await new Response(proc.stdout).text()
+  const exitCode = await proc.exited
+
+  if (exitCode !== 0) {
+    return null
+  }
+
+  return output.trim()
+}
+
+/**
  * Clone repository as bare to ~/.please/repositories/{owner}/{repo}.git
  */
 export async function cloneBareRepo(owner: string, repo: string): Promise<string> {
@@ -126,13 +146,15 @@ async function getCurrentRepoInfo(): Promise<{ owner: string, repo: string }> {
 
 /**
  * Resolve repository information from --repo flag or current directory
+ * When inside a cloned repo without --repo flag, returns gitDir for worktree operations
  */
 export async function resolveRepository(repoFlag?: string): Promise<RepositoryInfo> {
   let owner: string
   let repo: string
+  let gitDir: string | undefined
 
   if (repoFlag) {
-    // Parse from --repo flag
+    // Parse from --repo flag - use bare repo mode
     const parsed = parseRepoString(repoFlag)
     owner = parsed.owner
     repo = parsed.repo
@@ -147,6 +169,9 @@ export async function resolveRepository(repoFlag?: string): Promise<RepositoryIn
     const currentRepo = await getCurrentRepoInfo()
     owner = currentRepo.owner
     repo = currentRepo.repo
+
+    // Get gitDir for non-bare mode (worktree from current repo)
+    gitDir = (await getGitDir()) ?? undefined
   }
 
   const bareRepoPath = path.join(os.homedir(), '.please', 'repositories', owner, `${repo}.git`)
@@ -155,6 +180,7 @@ export async function resolveRepository(repoFlag?: string): Promise<RepositoryIn
     owner,
     repo,
     localPath: bareRepoPath,
-    isBare: true,
+    isBare: !gitDir, // false when we have gitDir (inside cloned repo without --repo)
+    gitDir,
   }
 }

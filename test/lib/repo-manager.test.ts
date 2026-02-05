@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import {
   cloneBareRepo,
   findBareRepo,
+  getGitDir,
   isInGitRepo,
   parseRepoString,
   resolveRepository,
@@ -47,6 +48,19 @@ describe('findBareRepo', () => {
 describe('isInGitRepo', () => {
   test('should export isInGitRepo function', () => {
     expect(typeof isInGitRepo).toBe('function')
+  })
+})
+
+describe('getGitDir', () => {
+  test('should export getGitDir function', () => {
+    expect(typeof getGitDir).toBe('function')
+  })
+
+  test('should return git directory path when in a git repo', async () => {
+    // This test is run from within the gh-please repo
+    const gitDir = await getGitDir()
+    expect(gitDir).not.toBeNull()
+    expect(gitDir).toContain('.git')
   })
 })
 

@@ -2,7 +2,7 @@ import type { DevelopOptions } from '../../types'
 import * as fs from 'node:fs'
 import { confirm, select } from '@clack/prompts'
 import { Command } from 'commander'
-import { createWorktree, fetchBranch, getAllLinkedBranches, startDevelopWorkflow } from '../../lib/git-workflow'
+import { createWorktree, createWorktreeFromRepo, fetchBranch, getAllLinkedBranches, startDevelopWorkflow } from '../../lib/git-workflow'
 import { detectSystemLanguage, getIssueMessages } from '../../lib/i18n'
 import { cloneBareRepo, findBareRepo, resolveRepository } from '../../lib/repo-manager'
 
@@ -39,25 +39,10 @@ export function createDevelopCommand(): Command {
           // Resolve repository
           console.log(msg.developCheckingRepo)
           const repoInfo = await resolveRepository(options.repo)
-          let bareRepoPath = await findBareRepo(repoInfo.owner, repoInfo.repo)
-
-          if (!bareRepoPath) {
-            // Prompt to clone
-            const shouldClone = await confirm({
-              message: msg.developPromptClone(repoInfo.owner, repoInfo.repo),
-            })
-
-            if (!shouldClone) {
-              console.log('Cancelled.')
-              process.exit(0)
-            }
-
-            console.log(msg.developCloning(repoInfo.owner, repoInfo.repo))
-            bareRepoPath = await cloneBareRepo(repoInfo.owner, repoInfo.repo)
-          }
 
           // Check for existing linked branches
-          const existingBranches = await getAllLinkedBranches(issueNumber, options.repo)
+          const repoString = options.repo || `${repoInfo.owner}/${repoInfo.repo}`
+          const existingBranches = await getAllLinkedBranches(issueNumber, repoString)
 
           let branch: string
           if (existingBranches.length === 0) {
@@ -100,7 +85,7 @@ export function createDevelopCommand(): Command {
             branch = selectedOption === '__new__' ? await startDevelopWorkflow(issueNumber, options) : selectedOption
           }
 
-          // Prepare worktree path
+          // Prepare worktree path (centralized location)
           const worktreePath = `~/.please/worktrees/${repoInfo.repo}/${branch}`
           const expandedPath = worktreePath.replace(/^~/, process.env.HOME || '')
 
@@ -109,12 +94,42 @@ export function createDevelopCommand(): Command {
             console.log(`✅ Worktree already exists!`)
             console.log(`cd ${expandedPath}`)
           }
+          else if (repoInfo.gitDir && !options.repo) {
+            // Case 1: Inside a cloned repo without --repo flag
+            // Use the current repo's gitDir for worktree (proper remote tracking)
+            console.log(`📥 Fetching branch ${branch}...`)
+
+            // Create worktree from current repo
+            console.log(msg.developCreateWorktree(worktreePath))
+            await createWorktreeFromRepo(repoInfo.gitDir, branch, worktreePath)
+
+            console.log(msg.developWorktreeReady(expandedPath))
+            console.log(`cd ${expandedPath}`)
+          }
           else {
+            // Case 2: Outside repo or --repo specified - use bare repo mode
+            let bareRepoPath = await findBareRepo(repoInfo.owner, repoInfo.repo)
+
+            if (!bareRepoPath) {
+              // Prompt to clone
+              const shouldClone = await confirm({
+                message: msg.developPromptClone(repoInfo.owner, repoInfo.repo),
+              })
+
+              if (!shouldClone) {
+                console.log('Cancelled.')
+                process.exit(0)
+              }
+
+              console.log(msg.developCloning(repoInfo.owner, repoInfo.repo))
+              bareRepoPath = await cloneBareRepo(repoInfo.owner, repoInfo.repo)
+            }
+
             // Fetch branch into bare repo before creating worktree
             console.log(`📥 Fetching branch ${branch}...`)
             await fetchBranch(bareRepoPath, branch)
 
-            // Create worktree
+            // Create worktree from bare repo
             console.log(msg.developCreateWorktree(worktreePath))
             await createWorktree(bareRepoPath, branch, worktreePath)
 

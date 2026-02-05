@@ -271,25 +271,59 @@ export async function listWorktrees(bareRepoPath: string): Promise<WorktreeInfo[
 }
 
 /**
- * Fetch branch from remote into a bare repository
+ * Fetch branch from remote into a bare repository with proper remote tracking
+ * Uses two-step approach:
+ * 1. Fetch to refs/remotes/origin/{branch} for remote tracking
+ * 2. Create/update local branch pointing to the same commit
  */
 export async function fetchBranch(
   bareRepoPath: string,
   branch: string,
 ): Promise<void> {
-  const proc = Bun.spawn(
-    ['git', '-C', bareRepoPath, 'fetch', 'origin', `${branch}:${branch}`],
+  // Step 1: Fetch to remote tracking branch (refs/remotes/origin/{branch})
+  const fetchProc = Bun.spawn(
+    ['git', '-C', bareRepoPath, 'fetch', 'origin', `${branch}:refs/remotes/origin/${branch}`],
     {
       stdout: 'pipe',
       stderr: 'pipe',
     },
   )
 
-  const exitCode = await proc.exited
+  const fetchExitCode = await fetchProc.exited
 
-  if (exitCode !== 0) {
-    const error = await new Response(proc.stderr).text()
+  if (fetchExitCode !== 0) {
+    const error = await new Response(fetchProc.stderr).text()
     throw new Error(`Failed to fetch branch: ${error.trim()}`)
+  }
+
+  // Step 2: Create or update local branch from remote tracking branch
+  // Try to create the branch first
+  const createProc = Bun.spawn(
+    ['git', '-C', bareRepoPath, 'branch', branch, `refs/remotes/origin/${branch}`],
+    {
+      stdout: 'pipe',
+      stderr: 'pipe',
+    },
+  )
+
+  const createExitCode = await createProc.exited
+
+  if (createExitCode !== 0) {
+    // Branch might already exist, try to update it
+    const updateProc = Bun.spawn(
+      ['git', '-C', bareRepoPath, 'branch', '-f', branch, `refs/remotes/origin/${branch}`],
+      {
+        stdout: 'pipe',
+        stderr: 'pipe',
+      },
+    )
+
+    const updateExitCode = await updateProc.exited
+
+    if (updateExitCode !== 0) {
+      const error = await new Response(updateProc.stderr).text()
+      throw new Error(`Failed to update local branch: ${error.trim()}`)
+    }
   }
 }
 
@@ -308,4 +342,81 @@ export async function removeWorktree(worktreePath: string): Promise<void> {
     const error = await new Response(proc.stderr).text()
     throw new Error(`Failed to remove worktree: ${error.trim()}`)
   }
+}
+
+/**
+ * Create worktree from a cloned repository (non-bare)
+ * Uses the existing repo's git directory to create worktree
+ * This ensures proper remote tracking for fetch operations in the worktree
+ */
+export async function createWorktreeFromRepo(
+  gitDir: string,
+  branch: string,
+  targetPath: string,
+): Promise<void> {
+  // Expand ~ to home directory
+  const expandedPath = targetPath.replace(/^~/, process.env.HOME || '')
+
+  // Create parent directories if needed
+  const parentDir = path.dirname(expandedPath)
+  try {
+    await fs.promises.mkdir(parentDir, { recursive: true })
+  }
+  catch (error) {
+    throw new Error(`Failed to create directory ${parentDir}: ${error instanceof Error ? error.message : String(error)}`)
+  }
+
+  // First, fetch the branch to ensure we have the latest
+  const fetchProc = Bun.spawn(
+    ['git', '--git-dir', gitDir, 'fetch', 'origin', branch],
+    {
+      stdout: 'pipe',
+      stderr: 'pipe',
+    },
+  )
+
+  await fetchProc.exited
+  // Ignore fetch errors - branch might be local only or already up to date
+
+  // Check if branch exists locally
+  const checkProc = Bun.spawn(
+    ['git', '--git-dir', gitDir, 'rev-parse', '--verify', `refs/heads/${branch}`],
+    {
+      stdout: 'pipe',
+      stderr: 'pipe',
+    },
+  )
+
+  const branchExists = (await checkProc.exited) === 0
+
+  // Create worktree with the branch
+  // If branch exists locally, just use it
+  // If not, create it tracking origin/{branch}
+  const worktreeArgs = branchExists
+    ? ['git', '--git-dir', gitDir, 'worktree', 'add', expandedPath, branch]
+    : ['git', '--git-dir', gitDir, 'worktree', 'add', '-b', branch, expandedPath, `origin/${branch}`]
+
+  const proc = Bun.spawn(worktreeArgs, {
+    stdout: 'pipe',
+    stderr: 'pipe',
+  })
+
+  const exitCode = await proc.exited
+
+  if (exitCode !== 0) {
+    const error = await new Response(proc.stderr).text()
+    throw new Error(`Failed to create worktree: ${error.trim()}`)
+  }
+
+  // Set upstream tracking for the branch in the worktree
+  const trackingProc = Bun.spawn(
+    ['git', '-C', expandedPath, 'branch', '--set-upstream-to', `origin/${branch}`, branch],
+    {
+      stdout: 'pipe',
+      stderr: 'pipe',
+    },
+  )
+
+  await trackingProc.exited
+  // Ignore tracking errors - upstream might not exist for new branches
 }

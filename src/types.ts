@@ -73,8 +73,9 @@ export interface DevelopOptions {
 export interface RepositoryInfo {
   owner: string
   repo: string
-  localPath: string // ~/repos/owner/repo.git
+  localPath: string // ~/repos/owner/repo.git (bare repo path)
   isBare: boolean
+  gitDir?: string // Current repo's .git directory (for non-bare mode)
 }
 
 export interface WorktreeInfo {
