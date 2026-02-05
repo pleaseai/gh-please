@@ -3,6 +3,7 @@ import * as fs from 'node:fs'
 import * as os from 'node:os'
 import * as path from 'node:path'
 import { getGhCommand } from './gh-command'
+import { runGitCommand } from './git-exec'
 
 /**
  * Parse repository string in format "owner/repo" or GitHub URL
@@ -51,13 +52,8 @@ export async function findBareRepo(owner: string, repo: string): Promise<string 
  * Check if current directory is inside a git repository
  */
 export async function isInGitRepo(): Promise<boolean> {
-  const proc = Bun.spawn(['git', 'rev-parse', '--git-dir'], {
-    stdout: 'pipe',
-    stderr: 'pipe',
-  })
-
-  const exitCode = await proc.exited
-  return exitCode === 0
+  const result = await runGitCommand(['git', 'rev-parse', '--git-dir'])
+  return result.exitCode === 0
 }
 
 /**
@@ -65,21 +61,13 @@ export async function isInGitRepo(): Promise<boolean> {
  * Returns absolute path if in a git repo, null otherwise
  */
 export async function getGitDir(): Promise<string | null> {
-  const proc = Bun.spawn(['git', 'rev-parse', '--absolute-git-dir'], {
-    stdout: 'pipe',
-    stderr: 'pipe',
-  })
+  const result = await runGitCommand(['git', 'rev-parse', '--absolute-git-dir'])
 
-  const output = await new Response(proc.stdout).text()
-  const exitCode = await proc.exited
-
-  if (exitCode !== 0) {
-    // Consume stderr to prevent potential pipe issues
-    await new Response(proc.stderr).text()
+  if (result.exitCode !== 0) {
     return null
   }
 
-  return output.trim()
+  return result.stdout.trim()
 }
 
 /**
@@ -98,19 +86,12 @@ export async function cloneBareRepo(owner: string, repo: string): Promise<string
   }
 
   // Clone as bare repository
-  const proc = Bun.spawn(
+  const result = await runGitCommand(
     [getGhCommand(), 'repo', 'clone', `${owner}/${repo}`, bareRepoPath, '--', '--bare'],
-    {
-      stdout: 'pipe',
-      stderr: 'pipe',
-    },
   )
 
-  const exitCode = await proc.exited
-
-  if (exitCode !== 0) {
-    const error = await new Response(proc.stderr).text()
-    throw new Error(`Failed to clone repository: ${error.trim()}`)
+  if (result.exitCode !== 0) {
+    throw new Error(`Failed to clone repository: ${result.stderr.trim()}`)
   }
 
   return bareRepoPath
@@ -120,20 +101,13 @@ export async function cloneBareRepo(owner: string, repo: string): Promise<string
  * Get current repository information (owner/repo from gh CLI)
  */
 async function getCurrentRepoInfo(): Promise<{ owner: string, repo: string }> {
-  const proc = Bun.spawn([getGhCommand(), 'repo', 'view', '--json', 'owner,name'], {
-    stdout: 'pipe',
-    stderr: 'pipe',
-  })
+  const result = await runGitCommand([getGhCommand(), 'repo', 'view', '--json', 'owner,name'])
 
-  const output = await new Response(proc.stdout).text()
-  const exitCode = await proc.exited
-
-  if (exitCode !== 0) {
-    const error = await new Response(proc.stderr).text()
-    throw new Error(`Failed to get repository info: ${error.trim() || 'Not in a git repository'}`)
+  if (result.exitCode !== 0) {
+    throw new Error(`Failed to get repository info: ${result.stderr.trim() || 'Not in a git repository'}`)
   }
 
-  const data = JSON.parse(output)
+  const data = JSON.parse(result.stdout)
   return {
     owner: data.owner?.login || data.owner,
     repo: data.name,
