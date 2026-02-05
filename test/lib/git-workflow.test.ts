@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 import {
   createWorktree,
+  createWorktreeFromRepo,
+  fetchBranch,
   getLinkedBranch,
   listWorktrees,
   removeWorktree,
@@ -22,6 +24,18 @@ describe('startDevelopWorkflow', () => {
 describe('createWorktree', () => {
   test('should export createWorktree function', () => {
     expect(typeof createWorktree).toBe('function')
+  })
+})
+
+describe('createWorktreeFromRepo', () => {
+  test('should export createWorktreeFromRepo function', () => {
+    expect(typeof createWorktreeFromRepo).toBe('function')
+  })
+})
+
+describe('fetchBranch', () => {
+  test('should export fetchBranch function', () => {
+    expect(typeof fetchBranch).toBe('function')
   })
 })
 

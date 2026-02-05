@@ -2,13 +2,7 @@ import type { RepositoryInfo } from '../types'
 import * as fs from 'node:fs'
 import * as os from 'node:os'
 import * as path from 'node:path'
-
-/**
- * Get the gh command path from environment variable or use default
- */
-function getGhCommand(): string {
-  return process.env.GH_PATH || 'gh'
-}
+import { getGhCommand } from './gh-command'
 
 /**
  * Parse repository string in format "owner/repo" or GitHub URL
@@ -64,6 +58,28 @@ export async function isInGitRepo(): Promise<boolean> {
 
   const exitCode = await proc.exited
   return exitCode === 0
+}
+
+/**
+ * Get the .git directory of the current repository
+ * Returns absolute path if in a git repo, null otherwise
+ */
+export async function getGitDir(): Promise<string | null> {
+  const proc = Bun.spawn(['git', 'rev-parse', '--absolute-git-dir'], {
+    stdout: 'pipe',
+    stderr: 'pipe',
+  })
+
+  const output = await new Response(proc.stdout).text()
+  const exitCode = await proc.exited
+
+  if (exitCode !== 0) {
+    // Consume stderr to prevent potential pipe issues
+    await new Response(proc.stderr).text()
+    return null
+  }
+
+  return output.trim()
 }
 
 /**
@@ -126,13 +142,15 @@ async function getCurrentRepoInfo(): Promise<{ owner: string, repo: string }> {
 
 /**
  * Resolve repository information from --repo flag or current directory
+ * When inside a cloned repo without --repo flag, returns gitDir for worktree operations
  */
 export async function resolveRepository(repoFlag?: string): Promise<RepositoryInfo> {
   let owner: string
   let repo: string
+  let gitDir: string | undefined
 
   if (repoFlag) {
-    // Parse from --repo flag
+    // Parse from --repo flag - use bare repo mode
     const parsed = parseRepoString(repoFlag)
     owner = parsed.owner
     repo = parsed.repo
@@ -147,6 +165,9 @@ export async function resolveRepository(repoFlag?: string): Promise<RepositoryIn
     const currentRepo = await getCurrentRepoInfo()
     owner = currentRepo.owner
     repo = currentRepo.repo
+
+    // Get gitDir for non-bare mode (worktree from current repo)
+    gitDir = (await getGitDir()) ?? undefined
   }
 
   const bareRepoPath = path.join(os.homedir(), '.please', 'repositories', owner, `${repo}.git`)
@@ -155,6 +176,7 @@ export async function resolveRepository(repoFlag?: string): Promise<RepositoryIn
     owner,
     repo,
     localPath: bareRepoPath,
-    isBare: true,
+    isBare: !gitDir, // false when we have gitDir (inside cloned repo without --repo)
+    gitDir,
   }
 }
