@@ -9,6 +9,10 @@ import { runGitCommand, warnWithFollowup } from './git-exec'
  * @returns The expanded absolute path
  */
 async function ensureParentDirectory(targetPath: string): Promise<string> {
+  // Validate HOME is set when expanding tilde
+  if (targetPath.startsWith('~') && !process.env.HOME) {
+    throw new Error('Cannot expand ~: HOME environment variable is not set')
+  }
   const expandedPath = targetPath.replace(/^~/, process.env.HOME || '')
   const parentDir = path.dirname(expandedPath)
   try {
@@ -72,7 +76,7 @@ export async function createWorktreeFromRepo(
   // Step 2: Update local branch to match remote (if fetch succeeded)
   // This ensures the worktree uses the latest code, not stale local branch
   // Using -f flag: creates branch if not exists, updates if exists
-  await runGitCommand([
+  const branchResult = await runGitCommand([
     'git',
     '--git-dir',
     gitDir,
@@ -81,7 +85,20 @@ export async function createWorktreeFromRepo(
     branch,
     `refs/remotes/origin/${branch}`,
   ])
-  // Ignore update errors - origin/branch might not exist for local-only branches
+  // Only ignore errors for local-only branches (remote ref doesn't exist)
+  // Other errors (disk full, permission denied, lock file) should warn the user
+  if (branchResult.exitCode !== 0) {
+    const isLocalOnlyBranch = branchResult.stderr.includes('not a valid object name')
+      || branchResult.stderr.includes('does not point to a valid commit')
+      || branchResult.stderr.includes('Not a valid object name')
+
+    if (!isLocalOnlyBranch) {
+      warnWithFollowup(
+        `Could not update local branch '${branch}': ${branchResult.stderr.trim() || 'unknown error'}`,
+        'The worktree will be created, but may not have the latest remote changes.',
+      )
+    }
+  }
 
   // Check if branch exists locally (for worktree add command selection)
   const checkResult = await runGitCommand(['git', '--git-dir', gitDir, 'rev-parse', '--verify', `refs/heads/${branch}`])
@@ -114,6 +131,12 @@ export async function listWorktrees(bareRepoPath: string): Promise<WorktreeInfo[
   const result = await runGitCommand(['git', '-C', bareRepoPath, 'worktree', 'list', '--porcelain'])
 
   if (result.exitCode !== 0) {
+    // Log warning for debugging but return empty to allow caller to continue
+    // This is a degraded operation - helps diagnose issues without breaking workflow
+    warnWithFollowup(
+      `Could not list worktrees for ${bareRepoPath}: ${result.stderr.trim() || 'unknown error'}`,
+      'Worktree listing may be incomplete. Check if the repository path is correct.',
+    )
     return []
   }
 

@@ -71,6 +71,20 @@ describe('createWorktree (bare repo)', () => {
 
     process.env.HOME = originalHome
   })
+
+  test('should throw error when HOME is undefined and path starts with tilde', async () => {
+    const originalHome = process.env.HOME
+    delete process.env.HOME
+
+    try {
+      expect(createWorktree('/path/to/bare.git', 'branch', '~/worktrees/test'))
+        .rejects
+        .toThrow('Cannot expand ~: HOME environment variable is not set')
+    }
+    finally {
+      process.env.HOME = originalHome
+    }
+  })
 })
 
 describe('createWorktreeFromRepo (cloned repo)', () => {
@@ -191,6 +205,43 @@ describe('createWorktreeFromRepo (cloned repo)', () => {
     expect(mockWarnWithFollowup).not.toHaveBeenCalled()
   })
 
+  test('should warn when branch update fails (not local-only)', async () => {
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // fetch succeeds
+    mockRunGitCommand.mockResolvedValueOnce({
+      exitCode: 1,
+      stdout: '',
+      stderr: 'fatal: Unable to create lock file',
+    }) // branch -f fails (lock file error)
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: 'abc123', stderr: '' }) // branch exists
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // worktree add
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // set upstream
+
+    await createWorktreeFromRepo('/path/to/.git', 'branch', '/tmp/wt')
+
+    // Should warn about branch update failure
+    expect(mockWarnWithFollowup).toHaveBeenCalledWith(
+      'Could not update local branch \'branch\': fatal: Unable to create lock file',
+      'The worktree will be created, but may not have the latest remote changes.',
+    )
+  })
+
+  test('should not warn when branch update fails due to local-only branch', async () => {
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // fetch succeeds
+    mockRunGitCommand.mockResolvedValueOnce({
+      exitCode: 1,
+      stdout: '',
+      stderr: 'fatal: not a valid object name',
+    }) // branch -f fails (local-only - remote ref doesn't exist)
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: 'abc123', stderr: '' }) // branch exists
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // worktree add
+    mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // set upstream
+
+    await createWorktreeFromRepo('/path/to/.git', 'local-branch', '/tmp/wt')
+
+    // Should NOT warn for local-only branches
+    expect(mockWarnWithFollowup).not.toHaveBeenCalled()
+  })
+
   test('should warn when upstream tracking setup fails', async () => {
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // fetch
     mockRunGitCommand.mockResolvedValueOnce({ exitCode: 0, stdout: '', stderr: '' }) // branch -f
@@ -280,7 +331,7 @@ prunable
     })
   })
 
-  test('should return empty array when git worktree list fails', async () => {
+  test('should return empty array and warn when git worktree list fails', async () => {
     mockRunGitCommand.mockResolvedValueOnce({
       exitCode: 1,
       stdout: '',
@@ -290,6 +341,10 @@ prunable
     const result = await listWorktrees('/invalid/path')
 
     expect(result).toEqual([])
+    expect(mockWarnWithFollowup).toHaveBeenCalledWith(
+      'Could not list worktrees for /invalid/path: fatal: not a git repository',
+      'Worktree listing may be incomplete. Check if the repository path is correct.',
+    )
   })
 
   test('should handle worktree paths with spaces', async () => {
