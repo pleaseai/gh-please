@@ -14,5 +14,5 @@ scripts:
     set -e
     # 1. gitignored 로컬 파일(.env*, .claude/settings.local.json)을 메인 체크아웃에서 worktree로 복사.
     bunx @pleaseai/worktreeinclude "$ORCA_ROOT_PATH" "$ORCA_WORKTREE_PATH"
-    # 2. worktree 안에서 의존성 설치.
-    bun install
+    # 2. worktree 안에서 의존성 설치 (--frozen-lockfile로 lockfile 변경 방지 → worktree가 dirty state로 시작하지 않음).
+    bun install --frozen-lockfile
