@@ -1,0 +1,18 @@
+# orca.yaml — Orca worktree 생성 시 실행되는 setup 스크립트
+# 사용법: 프로젝트 루트에 두면 Orca가 worktree 생성 시 자동 실행한다(committed 파일이라 팀 공유).
+# 상세: Skill("standards:dev-tooling") → references/worktree-setup.md
+#
+# 환경 변수:
+#   $ORCA_ROOT_PATH     — 메인 체크아웃(루트 저장소) 경로 (복사 원본)
+#   $ORCA_WORKTREE_PATH — 새로 생성된 worktree 경로 (복사 대상)
+#
+# 이 저장소는 mise.toml이 없고 bun이 시스템 PATH에 있는 단일 패키지(Bun 런타임) 프로젝트라
+# mise 미사용 변형을 사용한다: 로컬 파일 복사 → 의존성 설치.
+
+scripts:
+  setup: |
+    set -e
+    # 1. gitignored 로컬 파일(.env*, .claude/settings.local.json)을 메인 체크아웃에서 worktree로 복사.
+    bunx @pleaseai/worktreeinclude "$ORCA_ROOT_PATH" "$ORCA_WORKTREE_PATH"
+    # 2. worktree 안에서 의존성 설치.
+    bun install
