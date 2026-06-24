@@ -1,0 +1,19 @@
+eslint.config.js
+  s_2c578df22eb19c::t_c5aa7ca78df1fe 14-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.11",
+  "base_commit_sha": "8f1a5cfa9511d5dd0b1d977d41d439bf81943ef2",
+  "prompts": {},
+  "sessions": {
+    "s_2c578df22eb19c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1367e211-1fdc-4e0c-aa66-f50c0b8a3489",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Minsu Lee <minsu.lee@pleaseai.dev>"
+    }
+  }
+}
