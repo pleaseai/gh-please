@@ -11,6 +11,8 @@ export default antfu({
     'CLAUDE.md',
     'docs-dev/**/*.md',
     'docs/**/*.md',
+    // Ignore planning and memory documents with illustrative code blocks
+    '.please/**/*.md',
   ],
 }, {
   rules: {
