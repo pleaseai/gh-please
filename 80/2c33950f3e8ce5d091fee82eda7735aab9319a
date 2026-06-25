@@ -1,0 +1,58 @@
+test/commands/auth/index.test.ts
+  s_15dd90eca2ae85::t_e4457bb445e38b 1-41
+src/commands/auth/login.ts
+  s_15dd90eca2ae85::t_978ba8ace25861 1-155
+src/index.ts
+  s_15dd90eca2ae85::t_d134ef3af30d7d 5
+  s_15dd90eca2ae85::t_eb6888f3844f23 26
+src/lib/github-app.ts
+  s_15dd90eca2ae85::t_87f5f309c9bc9d 1-221
+docs-dev/adr/0008-auth-github-app-installation-tokens.md
+  s_15dd90eca2ae85::t_ca216518804479 1-134
+src/commands/auth/token.ts
+  s_15dd90eca2ae85::t_08a88bad02995e 1,5-7,27,30-32,35-37,44-45,47-56
+  s_15dd90eca2ae85::t_108a19f49c29bd 2-4,8-26,28-29,33-34,38-43,46
+test/lib/github-app.test.ts
+  s_15dd90eca2ae85::t_794cb87938bfc5 1,3-164
+  s_15dd90eca2ae85::t_ea7958e2ab5bbd 2
+src/lib/i18n.ts
+  s_15dd90eca2ae85::t_a8589b1193a199 395-432
+src/commands/auth/git-credential.ts
+  s_15dd90eca2ae85::t_d0e1a4dfb39869 1-50
+src/lib/auth-config.ts
+  s_15dd90eca2ae85::t_1c4ffb3a1db6b8 1-48
+src/commands/auth/index.ts
+  s_15dd90eca2ae85::t_142cecc858381d 1-30
+src/lib/app-auth.ts
+  s_15dd90eca2ae85::t_4c42f0ede94491 1-37
+test/commands/auth/login.test.ts
+  s_15dd90eca2ae85::t_3e1967f2c60379 1-35
+docs-dev/AUTH_WORKFLOW.md
+  s_15dd90eca2ae85::t_f696feed58ca5b 1-137
+test/lib/auth-config.test.ts
+  s_15dd90eca2ae85::t_4166b365b96415 1-4,6-80,82-86
+  s_15dd90eca2ae85::t_ea7958e2ab5bbd 5
+  s_15dd90eca2ae85::t_e4c60e6eab5063 81
+CLAUDE.md
+  s_15dd90eca2ae85::t_3a3c645eeeb2f7 584
+  s_15dd90eca2ae85::t_30bc9c7d01f706 14
+  s_15dd90eca2ae85::t_1547fe9a71d901 189-195
+src/types.ts
+  s_15dd90eca2ae85::t_396a4808cd0af2 153-211
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.13",
+  "base_commit_sha": "802c33950f3e8ce5d091fee82eda7735aab9319a",
+  "prompts": {},
+  "sessions": {
+    "s_15dd90eca2ae85": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a7665aa5-8df0-4449-9e32-ad9e254337ed",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Minsu Lee <minsu.lee@pleaseai.dev>"
+    }
+  }
+}
