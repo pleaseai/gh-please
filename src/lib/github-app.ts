@@ -12,6 +12,13 @@ const JWT_EXPIRY_SECONDS = 9 * 60
 const JWT_CLOCK_DRIFT_SECONDS = 60
 /** 기본 private key 환경 변수 이름 */
 const DEFAULT_PRIVATE_KEY_ENV = 'GH_APP_PRIVATE_KEY'
+/** GitHub API 요청 타임아웃 (ms). 멈춘 fetch가 인증 플로우를 무한 대기시키지 않도록 한다 */
+const REQUEST_TIMEOUT_MS = 30_000
+
+/** 타임아웃 AbortSignal을 생성한다 */
+function timeoutSignal(): AbortSignal {
+  return AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+}
 
 /**
  * Base64URL 인코딩 (패딩 없음)
@@ -101,7 +108,7 @@ export async function createInstallationToken(
   const { jwt, installationId, hostname, fetchImpl = fetch } = params
   const url = `${apiBaseUrl(hostname)}/app/installations/${installationId}/access_tokens`
 
-  const res = await fetchImpl(url, { method: 'POST', headers: appJwtHeaders(jwt) })
+  const res = await fetchImpl(url, { method: 'POST', headers: appJwtHeaders(jwt), signal: timeoutSignal() })
   if (!res.ok) {
     const text = await res.text()
     throw new Error(`Failed to create installation token (HTTP ${res.status}): ${text.trim()}`)
@@ -131,8 +138,10 @@ async function lookupOwnerInstallation(
   headers: Record<string, string>,
   fetchImpl: typeof fetch,
 ): Promise<string> {
-  for (const path of [`/orgs/${owner}/installation`, `/users/${owner}/installation`]) {
-    const res = await fetchImpl(`${base}${path}`, { headers })
+  // owner를 URL 경로에 넣기 전 인코딩해 경로 탐색/특수문자 주입을 방지한다.
+  const encodedOwner = encodeURIComponent(owner)
+  for (const path of [`/orgs/${encodedOwner}/installation`, `/users/${encodedOwner}/installation`]) {
+    const res = await fetchImpl(`${base}${path}`, { headers, signal: timeoutSignal() })
     if (res.ok) {
       const data = await res.json() as { id: number }
       return String(data.id)
@@ -159,7 +168,9 @@ export async function resolveInstallationId(params: ResolveInstallationParams): 
     return lookupOwnerInstallation(base, owner, headers, fetchImpl)
   }
 
-  const res = await fetchImpl(`${base}/app/installations`, { headers })
+  // per_page=100으로 한 페이지에 최대치를 받아, 단일 설치 자동 선택이 페이지
+  // 잘림 때문에 잘못 동작하지 않도록 한다.
+  const res = await fetchImpl(`${base}/app/installations?per_page=100`, { headers, signal: timeoutSignal() })
   if (!res.ok) {
     const text = await res.text()
     throw new Error(`Failed to list installations (HTTP ${res.status}): ${text.trim()}`)

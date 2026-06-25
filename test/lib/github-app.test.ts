@@ -119,6 +119,19 @@ describe('github-app', () => {
       expect(id).toBe('999')
     })
 
+    test('should URL-encode the owner to prevent path traversal/injection', async () => {
+      const requested: string[] = []
+      const fetchImpl = (async (url: string) => {
+        requested.push(url)
+        return new Response('not found', { status: 404 })
+      }) as unknown as typeof fetch
+
+      await expect(resolveInstallationId({ jwt: 'JWT', owner: '../evil', fetchImpl })).rejects.toThrow()
+      // 슬래시/점은 인코딩되어 경로에 그대로 새지 않아야 한다
+      expect(requested[0]).toContain('/orgs/..%2Fevil/installation')
+      expect(requested[0]).not.toContain('/orgs/../evil/')
+    })
+
     test('should auto-select when the app has exactly one installation', async () => {
       const fetchImpl = (async () => jsonResponse([{ id: 42, account: { login: 'solo' } }])) as unknown as typeof fetch
 

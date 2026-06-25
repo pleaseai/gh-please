@@ -1,5 +1,4 @@
 import type { AuthConfig, InstallationTokenResult } from '../types'
-import { readAuthConfig } from './auth-config'
 import { createInstallationToken, generateAppJwt, resolvePrivateKey } from './github-app'
 
 /**
@@ -18,20 +17,4 @@ export async function mintTokenFromConfig(
     installationId: config.installationId,
     hostname: config.hostname,
   })
-}
-
-/**
- * 저장된 설정을 읽어 새 installation token을 발급한다.
- * 설정이 없으면 안내 메시지와 함께 오류를 던진다.
- */
-export async function mintTokenFromSavedConfig(
-  env: Record<string, string | undefined> = process.env,
-): Promise<InstallationTokenResult> {
-  const config = readAuthConfig()
-  if (!config) {
-    throw new Error(
-      'No saved GitHub App credentials found. Run `gh please auth login --app-id <id> --private-key <path>` first.',
-    )
-  }
-  return mintTokenFromConfig(config, env)
 }

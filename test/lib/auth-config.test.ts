@@ -82,5 +82,19 @@ describe('auth-config', () => {
       writeFileSync(path, JSON.stringify({ appId: '1' }))
       expect(readAuthConfig(path)).toBeNull()
     })
+
+    test('should return null when required fields have wrong types', () => {
+      const path = makeTmpPath()
+      writeAuthConfig({ appId: '1', installationId: '2' }, path)
+      writeFileSync(path, JSON.stringify({ appId: 1, installationId: 2 }))
+      expect(readAuthConfig(path)).toBeNull()
+    })
+
+    test('should return null when an optional field has a wrong type', () => {
+      const path = makeTmpPath()
+      writeAuthConfig({ appId: '1', installationId: '2' }, path)
+      writeFileSync(path, JSON.stringify({ appId: '1', installationId: '2', hostname: 123 }))
+      expect(readAuthConfig(path)).toBeNull()
+    })
   })
 })

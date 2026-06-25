@@ -10,7 +10,8 @@ rationale.
 
 With no App flags, `gh please auth login` behaves exactly like `gh auth login`
 (interactive browser flow, `--with-token`, `--web`, etc.). All other `auth`
-subcommands (`status`, `logout`, `refresh`, `setup-git`) pass through to `gh`.
+subcommands (`status`, `logout`, `refresh`) pass through to `gh`. (`--setup-git`
+is a flag on `gh please auth login`, not a standalone subcommand.)
 
 ```bash
 gh please auth login                 # interactive, same as gh auth login
@@ -110,7 +111,7 @@ gh please auth login --app-id 123456 --private-key ./app.pem \
 
 ## How it works
 
-```
+```text
 --private-key ──▶ resolvePrivateKey ──▶ generateAppJwt (RS256, node:crypto)
                                               │
                           ┌───────────────────┴───────────────────┐

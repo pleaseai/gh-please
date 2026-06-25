@@ -1,5 +1,6 @@
 import type { AuthMessages } from '../../lib/i18n'
 import type { AppLoginOptions, AuthConfig } from '../../types'
+import { resolve } from 'node:path'
 import { Command } from 'commander'
 import { writeAuthConfig } from '../../lib/auth-config'
 import { createInstallationToken, generateAppJwt, resolveInstallationId, resolvePrivateKey } from '../../lib/github-app'
@@ -38,7 +39,7 @@ async function storeTokenInGh(token: string, hostname?: string): Promise<void> {
   }
   const proc = Bun.spawn([getGhCommand(), ...args], {
     stdin: 'pipe',
-    stdout: 'pipe',
+    stdout: 'ignore',
     stderr: 'pipe',
   })
   proc.stdin.write(token)
@@ -62,7 +63,7 @@ async function setupGitHelper(hostname?: string): Promise<void> {
   const host = hostname || 'github.com'
   const proc = Bun.spawn(
     ['git', 'config', '--global', `credential.https://${host}.helper`, '!gh-please auth git-credential'],
-    { stdout: 'pipe', stderr: 'pipe' },
+    { stdout: 'ignore', stderr: 'pipe' },
   )
   const exitCode = await proc.exited
   if (exitCode !== 0) {
@@ -90,9 +91,15 @@ async function runAppLogin(options: AppLoginOptions, msg: AuthMessages): Promise
   console.error(msg.mintingToken)
   const { token, expiresAt } = await createInstallationToken({ jwt, installationId, hostname: options.hostname })
 
-  // 재발급(자동 갱신) 가능하도록 설정을 저장한다. private key 경로일 때만 영속화 가능.
-  if (options.privateKey && options.privateKey !== '-') {
-    const config: AuthConfig = { appId, installationId, privateKeyPath: options.privateKey }
+  // 재발급(자동 갱신) 가능하도록 설정을 저장한다. stdin 키는 일회성이라 재발급이
+  // 불가하므로 그 경우만 저장을 건너뛴다. 파일 경로가 주어지면 절대 경로로 변환해
+  // (다른 CWD에서 재발급 시 ENOENT 방지) 저장하고, 경로가 없으면(GH_APP_PRIVATE_KEY
+  // 환경 변수 사용) 경로 없이 저장해 재발급 시 동일 환경 변수를 사용하도록 한다.
+  if (options.privateKey !== '-') {
+    const config: AuthConfig = { appId, installationId }
+    if (options.privateKey) {
+      config.privateKeyPath = resolve(options.privateKey)
+    }
     if (options.hostname) {
       config.hostname = options.hostname
     }
@@ -138,6 +145,21 @@ export function createAuthLoginCommand(): Command {
       const msg = getAuthMessages(lang)
 
       if (!options.appId) {
+        // App 전용 플래그를 --app-id 없이 쓰면 gh auth login으로 그대로 넘어가
+        // 불명확한 "unknown flag" 오류가 난다. 미리 명확한 안내를 준다.
+        const appOnlyFlags: Array<[keyof AppLoginOptions, string]> = [
+          ['privateKey', '--private-key'],
+          ['installationId', '--installation-id'],
+          ['owner', '--owner'],
+          ['printToken', '--print-token'],
+          ['setupGit', '--setup-git'],
+        ]
+        const misused = appOnlyFlags.filter(([key]) => options[key]).map(([, flag]) => flag)
+        if (misused.length > 0) {
+          console.error(`${msg.errorPrefix}: ${msg.appFlagsRequireAppId(misused.join(', '))}`)
+          process.exit(1)
+        }
+
         await mirrorGhAuthLogin()
         return
       }

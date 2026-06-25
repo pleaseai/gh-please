@@ -1,5 +1,5 @@
 import type { AuthConfig } from '../types'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
 
@@ -25,7 +25,15 @@ export function readAuthConfig(path: string = getAuthConfigPath()): AuthConfig |
   try {
     const raw = readFileSync(path, 'utf8')
     const parsed = JSON.parse(raw) as Partial<AuthConfig>
-    if (!parsed.appId || !parsed.installationId) {
+    // 필수 필드가 문자열인지 검증한다. 손상된 설정(잘못된 타입)은 null로 처리해
+    // 이후 단계에서 런타임 오류가 나는 대신 "손상 => null" 계약을 지킨다.
+    if (typeof parsed.appId !== 'string' || typeof parsed.installationId !== 'string') {
+      return null
+    }
+    if (parsed.privateKeyPath !== undefined && typeof parsed.privateKeyPath !== 'string') {
+      return null
+    }
+    if (parsed.hostname !== undefined && typeof parsed.hostname !== 'string') {
       return null
     }
     return parsed as AuthConfig
@@ -45,4 +53,8 @@ export function writeAuthConfig(config: AuthConfig, path: string = getAuthConfig
     mkdirSync(dir, { recursive: true, mode: 0o700 })
   }
   writeFileSync(path, `${JSON.stringify(config, null, 2)}\n`, { mode: 0o600 })
+  // mode 옵션은 파일/디렉터리를 새로 만들 때만 적용된다. 이미 존재하던 경우
+  // 권한이 그대로 남으므로, 매 쓰기마다 명시적으로 0700/0600을 강제한다.
+  chmodSync(dir, 0o700)
+  chmodSync(path, 0o600)
 }

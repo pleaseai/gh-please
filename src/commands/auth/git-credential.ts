@@ -1,20 +1,57 @@
 import { Command } from 'commander'
-import { mintTokenFromSavedConfig } from '../../lib/app-auth'
+import { mintTokenFromConfig } from '../../lib/app-auth'
+import { readAuthConfig } from '../../lib/auth-config'
 import { detectSystemLanguage, getAuthMessages } from '../../lib/i18n'
 
 /** GitHub App installation token의 git 사용자명 (고정값) */
 const APP_TOKEN_USERNAME = 'x-access-token'
 
 /**
+ * git credential 프로토콜 입력(key=value 줄)을 파싱한다.
+ */
+export function parseCredentialInput(input: string): Record<string, string> {
+  const result: Record<string, string> = {}
+  for (const line of input.split('\n')) {
+    const eq = line.indexOf('=')
+    if (eq === -1) {
+      continue
+    }
+    const key = line.slice(0, eq)
+    if (key) {
+      result[key] = line.slice(eq + 1)
+    }
+  }
+  return result
+}
+
+/**
  * git credential helper의 `get` 동작을 처리한다.
- * 저장된 설정으로 새 토큰을 발급해 git credential 프로토콜 형식으로 인쇄한다.
+ * 요청한 host/protocol이 저장된 설정과 일치할 때만 새 토큰을 발급해 인쇄한다.
  * 매 호출마다 새로 발급하므로 git 작업 시 토큰이 투명하게 자동 갱신된다.
  */
 async function handleGet(): Promise<void> {
-  // git이 stdin으로 보낸 속성을 소비한다 (값은 사용하지 않음)
-  await new Response(Bun.stdin.stream()).text()
+  const input = await new Response(Bun.stdin.stream()).text()
+  const request = parseCredentialInput(input)
 
-  const { token } = await mintTokenFromSavedConfig()
+  const config = readAuthConfig()
+  if (!config) {
+    throw new Error(
+      'No saved GitHub App credentials found. Run `gh please auth login --app-id <id> --private-key <path>` first.',
+    )
+  }
+
+  // 저장된 호스트(또는 github.com)와 https가 아닌 요청에는 토큰을 제공하지 않는다.
+  // 아무것도 출력하지 않으면 git이 다음 credential helper로 넘어간다 → App 토큰이
+  // 무관한 호스트로 새어 나가는 것을 방지한다.
+  const expectedHost = config.hostname || 'github.com'
+  if (request.protocol && request.protocol !== 'https') {
+    return
+  }
+  if (request.host && request.host !== expectedHost) {
+    return
+  }
+
+  const { token } = await mintTokenFromConfig(config)
   process.stdout.write(`username=${APP_TOKEN_USERNAME}\npassword=${token}\n`)
 }
 
