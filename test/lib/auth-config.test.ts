@@ -90,6 +90,13 @@ describe('auth-config', () => {
       expect(readAuthConfig(path)).toBeNull()
     })
 
+    test('should return null when a required field is a blank string', () => {
+      const path = makeTmpPath()
+      writeAuthConfig({ appId: '1', installationId: '2' }, path)
+      writeFileSync(path, JSON.stringify({ appId: '', installationId: '  ' }))
+      expect(readAuthConfig(path)).toBeNull()
+    })
+
     test('should return null when an optional field has a wrong type', () => {
       const path = makeTmpPath()
       writeAuthConfig({ appId: '1', installationId: '2' }, path)

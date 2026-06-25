@@ -25,9 +25,10 @@ export function readAuthConfig(path: string = getAuthConfigPath()): AuthConfig |
   try {
     const raw = readFileSync(path, 'utf8')
     const parsed = JSON.parse(raw) as Partial<AuthConfig>
-    // 필수 필드가 문자열인지 검증한다. 손상된 설정(잘못된 타입)은 null로 처리해
-    // 이후 단계에서 런타임 오류가 나는 대신 "손상 => null" 계약을 지킨다.
-    if (typeof parsed.appId !== 'string' || typeof parsed.installationId !== 'string') {
+    // 필수 필드가 비어있지 않은 문자열인지 검증한다. 손상된 설정(잘못된 타입/빈 값)은
+    // null로 처리해 이후 단계에서 런타임 오류가 나는 대신 "손상 => null" 계약을 지킨다.
+    if (typeof parsed.appId !== 'string' || parsed.appId.trim() === ''
+      || typeof parsed.installationId !== 'string' || parsed.installationId.trim() === '') {
       return null
     }
     if (parsed.privateKeyPath !== undefined && typeof parsed.privateKeyPath !== 'string') {
