@@ -1,0 +1,30 @@
+scripts/install.sh
+  s_eca994ca57d28b::t_3f9357f0da642e 40-43
+  s_eca994ca57d28b::t_da2fd7d2db8655 1-39,44-158,161,164-183
+  s_eca994ca57d28b::t_8a223ba99c3e92 159-160,162-163
+docs/content/en/1.guide/1.getting-started.md
+  s_eca994ca57d28b::t_8fbe6eb6fafba2 23-40,42-45
+  s_eca994ca57d28b::t_74722e74d6a3bd 41
+docs/content/ko/1.guide/1.getting-started.md
+  s_eca994ca57d28b::t_dfd3bbc09d1e0e 23-46
+README.md
+  s_eca994ca57d28b::t_96d03aeeae98eb 41-52
+README.ko.md
+  s_eca994ca57d28b::t_372fdcdab8d7eb 41-51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "30275f060be071fb3ea7e19d3860f6b3fdb857b8",
+  "prompts": {},
+  "sessions": {
+    "s_eca994ca57d28b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a801d52b-49d0-498b-8a8c-713d17c97f20",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Minsu Lee <minsu.lee@pleaseai.dev>"
+    }
+  }
+}
