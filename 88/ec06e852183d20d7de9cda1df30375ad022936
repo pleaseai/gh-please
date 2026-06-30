@@ -1,0 +1,34 @@
+scripts/install.sh
+  s_eca994ca57d28b::t_fabff19efeb4e5 164
+  s_eca994ca57d28b::t_282105c244620a 89
+  s_eca994ca57d28b::t_7a628fe6add0ef 144
+  s_eca994ca57d28b::t_9ebd634ece96fc 147-149
+  s_eca994ca57d28b::t_cff2fa6c59d1ab 108-112,115
+  s_eca994ca57d28b::t_c57af96171bcdc 177
+  s_eca994ca57d28b::t_2b62b26a220179 35-48
+  s_eca994ca57d28b::t_47b9bb7ab6b6e5 193-197,199
+  s_eca994ca57d28b::t_d0eb09276fdc3c 125-126,128-129,135
+  s_eca994ca57d28b::t_04394428f61cd3 189-190
+  s_eca994ca57d28b::t_7316ab73d9a721 50-52,54
+  s_eca994ca57d28b::t_7112444b965719 49
+docs/content/ko/1.guide/1.getting-started.md
+  s_eca994ca57d28b::t_33124385d94969 37-39
+docs/content/en/1.guide/1.getting-started.md
+  s_eca994ca57d28b::t_aadc2afda8fa0f 37-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "88ec06e852183d20d7de9cda1df30375ad022936",
+  "prompts": {},
+  "sessions": {
+    "s_eca994ca57d28b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a801d52b-49d0-498b-8a8c-713d17c97f20",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Minsu Lee <minsu.lee@pleaseai.dev>"
+    }
+  }
+}
