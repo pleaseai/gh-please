@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.32.1](https://github.com/pleaseai/gh-please/compare/github-v0.32.0...github-v0.32.1) (2026-06-30)
+
+
+### Bug Fixes
+
+* **install:** add auth-free installer for CI/Docker ([#288](https://github.com/pleaseai/gh-please/issues/288)) ([68873bc](https://github.com/pleaseai/gh-please/commit/68873bcfda445908c46b9ce877af94f4ae2e0c3d))
+
 ## [0.32.0](https://github.com/pleaseai/gh-please/compare/github-v0.31.1...github-v0.32.0) (2026-02-05)
 
 
