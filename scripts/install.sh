@@ -32,14 +32,26 @@ readonly HOST="github.com"
 readonly RELEASES_URL="https://github.com/${OWNER}/${REPO}/releases"
 
 # --- Output helpers ----------------------------------------------------------
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
+# Only emit ANSI colors when stderr is a terminal. In CI/Docker (this script's
+# primary target) output is redirected to log files, where escape sequences would
+# show up as literal garbage.
+if [[ -t 2 ]]; then
+  RED='\033[0;31m'
+  GREEN='\033[0;32m'
+  YELLOW='\033[1;33m'
+  NC='\033[0m'
+else
+  RED=''
+  GREEN=''
+  YELLOW=''
+  NC=''
+fi
 
-# Working directory for downloads; cleaned up by the EXIT trap. Declared at
-# file scope so the trap can reference it after main()'s locals go out of scope.
+# Temp paths cleaned up by the EXIT trap. Declared at file scope so the trap can
+# reference them after main()'s locals go out of scope. WORKDIR holds downloads;
+# STAGING holds the new extension copy until it is atomically moved into place.
 WORKDIR=""
+STAGING=""
 
 info() { printf '%b\n' "${YELLOW}==>${NC} $*"; }
 ok() { printf '%b\n' "${GREEN}✓${NC} $*"; }
@@ -74,7 +86,7 @@ detect_platform() {
 resolve_latest_tag() {
   local redirect
   redirect="$(curl -fsS -o /dev/null -w '%{redirect_url}' "${RELEASES_URL}/latest" || true)"
-  [ -n "$redirect" ] || die "Could not resolve the latest release tag from ${RELEASES_URL}/latest"
+  [[ -n "$redirect" ]] || die "Could not resolve the latest release tag from ${RELEASES_URL}/latest"
   printf '%s' "${redirect##*/tag/}"
 }
 
@@ -93,12 +105,14 @@ verify_checksum() {
   local binary="$1" checksums="$2" asset="$3"
   local expected actual
   expected="$(awk -v f="$asset" '$2 == f {print $1}' "$checksums")"
-  if [ -z "$expected" ]; then
-    info "No checksum entry for ${asset}; skipping verification."
-    return 0
+  # Fail closed: a missing entry must abort, never silently install an unverified
+  # binary. The release workflow generates checksums for every gh-please_* asset,
+  # so an absent entry means asset-name drift or a corrupt/partial checksums file.
+  if [[ -z "$expected" ]]; then
+    die "No checksum entry found for ${asset} in checksums.txt — cannot verify binary integrity."
   fi
   actual="$(sha256_of "$binary")"
-  [ "$expected" = "$actual" ] || die "Checksum mismatch for ${asset} (expected ${expected}, got ${actual})."
+  [[ "$expected" == "$actual" ]] || die "Checksum mismatch for ${asset} (expected ${expected}, got ${actual})."
   ok "Checksum verified."
 }
 
@@ -108,15 +122,17 @@ gh_extensions_dir() {
   printf '%s/gh/extensions' "${XDG_DATA_HOME:-$HOME/.local/share}"
 }
 
+# Writes manifest.yml. The file location and the recorded `path` are separate so
+# the manifest can be staged in a temp dir while still pointing at the final path.
 write_manifest() {
-  local dir="$1" tag="$2" pinned="$3"
-  cat >"${dir}/manifest.yml" <<EOF
+  local manifest_file="$1" install_path="$2" tag="$3" pinned="$4"
+  cat >"$manifest_file" <<EOF
 owner: ${OWNER}
 name: ${EXT_NAME}
 host: ${HOST}
 tag: ${tag}
 ispinned: ${pinned}
-path: ${dir}/${BIN_NAME}
+path: ${install_path}
 EOF
 }
 
@@ -125,11 +141,12 @@ main() {
   local version="${GH_PLEASE_VERSION:-}"
   local pinned="false"
 
-  while [ $# -gt 0 ]; do
+  while [[ $# -gt 0 ]]; do
     case "$1" in
       --version)
-        version="${2:-}"
-        shift 2 || die "--version requires a tag argument."
+        [[ $# -ge 2 ]] || die "--version requires a tag argument."
+        version="$2"
+        shift 2
         ;;
       -h | --help)
         printf 'Usage: install.sh [--version <tag>]\n'
@@ -144,7 +161,7 @@ main() {
   local platform tag asset base binary checksums
   platform="$(detect_platform)"
 
-  if [ -n "$version" ]; then
+  if [[ -n "$version" ]]; then
     tag="$version"
     pinned="true"
   else
@@ -157,7 +174,7 @@ main() {
   info "Installing ${EXT_NAME} ${tag} (${platform})..."
 
   WORKDIR="$(mktemp -d)"
-  trap 'rm -rf "${WORKDIR:-}"' EXIT
+  trap 'rm -rf "${WORKDIR:-}" "${STAGING:-}"' EXIT
 
   binary="${WORKDIR}/${BIN_NAME}"
   checksums="${WORKDIR}/checksums.txt"
@@ -169,12 +186,17 @@ main() {
 
   verify_checksum "$binary" "$checksums" "$asset"
 
+  # Stage the new copy fully, then swap it into place. This keeps any existing
+  # install intact if writing the binary or manifest fails partway through.
   local dir
   dir="$(gh_extensions_dir)/${EXT_NAME}"
+  STAGING="$(dirname "$dir")/.${EXT_NAME}.tmp.$$"
+  rm -rf "$STAGING"
+  mkdir -p "$STAGING"
+  install -m 0755 "$binary" "${STAGING}/${BIN_NAME}"
+  write_manifest "${STAGING}/manifest.yml" "${dir}/${BIN_NAME}" "$tag" "$pinned"
   rm -rf "$dir"
-  mkdir -p "$dir"
-  install -m 0755 "$binary" "${dir}/${BIN_NAME}"
-  write_manifest "$dir" "$tag" "$pinned"
+  mv "$STAGING" "$dir"
 
   ok "Installed to ${dir}/${BIN_NAME}"
   info "Run: gh please --version"
