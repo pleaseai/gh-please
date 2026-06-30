@@ -38,6 +38,17 @@ GitHub CLI 확장 프로그램 - LLM을 위한 GitHub 도구
 gh extension install pleaseai/gh-please
 ```
 
+**CI / Docker (인증 불필요):** `gh extension install`은 GitHub API를 사용하는데,
+비인증 요청의 속도 제한(IP당 시간당 60회)은 공유 CI 러너에서 쉽게 소진되어 gh가
+`HTTP 403`을 인증 오류처럼 표시합니다. 공개 릴리스 CDN에서 토큰 없이 바이너리를
+내려받는 독립 설치 스크립트를 사용하세요:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/pleaseai/gh-please/main/scripts/install.sh | bash
+```
+
+> CI에서 `gh extension install`을 그대로 쓰려면 `GH_TOKEN`(GitHub Actions의 경우 `${{ github.token }}`)을 설정해 속도 제한을 해제하세요.
+
 ### 5분 안에 시작하기
 
 ```bash

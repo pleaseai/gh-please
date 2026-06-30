@@ -38,6 +38,18 @@ English | [한국어](./README.ko.md)
 gh extension install pleaseai/gh-please
 ```
 
+**CI / Docker (no authentication needed):** `gh extension install` uses the GitHub
+API, whose unauthenticated rate limit (60 req/hour per IP) is easily exhausted on
+shared CI runners — gh then reports the `HTTP 403` as an auth error. Use the
+standalone installer, which downloads the binary from the public release CDN with
+no token:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/pleaseai/gh-please/main/scripts/install.sh | bash
+```
+
+> Prefer `gh extension install` in CI? Set `GH_TOKEN` (e.g. `${{ github.token }}` in GitHub Actions) to lift the rate limit.
+
 ### Get Started in 5 Minutes
 
 ```bash
