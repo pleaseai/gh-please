@@ -4,6 +4,7 @@
 [![CI](https://github.com/pleaseai/gh-please/actions/workflows/ci.yml/badge.svg)](https://github.com/pleaseai/gh-please/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/github/pleaseai/gh-please/graph/badge.svg?token=BQKO959X1M)](https://codecov.io/github/pleaseai/gh-please)
 [![code style](https://antfu.me/badge-code-style.svg)](https://github.com/antfu/eslint-config)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
 GitHub CLI extension - GitHub tools for LLMs
 
