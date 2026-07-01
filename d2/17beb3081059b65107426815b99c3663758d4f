@@ -1,0 +1,22 @@
+.github/PULL_REQUEST_TEMPLATE.md
+  s_f0c447c07ea585::t_dcbef0d9fbc52d 16-17
+CONTRIBUTING.md
+  s_f0c447c07ea585::t_473bf1a2880e43 5
+  s_f0c447c07ea585::t_c493ecf2568d4c 25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "d217beb3081059b65107426815b99c3663758d4f",
+  "prompts": {},
+  "sessions": {
+    "s_f0c447c07ea585": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9026827b-9f5e-4cb2-ac4f-0218019c1c6d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Minsu Lee <minsu.lee@pleaseai.dev>"
+    }
+  }
+}
