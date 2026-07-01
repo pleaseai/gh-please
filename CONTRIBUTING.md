@@ -2,7 +2,7 @@
 
 Thanks for your interest in contributing! This guide covers how to get from a clone to a merged pull request.
 
-By participating, you agree to abide by our [Code of Conduct](./CODE_OF_CONDUCT.md). All documentation, code, comments, and commit messages in this repository are written in **English**.
+By participating, you agree to abide by our [Code of Conduct](./CODE_OF_CONDUCT.md). While documentation is provided in both English and Korean, all code, comments, and commit messages in this repository are written in **English**.
 
 ## Getting started
 
@@ -22,7 +22,7 @@ bun install         # install dependencies
 4. Open a pull request and fill out the template.
 
 ```bash
-bun run lint        # lint and format
+bun run lint:fix    # lint and auto-fix
 bun run type-check  # type-check with tsc
 bun run test        # run the test suite
 bun run build       # ensure it builds
