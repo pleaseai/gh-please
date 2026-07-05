@@ -1,0 +1,31 @@
+test/lib/git-workflow-worktree.preload.ts
+  s_67ae564621a80c::t_97a9f2bdb5b28d 18
+src/lib/git-exec.ts
+  s_67ae564621a80c::t_2c2b5cc2c065e5 11
+  s_67ae564621a80c::t_97a9f2bdb5b28d 13
+src/lib/repo-manager.ts
+  s_67ae564621a80c::t_4ed920f82bc5ea 99-107,120-126
+  s_67ae564621a80c::t_97a9f2bdb5b28d 6,56,70
+src/lib/git-workflow.ts
+  s_67ae564621a80c::t_97a9f2bdb5b28d 3,63,126,165,175,181
+test/lib/git-workflow-worktree.test.ts
+  s_67ae564621a80c::t_97a9f2bdb5b28d 5
+src/lib/git-workflow-worktree.ts
+  s_67ae564621a80c::t_97a9f2bdb5b28d 4,37,58,78,92,112,120,126,139,199
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "acbec2ec254ef82d3ac89e501dcb38b472994df0",
+  "prompts": {},
+  "sessions": {
+    "s_67ae564621a80c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5e2ef4ed-2fbb-45e8-a526-41cf06642407",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Minsu Lee <minsu.lee@pleaseai.dev>"
+    }
+  }
+}
