@@ -2,7 +2,7 @@
  * Comprehensive tests for git-workflow-worktree.ts
  *
  * These tests verify git command arguments and error handling by mocking
- * the runGitCommand function. Run with:
+ * the runCliCommand function. Run with:
  *   bun test test/lib/git-workflow-worktree.test.ts --preload test/lib/git-workflow-worktree.preload.ts
  */
 import { afterEach, describe, expect, test } from 'bun:test'

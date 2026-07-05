@@ -8,9 +8,9 @@ export interface GitResult {
 }
 
 /**
- * Execute a git command and return the result
+ * Execute a CLI command (git or gh) and return the result
  */
-export async function runGitCommand(args: string[]): Promise<GitResult> {
+export async function runCliCommand(args: string[]): Promise<GitResult> {
   const proc = Bun.spawn(args, {
     stdout: 'pipe',
     stderr: 'pipe',

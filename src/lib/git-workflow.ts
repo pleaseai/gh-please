@@ -1,5 +1,6 @@
 import type { DevelopOptions } from '../types'
 import { getGhCommand } from './gh-command'
+import { runCliCommand } from './git-exec'
 
 // Re-export worktree functions from dedicated module
 export {
@@ -17,21 +18,8 @@ export async function getAllLinkedBranches(
   repo?: string,
 ): Promise<string[]> {
   if (!repo) {
-    // Try to get from current git repo
-    const proc = Bun.spawn(['git', 'rev-parse', '--show-toplevel'], {
-      stdout: 'pipe',
-      stderr: 'pipe',
-    })
-    await new Response(proc.stdout).text()
-    const exitCode = await proc.exited
-
-    if (exitCode !== 0) {
-      // Cannot determine repo, return empty array
-      return []
-    }
-
-    // For now, if no repo specified and can't auto-detect owner/repo, return empty
-    // This is a limitation of the current implementation
+    // For now, if no repo specified, return empty array
+    // This is a limitation of the current implementation - auto-detection not yet implemented
     return []
   }
 
@@ -72,25 +60,18 @@ export async function getAllLinkedBranches(
     `issueNumber=${issueNumber}`,
   ]
 
-  const proc = Bun.spawn(args, {
-    stdout: 'pipe',
-    stderr: 'pipe',
-  })
+  const result = await runCliCommand(args)
 
-  const output = await new Response(proc.stdout).text()
-  const stderr = await new Response(proc.stderr).text()
-  const exitCode = await proc.exited
-
-  if (exitCode !== 0) {
+  if (result.exitCode !== 0) {
     // GraphQL query failed
-    if (stderr.trim()) {
-      console.warn(`⚠️  Failed to get linked branches: ${stderr.trim()}`)
+    if (result.stderr.trim()) {
+      console.warn(`⚠️  Failed to get linked branches: ${result.stderr.trim()}`)
     }
     return []
   }
 
   try {
-    const data = JSON.parse(output)
+    const data = JSON.parse(result.stdout)
     const branches = data?.data?.repository?.issue?.linkedBranches?.nodes || []
     return branches
       .map((node: unknown) => {
@@ -142,28 +123,21 @@ export async function startDevelopWorkflow(
     args.push('-n', options.name)
   }
 
-  const proc = Bun.spawn(args, {
-    stdout: 'pipe',
-    stderr: 'pipe',
-  })
+  const result = await runCliCommand(args)
 
-  const output = await new Response(proc.stdout).text()
-  const exitCode = await proc.exited
-
-  if (exitCode !== 0) {
-    const error = await new Response(proc.stderr).text()
-    throw new Error(`Failed to develop issue: ${error.trim()}`)
+  if (result.exitCode !== 0) {
+    throw new Error(`Failed to develop issue: ${result.stderr.trim()}`)
   }
 
   // Parse branch name from gh issue develop output
   // With --checkout: "Switched to a new branch 'feat-123-title'"
-  const branchMatch = output.match(/'([^']+)'/)
+  const branchMatch = result.stdout.match(/'([^']+)'/)
   if (branchMatch) {
     return branchMatch[1]!
   }
 
   // Without --checkout: "github.com/owner/repo/tree/branch-name"
-  const urlMatch = output.match(/\/tree\/(\S+)/)
+  const urlMatch = result.stdout.match(/\/tree\/(\S+)/)
   if (urlMatch) {
     return urlMatch[1]!.trim()
   }
@@ -188,48 +162,28 @@ export async function fetchBranch(
   branch: string,
 ): Promise<void> {
   // Step 1: Fetch to remote tracking branch (refs/remotes/origin/{branch})
-  const fetchProc = Bun.spawn(
+  const fetchResult = await runCliCommand(
     ['git', '-C', bareRepoPath, 'fetch', 'origin', `${branch}:refs/remotes/origin/${branch}`],
-    {
-      stdout: 'pipe',
-      stderr: 'pipe',
-    },
   )
 
-  const fetchExitCode = await fetchProc.exited
-
-  if (fetchExitCode !== 0) {
-    const error = await new Response(fetchProc.stderr).text()
-    throw new Error(`Failed to fetch branch: ${error.trim()}`)
+  if (fetchResult.exitCode !== 0) {
+    throw new Error(`Failed to fetch branch: ${fetchResult.stderr.trim()}`)
   }
 
   // Step 2: Create or update local branch from remote tracking branch
   // Try to create the branch first
-  const createProc = Bun.spawn(
+  const createResult = await runCliCommand(
     ['git', '-C', bareRepoPath, 'branch', branch, `refs/remotes/origin/${branch}`],
-    {
-      stdout: 'pipe',
-      stderr: 'pipe',
-    },
   )
 
-  const createExitCode = await createProc.exited
-
-  if (createExitCode !== 0) {
+  if (createResult.exitCode !== 0) {
     // Branch might already exist, try to update it
-    const updateProc = Bun.spawn(
+    const updateResult = await runCliCommand(
       ['git', '-C', bareRepoPath, 'branch', '-f', branch, `refs/remotes/origin/${branch}`],
-      {
-        stdout: 'pipe',
-        stderr: 'pipe',
-      },
     )
 
-    const updateExitCode = await updateProc.exited
-
-    if (updateExitCode !== 0) {
-      const error = await new Response(updateProc.stderr).text()
-      throw new Error(`Failed to update local branch: ${error.trim()}`)
+    if (updateResult.exitCode !== 0) {
+      throw new Error(`Failed to update local branch: ${updateResult.stderr.trim()}`)
     }
   }
 }
