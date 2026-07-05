@@ -52,8 +52,13 @@ export async function findBareRepo(owner: string, repo: string): Promise<string 
  * Check if current directory is inside a git repository
  */
 export async function isInGitRepo(): Promise<boolean> {
-  const result = await runGitCommand(['git', 'rev-parse', '--git-dir'])
-  return result.exitCode === 0
+  try {
+    const result = await runGitCommand(['git', 'rev-parse', '--git-dir'])
+    return result.exitCode === 0
+  }
+  catch {
+    return false
+  }
 }
 
 /**
@@ -61,13 +66,18 @@ export async function isInGitRepo(): Promise<boolean> {
  * Returns absolute path if in a git repo, null otherwise
  */
 export async function getGitDir(): Promise<string | null> {
-  const result = await runGitCommand(['git', 'rev-parse', '--absolute-git-dir'])
+  try {
+    const result = await runGitCommand(['git', 'rev-parse', '--absolute-git-dir'])
 
-  if (result.exitCode !== 0) {
+    if (result.exitCode !== 0) {
+      return null
+    }
+
+    return result.stdout.trim()
+  }
+  catch {
     return null
   }
-
-  return result.stdout.trim()
 }
 
 /**
