@@ -392,6 +392,47 @@ export function getPassthroughMessages(language: Language): PassthroughMessages 
   return passthroughMessages[language]
 }
 
+export interface AuthMessages {
+  resolvingInstallation: string
+  mintingToken: string
+  appLoginSuccess: (installationId: string, expiresAt: string) => string
+  tokenExpiresAt: (expiresAt: string) => string
+  gitHelperConfigured: (hostname: string) => string
+  gitHelperHint: (command: string) => string
+  appFlagsRequireAppId: (flags: string) => string
+  errorPrefix: string
+  unknownError: string
+}
+
+const authMessages: Record<Language, AuthMessages> = {
+  ko: {
+    resolvingInstallation: '🔍 installation을 조회하는 중...',
+    mintingToken: '🔑 installation 토큰을 발급하는 중...',
+    appLoginSuccess: (id, exp) => `✅ GitHub App으로 로그인했습니다 (installation ${id}). 토큰 만료: ${exp}`,
+    tokenExpiresAt: exp => `토큰 만료: ${exp}`,
+    gitHelperConfigured: host => `✅ git credential helper를 설정했습니다 (${host}). git 작업 시 토큰이 자동 갱신됩니다.`,
+    gitHelperHint: cmd => `💡 git 토큰 자동 갱신을 활성화하려면 실행하세요:\n   ${cmd}`,
+    appFlagsRequireAppId: flags => `${flags} 옵션은 --app-id와 함께 사용해야 합니다 (GitHub App 모드 전용).`,
+    errorPrefix: '❌ 오류',
+    unknownError: '예상치 못한 오류가 발생했습니다',
+  },
+  en: {
+    resolvingInstallation: '🔍 Resolving installation...',
+    mintingToken: '🔑 Minting installation token...',
+    appLoginSuccess: (id, exp) => `✅ Logged in as GitHub App (installation ${id}). Token expires: ${exp}`,
+    tokenExpiresAt: exp => `Token expires: ${exp}`,
+    gitHelperConfigured: host => `✅ Configured git credential helper for ${host}. Tokens auto-refresh on git operations.`,
+    gitHelperHint: cmd => `💡 To enable git token auto-refresh, run:\n   ${cmd}`,
+    appFlagsRequireAppId: flags => `${flags} requires --app-id (GitHub App mode only).`,
+    errorPrefix: '❌ Error',
+    unknownError: 'An unexpected error occurred',
+  },
+}
+
+export function getAuthMessages(language: Language): AuthMessages {
+  return authMessages[language]
+}
+
 /**
  * Detect system language from environment variables
  */
