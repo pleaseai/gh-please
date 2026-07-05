@@ -1,7 +1,7 @@
 import type { WorktreeInfo } from '../types'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import { runGitCommand, warnWithFollowup } from './git-exec'
+import { runCliCommand, warnWithFollowup } from './git-exec'
 
 /**
  * Ensure parent directory exists for a target path
@@ -34,7 +34,7 @@ export async function createWorktree(
 ): Promise<void> {
   const expandedPath = await ensureParentDirectory(targetPath)
 
-  const result = await runGitCommand(['git', '-C', bareRepoPath, 'worktree', 'add', expandedPath, branch])
+  const result = await runCliCommand(['git', '-C', bareRepoPath, 'worktree', 'add', expandedPath, branch])
 
   if (result.exitCode !== 0) {
     throw new Error(`Failed to create worktree: ${result.stderr.trim()}`)
@@ -55,7 +55,7 @@ export async function createWorktreeFromRepo(
 
   // Step 1: Fetch the branch with explicit refspec to update remote-tracking ref
   // Using refspec ensures refs/remotes/origin/{branch} is updated
-  const fetchResult = await runGitCommand([
+  const fetchResult = await runCliCommand([
     'git',
     '--git-dir',
     gitDir,
@@ -75,7 +75,7 @@ export async function createWorktreeFromRepo(
 
   // Step 2: Check if remote-tracking ref exists before updating local branch
   // Using rev-parse is language-agnostic (avoids relying on localized error messages)
-  const remoteRefCheck = await runGitCommand([
+  const remoteRefCheck = await runCliCommand([
     'git',
     '--git-dir',
     gitDir,
@@ -89,7 +89,7 @@ export async function createWorktreeFromRepo(
   // Step 3: Update local branch to match remote (only if remote ref exists)
   // This ensures the worktree uses the latest code, not stale local branch
   if (remoteRefExists) {
-    const branchResult = await runGitCommand([
+    const branchResult = await runCliCommand([
       'git',
       '--git-dir',
       gitDir,
@@ -109,7 +109,7 @@ export async function createWorktreeFromRepo(
   }
 
   // Check if branch exists locally (for worktree add command selection)
-  const checkResult = await runGitCommand(['git', '--git-dir', gitDir, 'rev-parse', '--verify', `refs/heads/${branch}`])
+  const checkResult = await runCliCommand(['git', '--git-dir', gitDir, 'rev-parse', '--verify', `refs/heads/${branch}`])
   const branchExists = checkResult.exitCode === 0
 
   // Create worktree with the branch
@@ -117,13 +117,13 @@ export async function createWorktreeFromRepo(
     ? ['git', '--git-dir', gitDir, 'worktree', 'add', expandedPath, branch]
     : ['git', '--git-dir', gitDir, 'worktree', 'add', '-b', branch, expandedPath, `origin/${branch}`]
 
-  const worktreeResult = await runGitCommand(worktreeArgs)
+  const worktreeResult = await runCliCommand(worktreeArgs)
   if (worktreeResult.exitCode !== 0) {
     throw new Error(`Failed to create worktree at '${expandedPath}' for branch '${branch}': ${worktreeResult.stderr.trim()}`)
   }
 
   // Set upstream tracking for the branch in the worktree
-  const trackingResult = await runGitCommand(['git', '-C', expandedPath, 'branch', '--set-upstream-to', `origin/${branch}`, branch])
+  const trackingResult = await runCliCommand(['git', '-C', expandedPath, 'branch', '--set-upstream-to', `origin/${branch}`, branch])
   if (trackingResult.exitCode !== 0) {
     warnWithFollowup(
       `Could not set upstream tracking: ${trackingResult.stderr.trim() || 'unknown error'}`,
@@ -136,7 +136,7 @@ export async function createWorktreeFromRepo(
  * List all worktrees for a repository
  */
 export async function listWorktrees(bareRepoPath: string): Promise<WorktreeInfo[]> {
-  const result = await runGitCommand(['git', '-C', bareRepoPath, 'worktree', 'list', '--porcelain'])
+  const result = await runCliCommand(['git', '-C', bareRepoPath, 'worktree', 'list', '--porcelain'])
 
   if (result.exitCode !== 0) {
     // Log warning for debugging but return empty to allow caller to continue
@@ -196,7 +196,7 @@ function parseWorktreeOutput(output: string): WorktreeInfo[] {
  * Remove worktree at path
  */
 export async function removeWorktree(worktreePath: string): Promise<void> {
-  const result = await runGitCommand(['git', 'worktree', 'remove', worktreePath])
+  const result = await runCliCommand(['git', 'worktree', 'remove', worktreePath])
 
   if (result.exitCode !== 0) {
     throw new Error(`Failed to remove worktree: ${result.stderr.trim()}`)

@@ -3,7 +3,7 @@ import * as fs from 'node:fs'
 import * as os from 'node:os'
 import * as path from 'node:path'
 import { getGhCommand } from './gh-command'
-import { runGitCommand } from './git-exec'
+import { runCliCommand } from './git-exec'
 
 /**
  * Parse repository string in format "owner/repo" or GitHub URL
@@ -53,7 +53,7 @@ export async function findBareRepo(owner: string, repo: string): Promise<string 
  */
 export async function isInGitRepo(): Promise<boolean> {
   try {
-    const result = await runGitCommand(['git', 'rev-parse', '--git-dir'])
+    const result = await runCliCommand(['git', 'rev-parse', '--git-dir'])
     return result.exitCode === 0
   }
   catch {
@@ -67,7 +67,7 @@ export async function isInGitRepo(): Promise<boolean> {
  */
 export async function getGitDir(): Promise<string | null> {
   try {
-    const result = await runGitCommand(['git', 'rev-parse', '--absolute-git-dir'])
+    const result = await runCliCommand(['git', 'rev-parse', '--absolute-git-dir'])
 
     if (result.exitCode !== 0) {
       return null
@@ -96,9 +96,15 @@ export async function cloneBareRepo(owner: string, repo: string): Promise<string
   }
 
   // Clone as bare repository
-  const result = await runGitCommand(
-    [getGhCommand(), 'repo', 'clone', `${owner}/${repo}`, bareRepoPath, '--', '--bare'],
-  )
+  let result
+  try {
+    result = await runCliCommand(
+      [getGhCommand(), 'repo', 'clone', `${owner}/${repo}`, bareRepoPath, '--', '--bare'],
+    )
+  }
+  catch (error) {
+    throw new Error(`Failed to clone repository: ${error instanceof Error ? error.message : String(error)}`)
+  }
 
   if (result.exitCode !== 0) {
     throw new Error(`Failed to clone repository: ${result.stderr.trim()}`)
@@ -111,7 +117,13 @@ export async function cloneBareRepo(owner: string, repo: string): Promise<string
  * Get current repository information (owner/repo from gh CLI)
  */
 async function getCurrentRepoInfo(): Promise<{ owner: string, repo: string }> {
-  const result = await runGitCommand([getGhCommand(), 'repo', 'view', '--json', 'owner,name'])
+  let result
+  try {
+    result = await runCliCommand([getGhCommand(), 'repo', 'view', '--json', 'owner,name'])
+  }
+  catch (error) {
+    throw new Error(`Failed to get repository info: ${error instanceof Error ? error.message : String(error)}`)
+  }
 
   if (result.exitCode !== 0) {
     throw new Error(`Failed to get repository info: ${result.stderr.trim() || 'Not in a git repository'}`)

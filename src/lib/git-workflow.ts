@@ -1,6 +1,6 @@
 import type { DevelopOptions } from '../types'
 import { getGhCommand } from './gh-command'
-import { runGitCommand } from './git-exec'
+import { runCliCommand } from './git-exec'
 
 // Re-export worktree functions from dedicated module
 export {
@@ -60,7 +60,7 @@ export async function getAllLinkedBranches(
     `issueNumber=${issueNumber}`,
   ]
 
-  const result = await runGitCommand(args)
+  const result = await runCliCommand(args)
 
   if (result.exitCode !== 0) {
     // GraphQL query failed
@@ -123,7 +123,7 @@ export async function startDevelopWorkflow(
     args.push('-n', options.name)
   }
 
-  const result = await runGitCommand(args)
+  const result = await runCliCommand(args)
 
   if (result.exitCode !== 0) {
     throw new Error(`Failed to develop issue: ${result.stderr.trim()}`)
@@ -162,7 +162,7 @@ export async function fetchBranch(
   branch: string,
 ): Promise<void> {
   // Step 1: Fetch to remote tracking branch (refs/remotes/origin/{branch})
-  const fetchResult = await runGitCommand(
+  const fetchResult = await runCliCommand(
     ['git', '-C', bareRepoPath, 'fetch', 'origin', `${branch}:refs/remotes/origin/${branch}`],
   )
 
@@ -172,13 +172,13 @@ export async function fetchBranch(
 
   // Step 2: Create or update local branch from remote tracking branch
   // Try to create the branch first
-  const createResult = await runGitCommand(
+  const createResult = await runCliCommand(
     ['git', '-C', bareRepoPath, 'branch', branch, `refs/remotes/origin/${branch}`],
   )
 
   if (createResult.exitCode !== 0) {
     // Branch might already exist, try to update it
-    const updateResult = await runGitCommand(
+    const updateResult = await runCliCommand(
       ['git', '-C', bareRepoPath, 'branch', '-f', branch, `refs/remotes/origin/${branch}`],
     )
 

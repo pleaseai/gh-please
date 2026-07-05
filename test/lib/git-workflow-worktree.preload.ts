@@ -15,7 +15,7 @@ export const mockMkdir = mock(() => Promise.resolve())
 
 // Mock git-exec module BEFORE it's imported
 mock.module('../../src/lib/git-exec', () => ({
-  runGitCommand: mockRunGitCommand,
+  runCliCommand: mockRunGitCommand,
   warnWithFollowup: mockWarnWithFollowup,
 }))
 
