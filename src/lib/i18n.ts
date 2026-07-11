@@ -88,6 +88,11 @@ export interface CommentMessages {
   fetchingComment: (commentId: number) => string
   updatingComment: (commentId: number) => string
   commentUpdated: string
+  deletingComment: (commentId: number | string) => string
+  commentDeleted: string
+  confirmDelete: string
+  deleteAborted: string
+  usageDeleteIssue: string
   bodyRequired: string
   bodyEmpty: string
   usageIssue: string
@@ -299,6 +304,11 @@ export const commentMessages: Record<Language, CommentMessages> = {
     fetchingComment: (commentId: number) => `🔍 댓글 ${commentId} 가져오는 중...`,
     updatingComment: (commentId: number) => `📝 댓글 ${commentId} 업데이트 중...`,
     commentUpdated: '✅ 댓글이 성공적으로 업데이트되었습니다!',
+    deletingComment: (commentId: number | string) => `🗑️ 댓글 ${commentId} 삭제 중...`,
+    commentDeleted: '✅ 댓글이 성공적으로 삭제되었습니다!',
+    confirmDelete: '정말로 이 댓글을 삭제하시겠습니까? (y/N): ',
+    deleteAborted: '삭제가 취소되었습니다.',
+    usageDeleteIssue: '   사용법: gh please issue comment delete <comment-id> [--yes]',
     bodyRequired: '❌ 오류: --body 또는 --body-file이 필요합니다',
     bodyEmpty: '❌ 오류: 댓글 내용이 비어 있습니다',
     usageIssue: '   사용법: gh please issue comment edit <comment-id> --body \'내용\'',
@@ -317,6 +327,11 @@ export const commentMessages: Record<Language, CommentMessages> = {
     fetchingComment: (commentId: number) => `🔍 Fetching comment ${commentId}...`,
     updatingComment: (commentId: number) => `📝 Updating comment ${commentId}...`,
     commentUpdated: '✅ Comment updated successfully!',
+    deletingComment: (commentId: number | string) => `🗑️ Deleting comment ${commentId}...`,
+    commentDeleted: '✅ Comment deleted successfully!',
+    confirmDelete: 'Are you sure you want to delete this comment? (y/N): ',
+    deleteAborted: 'Delete aborted.',
+    usageDeleteIssue: '   Usage: gh please issue comment delete <comment-id> [--yes]',
     bodyRequired: '❌ Error: --body or --body-file is required',
     bodyEmpty: '❌ Error: Comment body cannot be empty',
     usageIssue: '   Usage: gh please issue comment edit <comment-id> --body \'text\'',

@@ -16,7 +16,8 @@
       "Bash(gh issue view :*)",
       "Bash(bun test:*)",
       "Bash(bun run lint:*)",
-      "Bash(bun run lint)"
+      "Bash(bun run lint)",
+      "WebFetch(domain:cli.github.com)"
     ],
     "deny": [],
     "ask": []
