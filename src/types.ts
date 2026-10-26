@@ -151,6 +151,65 @@ export interface CreateIssueOptions {
 }
 
 /**
+ * GitHub App installation access token 발급 결과
+ */
+export interface InstallationTokenResult {
+  /** installation access token (약 1시간 후 만료) */
+  token: string
+  /** 만료 시각 (ISO 8601) */
+  expiresAt: string
+}
+
+/**
+ * private key 해석 옵션
+ */
+export interface ResolvePrivateKeyOptions {
+  /** 파일 경로. '-'이면 표준 입력에서 읽는다 */
+  path?: string
+  /** 폴백 환경 변수 이름 (기본: GH_APP_PRIVATE_KEY) */
+  envVarName?: string
+  /** 환경 변수 소스 (기본: process.env, 테스트 주입용) */
+  env?: Record<string, string | undefined>
+  /** 표준 입력 reader (테스트 주입용) */
+  readStdin?: () => Promise<string>
+}
+
+/**
+ * `auth login` 명령의 GitHub App 모드 옵션
+ */
+export interface AppLoginOptions {
+  /** GitHub App ID 또는 Client ID */
+  appId?: string
+  /** private key 파일 경로 ('-'이면 stdin) */
+  privateKey?: string
+  /** 대상 installation ID */
+  installationId?: string
+  /** installation 자동 조회용 org/user 이름 */
+  owner?: string
+  /** GitHub 호스트명 (GHES 지원) */
+  hostname?: string
+  /** 토큰을 저장하지 않고 표준 출력으로 인쇄 */
+  printToken?: boolean
+  /** git credential helper 자동 설정 */
+  setupGit?: boolean
+}
+
+/**
+ * GitHub App 인증 설정 (~/.please/auth.json에 영속화).
+ * 보안상 private key 값 자체는 절대 저장하지 않고 경로/환경 변수 참조만 저장한다.
+ */
+export interface AuthConfig {
+  /** GitHub App ID 또는 Client ID */
+  appId: string
+  /** 해석된 installation ID */
+  installationId: string
+  /** private key 파일 경로 (값이 아닌 참조). 환경 변수 사용 시 생략 */
+  privateKeyPath?: string
+  /** GitHub 호스트명 (github.com이 아닌 경우) */
+  hostname?: string
+}
+
+/**
  * Custom error class for JMESPath query errors
  * Provides detailed information about query failures
  */

@@ -2,6 +2,7 @@
 
 import { Command } from 'commander'
 import packageJson from '../package.json' with { type: 'json' }
+import { createAuthCommand } from './commands/auth'
 import { createIssueCommand } from './commands/issue'
 import { createPluginCommand } from './commands/plugin'
 import { createPrCommand } from './commands/pr'
@@ -22,6 +23,7 @@ export async function createProgram(): Promise<Command> {
     .version(packageJson.version)
 
   // Add core command groups
+  program.addCommand(createAuthCommand())
   program.addCommand(createIssueCommand())
   program.addCommand(createPrCommand())
   program.addCommand(createRepoCommand())

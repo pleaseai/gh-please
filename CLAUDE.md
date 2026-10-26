@@ -11,6 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 @docs-dev/GH_FIELDS_MAINTENANCE.md
 @docs-dev/ISSUE_WORKFLOW.md
 @docs-dev/PR_REVIEW_WORKFLOW.md
+@docs-dev/AUTH_WORKFLOW.md
 
 ## Project Overview
 
@@ -184,6 +185,13 @@ gh please pr review reply <comment-id> -b "text"  # Reply to review comment (sup
 gh please pr review thread list <pr-number> [--unresolved-only]          # List review threads with Node IDs
 gh please pr review thread resolve <pr-number> [--thread <id> | --all]   # Resolve threads
 gh please pr review comment edit <comment-id> --body "text" [--pr <number>]  # Edit PR review comment (supports both ID formats)
+
+# Authentication (Built-in) - mirrors `gh auth`, adds GitHub App installation tokens (see @docs-dev/AUTH_WORKFLOW.md)
+gh please auth login                                # Mirror `gh auth login` (interactive / --with-token / --web)
+gh please auth login --app-id <id> --private-key <path> [--installation-id <id> | --owner <org/user>] [--print-token] [--setup-git]  # GitHub App installation token
+gh please auth token                               # Re-mint fresh App token from saved config (else mirror `gh auth token`)
+gh please auth git-credential <get|store|erase>    # git credential helper with auto-refreshing App tokens
+gh please auth <status|logout|refresh|...>         # Passthrough to gh CLI
 
 # Deprecated (still works with warning)
 gh please review-reply <comment-id> -b "text"      # → Use 'gh please pr review reply'
@@ -573,6 +581,7 @@ See dedicated workflow documentation:
 
 - **Issue Development**: @docs-dev/ISSUE_WORKFLOW.md
 - **PR Review**: @docs-dev/PR_REVIEW_WORKFLOW.md
+- **Authentication (GitHub App tokens)**: @docs-dev/AUTH_WORKFLOW.md
 - **GitHub ID Systems**: @docs-dev/GITHUB_ID_SYSTEMS.md
 - **gh CLI Passthrough**: @docs-dev/GH_CLI_PASSTHROUGH.md
 
